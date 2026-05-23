@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agora FM — FM Service Provider Catalogue</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="agora_fm.css">
+  <script src="db.js"></script>
+  <script src="nav-auth.js"></script>
+  <script src="basket.js"></script>
+  <style>
+    .catalogue-hero{position:relative;z-index:1;padding:60px 80px 40px;border-bottom:1px solid rgba(62,107,137,0.15);}
+    .cat-nav{position:sticky;top:0;z-index:100;background:rgba(10,26,47,0.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(62,107,137,0.2);padding:0 80px;display:flex;gap:0;overflow-x:auto;}
+    .cat-nav-btn{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 20px;border:none;background:transparent;color:rgba(227,229,232,0.45);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+    .cat-nav-btn:hover{color:var(--grey);}
+    .cat-nav-btn.active{color:var(--orange);border-bottom-color:var(--orange);}
+    .catalogue-body{position:relative;z-index:1;padding:60px 80px;}
+    .category-section{margin-bottom:60px;display:none;}
+    .category-section.active{display:block;}
+    .category-heading{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid rgba(62,107,137,0.2);}
+    .category-icon{width:48px;height:48px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.25);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+    .category-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:2px;color:var(--grey);}
+    .category-count{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--steel-light);margin-top:2px;}
+    .subcategory-block{margin-bottom:40px;}
+    .subcategory-label{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+    .subcategory-label::after{content:'';flex:1;height:1px;background:rgba(241,143,1,0.15);}
+    .provider-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+    .provider-card{background:rgba(13,32,64,0.7);border:1px solid rgba(62,107,137,0.2);border-radius:2px;padding:24px;transition:all 0.2s;position:relative;overflow:hidden;}
+    .provider-card:hover{border-color:rgba(62,107,137,0.4);background:rgba(13,32,64,0.9);}
+    .provider-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),transparent);opacity:0;transition:opacity 0.2s;}
+    .provider-card:hover::before{opacity:1;}
+    .provider-name{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.5px;color:var(--grey);margin-bottom:6px;}
+    .provider-address{font-size:0.75rem;color:rgba(227,229,232,0.4);margin-bottom:10px;display:flex;align-items:flex-start;gap:6px;}
+    .provider-links{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+    .provider-link{font-size:0.72rem;color:var(--steel-light);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color 0.15s;}
+    .provider-link:hover{color:var(--orange);}
+    .provider-desc{font-size:0.78rem;color:rgba(227,229,232,0.55);line-height:1.65;font-weight:300;margin-bottom:14px;}
+    .provider-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .provider-price{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:1px;color:var(--orange);}
+    .provider-period{font-size:0.65rem;color:rgba(227,229,232,0.35);text-transform:uppercase;letter-spacing:1.5px;margin-top:-2px;}
+    .provider-actions{display:flex;gap:8px;align-items:center;}
+    .btn-tc{font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:7px 12px;background:transparent;border:1px solid rgba(62,107,137,0.35);border-radius:2px;color:rgba(227,229,232,0.5);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+    .btn-tc:hover{border-color:var(--steel);color:var(--grey);}
+    .btn-basket{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.4);border-radius:2px;color:var(--orange);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+    .btn-basket:hover:not(:disabled){background:var(--orange);color:var(--navy);}
+    .btn-basket:disabled{opacity:0.3;cursor:not-allowed;border-color:rgba(62,107,137,0.2);color:rgba(227,229,232,0.3);background:transparent;}
+    /* T&Cs panel */
+    .tc-panel{display:none;margin-top:14px;background:rgba(10,26,47,0.8);border:1px solid rgba(62,107,137,0.25);border-radius:2px;padding:16px;}
+    .tc-panel.open{display:block;}
+    .tc-panel-title{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:10px;}
+    .tc-text{font-size:0.74rem;color:rgba(227,229,232,0.5);line-height:1.7;font-weight:300;max-height:160px;overflow-y:auto;margin-bottom:12px;}
+    .tc-accept{display:flex;align-items:center;gap:8px;font-size:0.76rem;color:rgba(227,229,232,0.6);cursor:pointer;}
+    .tc-accept input{accent-color:var(--orange);cursor:pointer;}
+    /* Basket panel */
+    /* Basket styling handled by basket.js nav dropdown */
+    /* Search bar */
+    .search-bar{display:flex;gap:12px;margin-bottom:36px;}
+    .search-input{flex:1;padding:11px 16px;background:rgba(13,32,64,0.7);border:1px solid rgba(62,107,137,0.25);border-radius:2px;color:var(--grey);font-family:'Barlow',sans-serif;font-size:0.85rem;}
+    .search-input:focus{outline:none;border-color:var(--orange);}
+    .search-input::placeholder{color:rgba(227,229,232,0.3);}
+    @media(max-width:900px){.provider-grid{grid-template-columns:1fr}.catalogue-body{padding:40px 24px}.catalogue-hero{padding:40px 24px}.cat-nav{padding:0 24px}}
+
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-text">AGORA<span class="logo-accent">FM</span></span>
+    <span class="logo-dot"></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li>
+      <a href="service_providers.html">Services <span class="nav-chevron">▼</span></a>
+      <div class="nav-dropdown">
+        <div class="dropdown-head">FM Categories</div>
+        <a href="service_providers.html">Fire Protection</a>
+        <a href="service_providers.html">Water Services</a>
+        <a href="service_providers.html">Electrical Services</a>
+        <a href="service_providers.html">Gas Services</a>
+        <a href="service_providers.html">HVAC</a>
+        <a href="service_providers.html">Lifts &amp; Lifting</a>
+        <a href="service_providers.html">Doors &amp; Access</a>
+        <a href="service_providers.html">Risk Assessments</a>
+      </div>
+    </li>
+    <li><a href="service_providers.html">Providers</a></li>
+    <li><a href="service_providers_catalogue.html" class="active">Catalogue</a></li>
+    <li><a href="#">Benchmarks</a></li>
+    <li><a href="#">Analytics</a></li>
+    <li><a href="#">Enterprise</a></li>
+  </ul>
+  <div class="nav-search">
+    <div class="search-wrap">
+      <input type="text" placeholder="Search services, providers…" id="navSearch" />
+      <button onclick="handleNavSearch()">⌕</button>
+    </div>
+  </div>
+  <div class="nav-cta">
+    <a href="registration.html" class="btn-nav-login">Sign In</a>
+    <a href="registration.html" class="btn-nav-reg">Register Free</a>
+  </div>
+  <span class="nav-badge">Platform v3.0</span>
+</nav>
+
+<!-- TICKER -->
+<div class="site-ticker"><div class="ticker-label">Live Market</div><div class="ticker-track">
+  <span class="ticker-item">80 verified FM service providers listed</span>
+  <span class="ticker-item">5 categories · 15 subcategories</span>
+  <span class="ticker-item">5% Agora FM commission — charged to providers only</span>
+  <span class="ticker-item">UK-wide coverage · All accreditations verified</span>
+  <span class="ticker-item">80 verified FM service providers listed</span>
+  <span class="ticker-item">5 categories · 15 subcategories</span>
+  <span class="ticker-item">5% Agora FM commission — charged to providers only</span>
+  <span class="ticker-item">UK-wide coverage · All accreditations verified</span>
+</div></div>
+
+<!-- HERO -->
+<div class="catalogue-hero">
+  <div class="hero-eyebrow"><span class="eyebrow-line"></span><span class="eyebrow-text">FM Service Catalogue</span></div>
+  <h1 style="font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:2px;line-height:1;margin-bottom:12px;">FM Service Provider Catalogue</h1>
+  <p style="font-size:0.9rem;color:var(--grey-dim);max-width:600px;font-weight:300;line-height:1.6;margin-bottom:12px;">Browse our full catalogue of FM service providers by category and subcategory. Accept T&Cs, add to basket, and proceed to checkout.</p>
+  <div style="display:inline-flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(241,143,1,0.08);border:1px solid rgba(241,143,1,0.2);border-radius:2px;margin-bottom:16px;">
+    <span style="font-size:0.75rem;color:var(--orange);">⭐</span>
+    <span style="font-size:0.78rem;color:rgba(227,229,232,0.7);">Looking for Agora FM verified providers with full storefronts?</span>
+    <a href="service_providers.html" style="font-size:0.78rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);text-decoration:none;">View Providers →</a>
+  </div>
+  <div class="search-bar">
+    <input class="search-input" type="text" id="catalogueSearch" placeholder="Search by company name, service or location…" oninput="filterProviders(this.value)">
+  </div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;">
+    <div style="font-size:0.75rem;color:rgba(227,229,232,0.4);"><span style="color:var(--orange);font-weight:600;">80</span> providers</div>
+    <div style="font-size:0.75rem;color:rgba(227,229,232,0.4);"><span style="color:var(--orange);font-weight:600;">5</span> categories</div>
+    <div style="font-size:0.75rem;color:rgba(227,229,232,0.4);"><span style="color:var(--orange);font-weight:600;">15</span> subcategories</div>
+    <div style="font-size:0.75rem;color:rgba(227,229,232,0.4);">Commission: <span style="color:var(--orange);font-weight:600;">5%</span> (charged to provider)</div>
+  </div>
+</div>
+
+<!-- CATEGORY NAV -->
+<div class="cat-nav">
+  <button class="cat-nav-btn active" onclick="showCategory('fire',this)">🔥 Fire</button>
+  <button class="cat-nav-btn" onclick="showCategory('water',this)">💧 Water</button>
+  <button class="cat-nav-btn" onclick="showCategory('hvac',this)">🌡 HVAC</button>
+  <button class="cat-nav-btn" onclick="showCategory('risk',this)">📋 Risk Assessments</button>
+  <button class="cat-nav-btn" onclick="showCategory('electricity',this)">⚡ Electricity</button>
+</div>
+
+<!-- CATALOGUE BODY -->
+<div class="catalogue-body">
+
+  <!-- FIRE -->
+  <div class="category-section active" id="cat-fire">
+    <div class="category-heading">
+      <div class="category-icon">🔥</div>
+      <div><div class="category-title">Fire</div><div class="category-count">12 providers · 3 subcategories</div></div>
+    </div>
+
+    <div class="subcategory-block">
+      <div class="subcategory-label">Fire extinguisher servicing</div>
+      <div class="provider-grid" id="grid-fire-ext"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Fire alarm maintenance</div>
+      <div class="provider-grid" id="grid-fire-alarm"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Emergency lighting checks</div>
+      <div class="provider-grid" id="grid-fire-lighting"></div>
+    </div>
+  </div>
+
+  <!-- WATER -->
+  <div class="category-section" id="cat-water">
+    <div class="category-heading">
+      <div class="category-icon">💧</div>
+      <div><div class="category-title">Water</div><div class="category-count">12 providers · 3 subcategories</div></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Legionella testing</div>
+      <div class="provider-grid" id="grid-water-leg"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Water tank cleaning</div>
+      <div class="provider-grid" id="grid-water-tank"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Water hygiene monitoring</div>
+      <div class="provider-grid" id="grid-water-hygiene"></div>
+    </div>
+  </div>
+
+  <!-- HVAC -->
+  <div class="category-section" id="cat-hvac">
+    <div class="category-heading">
+      <div class="category-icon">🌡</div>
+      <div><div class="category-title">HVAC</div><div class="category-count">12 providers · 3 subcategories</div></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Air conditioning servicing</div>
+      <div class="provider-grid" id="grid-hvac-ac"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Boiler servicing</div>
+      <div class="provider-grid" id="grid-hvac-boiler"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Ventilation system inspections</div>
+      <div class="provider-grid" id="grid-hvac-vent"></div>
+    </div>
+  </div>
+
+  <!-- RISK -->
+  <div class="category-section" id="cat-risk">
+    <div class="category-heading">
+      <div class="category-icon">📋</div>
+      <div><div class="category-title">Risk Assessments</div><div class="category-count">12 providers · 3 subcategories</div></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">General workplace risk assessments</div>
+      <div class="provider-grid" id="grid-risk-general"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">DSE assessments</div>
+      <div class="provider-grid" id="grid-risk-dse"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Workplace safety audits</div>
+      <div class="provider-grid" id="grid-risk-audit"></div>
+    </div>
+  </div>
+
+  <!-- ELECTRICITY -->
+  <div class="category-section" id="cat-electricity">
+    <div class="category-heading">
+      <div class="category-icon">⚡</div>
+      <div><div class="category-title">Electricity</div><div class="category-count">12 providers · 3 subcategories</div></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">PAT testing</div>
+      <div class="provider-grid" id="grid-elec-pat"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">EICR inspections</div>
+      <div class="provider-grid" id="grid-elec-eicr"></div>
+    </div>
+    <div class="subcategory-block">
+      <div class="subcategory-label">Emergency lighting electrical checks</div>
+      <div class="provider-grid" id="grid-elec-em"></div>
+    </div>
+  </div>
+
+</div><!-- /catalogue-body -->
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand"><a href="index.html" class="nav-logo" style="text-decoration:none;"><span class="logo-text">AGORA<span class="logo-accent">FM</span></span><span class="logo-dot" style="animation:none;opacity:0.7;"></span></a><p>The UK's most advanced facilities management comparison and commissioning platform.</p></div>
+    <div class="footer-col"><h4>Platform</h4><ul><li><a href="service_providers.html">Find Providers</a></li><li><a href="#">Benchmarking</a></li></ul></div>
+    <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Terms &amp; Conditions</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 Agora FM Ltd. All rights reserved. Registered in England &amp; Wales.</div>
+    <div class="footer-badge">Built for excellence in FM ◆</div>
+  </div>
+</footer>
+
+<script>
+// ── Provider data ──────────────────────────────────────────────────────────
+var PROVIDERS = [
+  // FIRE — extinguisher
+  {id:'p1',name:'Redline Fire Safety Ltd',address:'14 Anvil Way, Sheffield, S3 8LT',website:'https://www.redlinefiresafety.co.uk',email:'service@redlinefiresafety.co.uk',tel:'0114 201 4490',cat:'Fire',sub:'Fire extinguisher servicing',desc:'Annual inspection, recharge and certification of all extinguisher types including CO2, powder, foam and wet chemical. BAFE-certified engineers. Full compliance report issued same day.',price:420,period:'per_year',terms:'/terms/redline-fire-safety',grid:'grid-fire-ext'},
+  {id:'p2',name:'BlazeCare Services Ltd',address:'Unit 3, Thornton Industrial Estate, Bradford, BD1 2NQ',website:'https://www.blazecareservices.co.uk',email:'info@blazecareservices.co.uk',tel:'01274 889 321',cat:'Fire',sub:'Fire extinguisher servicing',desc:'Full extinguisher service covering inspection, discharge testing, re-filling and statutory labelling. Nationwide coverage. CHAS-accredited. Service records stored digitally on client portal.',price:380,period:'per_year',terms:'/terms/blazecare-services',grid:'grid-fire-ext'},
+  {id:'p3',name:'Ignition Compliance Ltd',address:'22 Copper Road, Norwich, NR1 3BZ',website:'https://www.ignitioncompliance.co.uk',email:'enquiries@ignitioncompliance.co.uk',tel:'01603 774 882',cat:'Fire',sub:'Fire extinguisher servicing',desc:'Scheduled and emergency extinguisher servicing for commercial premises. All work carried out to BS 5306-3. Certificate of conformity issued on completion. Weekend appointments available.',price:395,period:'per_year',terms:'/terms/ignition-compliance',grid:'grid-fire-ext'},
+  {id:'p4',name:'FireShield Maintenance Ltd',address:'8 Hallgate Business Park, Pontefract, WF8 1PQ',website:'https://www.fireshieldmaintenance.co.uk',email:'bookings@fireshieldmaintenance.co.uk',tel:'01977 663 120',cat:'Fire',sub:'Fire extinguisher servicing',desc:'Comprehensive extinguisher maintenance contracts for multi-site estates. Includes visual inspections, pressure tests and extended service. Compliant with BS EN 3. Instant digital reports.',price:450,period:'per_year',terms:'/terms/fireshield-maintenance',grid:'grid-fire-ext'},
+  // FIRE — alarm
+  {id:'p5',name:'Sentinel Alarm Systems Ltd',address:'45 Regent Crescent, Leicester, LE1 6WX',website:'https://www.sentinelalarmsystems.co.uk',email:'contracts@sentinelalarmsystems.co.uk',tel:'0116 278 5540',cat:'Fire',sub:'Fire alarm maintenance',desc:'Full fire alarm maintenance contracts covering bi-annual inspections, detector testing, panel servicing and fault resolution. NSI Gold approved. Compliant with BS 5839-1. 4-hour emergency response SLA.',price:890,period:'per_year',terms:'/terms/sentinel-alarm-systems',grid:'grid-fire-alarm'},
+  {id:'p6',name:'Clearbell Fire Protection Ltd',address:'30 Millfield Avenue, Preston, PR2 8ST',website:'https://www.clearbellfire.co.uk',email:'service@clearbellfire.co.uk',tel:'01772 441 900',cat:'Fire',sub:'Fire alarm maintenance',desc:'Preventive and reactive fire alarm maintenance for commercial and industrial premises. All major panel manufacturers supported. Quarterly reporting included. BAFE SP203-1 certificated contractor.',price:75,period:'per_month',terms:'/terms/clearbell-fire-protection',grid:'grid-fire-alarm'},
+  {id:'p7',name:'Apex Fire & Security Ltd',address:'Unit 9, Ashbourne Road, Derby, DE22 3FS',website:'https://www.apexfiresecurity.co.uk',email:'maintenance@apexfiresecurity.co.uk',tel:'01332 519 870',cat:'Fire',sub:'Fire alarm maintenance',desc:'Addressable and conventional fire alarm servicing. Includes panel firmware updates, zone testing, sounder checks and full compliance documentation. 24/7 monitoring available as add-on.',price:820,period:'per_year',terms:'/terms/apex-fire-security',grid:'grid-fire-alarm'},
+  {id:'p8',name:'SafeAlert Systems Ltd',address:'17 Bramblewood Court, Coventry, CV6 4PP',website:'https://www.safealertsystems.co.uk',email:'info@safealertsystems.co.uk',tel:'024 7661 3300',cat:'Fire',sub:'Fire alarm maintenance',desc:'Fire alarm maintenance tailored for multi-occupancy and mixed-use buildings. Full log book management, false alarm reduction reporting and liaison with local fire authority on request.',price:68,period:'per_month',terms:'/terms/safealert-systems',grid:'grid-fire-alarm'},
+  // FIRE — emergency lighting
+  {id:'p9',name:'LuminaCheck Ltd',address:'55 Glasshouse Street, Nottingham, NG1 3LW',website:'https://www.luminacheck.co.uk',email:'testing@luminacheck.co.uk',tel:'0115 948 2201',cat:'Fire',sub:'Emergency lighting checks',desc:'Monthly flick-test monitoring, annual full-duration discharge test and battery replacement. Compliant with BS 5266-1. NICEIC-registered engineers. Electronic logbook and certificate provided after every visit.',price:360,period:'per_year',terms:'/terms/luminacheck',grid:'grid-fire-lighting'},
+  {id:'p10',name:'NightPath Electrical Services Ltd',address:'6 Foundry Lane, Wolverhampton, WV2 2BE',website:'https://www.nightpathelectrical.co.uk',email:'enquiries@nightpathelectrical.co.uk',tel:'01902 774 330',cat:'Fire',sub:'Emergency lighting checks',desc:'Routine and emergency lighting compliance checks including 1-hour and 3-hour battery tests. Fault rectification included in annual contract price. Suitable for schools, offices and retail environments.',price:30,period:'per_month',terms:'/terms/nightpath-electrical',grid:'grid-fire-lighting'},
+  {id:'p11',name:'BrightEscape Compliance Ltd',address:'12 Minster Gate, York, YO1 7HL',website:'https://www.brightescape.co.uk',email:'service@brightescape.co.uk',tel:'01904 551 200',cat:'Fire',sub:'Emergency lighting checks',desc:'Dedicated emergency lighting service covering exit signs, maintained and non-maintained luminaires. Full photometric testing on request. Compliant with BS EN 1838. Reports submitted within 24 hours.',price:395,period:'per_year',terms:'/terms/brightescape-compliance',grid:'grid-fire-lighting'},
+  {id:'p12',name:'EscapeLight Solutions Ltd',address:'Unit 4, Humber Bridge Industrial Park, Hull, HU13 0HH',website:'https://www.escapelightsolutions.co.uk',email:'bookings@escapelightsolutions.co.uk',tel:'01482 639 540',cat:'Fire',sub:'Emergency lighting checks',desc:'Emergency lighting inspection and testing across all building types. Includes emergency central battery system (CBS) maintenance. All works conform to current IET Wiring Regulations and BS 5266.',price:340,period:'per_year',terms:'/terms/escapelight-solutions',grid:'grid-fire-lighting'},
+  // WATER — legionella
+  {id:'p13',name:'ClearWater Compliance Ltd',address:'3 Quayside Business Park, Newcastle upon Tyne, NE1 3DX',website:'https://www.clearwatercompliance.co.uk',email:'testing@clearwatercompliance.co.uk',tel:'0191 232 8840',cat:'Water',sub:'Legionella testing',desc:'UKAS-accredited Legionella water sampling and analysis. Hot and cold water system testing in line with L8 ACOP and HSG274. Results within 5 working days. Full written report and recommended actions provided.',price:195,period:'per_year',terms:'/terms/clearwater-compliance',grid:'grid-water-leg'},
+  {id:'p14',name:'AquaGuard Testing Ltd',address:'88 Dock Road, Liverpool, L3 4AE',website:'https://www.aquaguardtesting.co.uk',email:'lab@aquaguardtesting.co.uk',tel:'0151 709 5512',cat:'Water',sub:'Legionella testing',desc:'Quarterly and annual Legionella sampling programmes for commercial estates. Includes temperature monitoring, sampling, UKAS laboratory analysis and corrective action reports. Schematic drawings updated annually.',price:220,period:'per_year',terms:'/terms/aquaguard-testing',grid:'grid-water-leg'},
+  {id:'p15',name:'HydroSafe Systems Ltd',address:'19 Canal Wharf, Leeds, LS11 5PS',website:'https://www.hydrosafeuk.co.uk',email:'info@hydrosafeuk.co.uk',tel:'0113 244 7720',cat:'Water',sub:'Legionella testing',desc:'Legionella risk management including sampling, temperature monitoring and sentinel outlet checks. Accredited to ISO 17025. Suitable for healthcare, education and commercial premises. 24-hour emergency sampling available.',price:18.5,period:'per_month',terms:'/terms/hydrosafe-systems',grid:'grid-water-leg'},
+  {id:'p16',name:'PureLine Water Services Ltd',address:'Unit 7, Wilmslow Road, Manchester, M20 6RG',website:'https://www.purelinewater.co.uk',email:'service@purelinewater.co.uk',tel:'0161 434 9900',cat:'Water',sub:'Legionella testing',desc:'Legionella sampling, analysis and written risk assessment update service. Covers all water outlets including showers, taps, calorifiers and cooling towers. Frequency programmes tailored to risk profile.',price:240,period:'per_year',terms:'/terms/pureline-water',grid:'grid-water-leg'},
+  // WATER — tank cleaning
+  {id:'p17',name:'TankClean Pro Ltd',address:'22 Station Road, Swindon, SN1 1DG',website:'https://www.tankcleanpro.co.uk',email:'bookings@tankcleanpro.co.uk',tel:'01793 512 200',cat:'Water',sub:'Water tank cleaning',desc:'Cold water storage tank (CWST) inspection and clean in accordance with BS 8558 and WRAS guidelines. Includes decontamination, chlorination dosing and post-clean sampling. Written report issued within 48 hours.',price:345,period:'per_year',terms:'/terms/tankclean-pro',grid:'grid-water-tank'},
+  {id:'p18',name:'AquaVault Services Ltd',address:'14 Ringway Industrial Estate, Coventry, CV2 1NF',website:'https://www.aquavaultservices.co.uk',email:'enquiries@aquavaultservices.co.uk',tel:'024 7644 8833',cat:'Water',sub:'Water tank cleaning',desc:'Full cleaning and disinfection of potable water storage tanks. Confined space trained operatives. Includes sediment removal, liner inspection, inlet/outlet valve checks and final water quality certificate.',price:370,period:'per_year',terms:'/terms/aquavault-services',grid:'grid-water-tank'},
+  {id:'p19',name:'Sterling Water Hygiene Ltd',address:'7 Wheatfield Road, Bristol, BS5 9RQ',website:'https://www.sterlingwaterhygiene.co.uk',email:'team@sterlingwaterhygiene.co.uk',tel:'0117 955 4410',cat:'Water',sub:'Water tank cleaning',desc:'Annual tank inspection and clean for commercial and residential estates. All operatives IPAF and confined space trained. Service includes pre and post-clean turbidity and bacteriological water testing.',price:30,period:'per_month',terms:'/terms/sterling-water-hygiene',grid:'grid-water-tank'},
+  {id:'p20',name:'BlueDepth Maintenance Ltd',address:'33 Quay Street, Portsmouth, PO1 2HH',website:'https://www.bluedepthmaintenance.co.uk',email:'info@bluedepthmaintenance.co.uk',tel:'023 9282 6640',cat:'Water',sub:'Water tank cleaning',desc:'Cold and hot water tank cleaning, inspection and disinfection. Tanks up to 45,000 litres serviced. Compliant with WRAS and HSG274 Part 2. Tank condition grading report and photographic evidence provided.',price:390,period:'per_year',terms:'/terms/bluedepth-maintenance',grid:'grid-water-tank'},
+  // WATER — hygiene monitoring
+  {id:'p21',name:'Vivid Water Solutions Ltd',address:'5 Elm Park Industrial Estate, Chelmsford, CM2 0TD',website:'https://www.vividwatersolutions.co.uk',email:'monitoring@vividwatersolutions.co.uk',tel:'01245 333 780',cat:'Water',sub:'Water hygiene monitoring',desc:'Ongoing water hygiene monitoring programme including monthly temperature checks, quarterly sampling and annual risk assessment review. Electronic logbooks maintained and accessible via client portal 24/7.',price:65,period:'per_month',terms:'/terms/vivid-water-solutions',grid:'grid-water-hygiene'},
+  {id:'p22',name:'FlowSafe Compliance Ltd',address:'18 Orchard Business Centre, Maidstone, ME16 8PX',website:'https://www.flowsafecompliance.co.uk',email:'contracts@flowsafecompliance.co.uk',tel:'01622 780 450',cat:'Water',sub:'Water hygiene monitoring',desc:'Comprehensive water hygiene management covering Legionella control, TMV servicing, dead leg identification and outlet flushing programmes. Suitable for complex healthcare and education estates.',price:720,period:'per_year',terms:'/terms/flowsafe-compliance',grid:'grid-water-hygiene'},
+  {id:'p23',name:'WaterWatch Services Ltd',address:'11 Derwent Court, Derby, DE1 2NQ',website:'https://www.waterwatchservices.co.uk',email:'info@waterwatchservices.co.uk',tel:'01332 340 900',cat:'Water',sub:'Water hygiene monitoring',desc:'Monthly water hygiene site visits covering temperature monitoring, sentinel outlet testing, visual inspections and log book updates. Includes annual L8 risk assessment review and schematic update service.',price:58,period:'per_month',terms:'/terms/waterwatch-services',grid:'grid-water-hygiene'},
+  {id:'p24',name:'PureFlow Water Management Ltd',address:'25 Victoria Business Park, Northampton, NN1 5EA',website:'https://www.pureflowwm.co.uk',email:'hygiene@pureflowwm.co.uk',tel:'01604 630 770',cat:'Water',sub:'Water hygiene monitoring',desc:'Tailored water hygiene monitoring contracts for single and multi-site estates. Services include temperature logging, chlorine residual checks, TMV and showerhead maintenance and ACOP L8 compliance reporting.',price:780,period:'per_year',terms:'/terms/pureflow-water-management',grid:'grid-water-hygiene'},
+  // HVAC — AC
+  {id:'p25',name:'CoolBreeze HVAC Ltd',address:'9 Meridian Way, Southampton, SO14 5QP',website:'https://www.coolbreezehvac.co.uk',email:'service@coolbreezehvac.co.uk',tel:'023 8033 4490',cat:'HVAC',sub:'Air conditioning servicing',desc:'Bi-annual air conditioning service and maintenance for split, multi-split and VRF systems. F-Gas certified engineers. Includes filter cleaning, refrigerant level check, coil inspection and performance report.',price:580,period:'per_year',terms:'/terms/coolbreeze-hvac',grid:'grid-hvac-ac'},
+  {id:'p26',name:'ArcticAir Maintenance Ltd',address:'Unit 6, Kingsway Industrial Estate, Luton, LU1 1LP',website:'https://www.arcticairmaintenance.co.uk',email:'contracts@arcticairmaintenance.co.uk',tel:'01582 481 200',cat:'HVAC',sub:'Air conditioning servicing',desc:'Commercial air conditioning servicing including planned preventive maintenance and reactive callouts. REFCOM registered. F-Gas handling licence held. Service reports issued within 24 hours.',price:52,period:'per_month',terms:'/terms/arcticair-maintenance',grid:'grid-hvac-ac'},
+  {id:'p27',name:'ThermalEdge Services Ltd',address:'14 Commerce Road, Stoke-on-Trent, ST4 2RT',website:'https://www.thermaledgeservices.co.uk',email:'hvac@thermaledgeservices.co.uk',tel:'01782 401 880',cat:'HVAC',sub:'Air conditioning servicing',desc:'Full air conditioning service contracts for offices, retail and industrial premises. Covers split and cassette units, fan coils and chilled water systems. Includes refrigerant leak checks.',price:620,period:'per_year',terms:'/terms/thermaledge-services',grid:'grid-hvac-ac'},
+  {id:'p28',name:'Ventus Climate Control Ltd',address:'3 Riverside Park, Gloucester, GL1 1SL',website:'https://www.ventusclimatecontrol.co.uk',email:'info@ventusclimatecontrol.co.uk',tel:'01452 882 660',cat:'HVAC',sub:'Air conditioning servicing',desc:'Air conditioning planned maintenance covering all refrigerant types. Service includes electrical safety checks, drain clearance, UV lamp inspection and full system efficiency report. Emergency breakdown cover included.',price:560,period:'per_year',terms:'/terms/ventus-climate-control',grid:'grid-hvac-ac'},
+  // HVAC — boiler
+  {id:'p29',name:'HeatMaster Services Ltd',address:'7 Forge Road, Wolverhampton, WV14 9QR',website:'https://www.heatmasterservices.co.uk',email:'boilers@heatmasterservices.co.uk',tel:'01902 880 660',cat:'HVAC',sub:'Boiler servicing',desc:'Annual commercial boiler service by Gas Safe registered engineers. Covers all gas-fired boiler types including condensing, combination and pressurised systems. Includes flue analysis, controls check and gas tightness test.',price:195,period:'per_year',terms:'/terms/heatmaster-services',grid:'grid-hvac-boiler'},
+  {id:'p30',name:'Celsius Mechanical Ltd',address:'24 Bricklayers Arms Road, Reading, RG1 7QN',website:'https://www.celsiusmechanical.co.uk',email:'service@celsiusmechanical.co.uk',tel:'0118 959 4400',cat:'HVAC',sub:'Boiler servicing',desc:'Planned preventive maintenance contracts for commercial boilers, plant rooms and pressurisation units. All works carried out by fully Gas Safe registered engineers. Emergency breakdown response within 4 hours.',price:18,period:'per_month',terms:'/terms/celsius-mechanical',grid:'grid-hvac-boiler'},
+  {id:'p31',name:'FlamePoint Engineering Ltd',address:'41 Riverside Industrial Estate, Exeter, EX2 7LH',website:'https://www.flamepointengineering.co.uk',email:'enquiries@flamepointengineering.co.uk',tel:'01392 474 900',cat:'HVAC',sub:'Boiler servicing',desc:'Boiler servicing and gas safety inspection for commercial and industrial premises. Covers Ideal, Vaillant, Remeha and Hamworthy boilers. Service record updated in BMS where applicable.',price:210,period:'per_year',terms:'/terms/flamepoint-engineering',grid:'grid-hvac-boiler'},
+  {id:'p32',name:'ThermoServ UK Ltd',address:'15 The Maltings, Cambridge, CB1 2LH',website:'https://www.thermoservuk.co.uk',email:'maintenance@thermoservuk.co.uk',tel:'01223 770 230',cat:'HVAC',sub:'Boiler servicing',desc:'Commercial boiler service contracts with 24/7 emergency cover. Gas Safe registered. Works include burner inspection, heat exchanger clean, safety valve test and combustion analysis.',price:185,period:'per_year',terms:'/terms/thermoserv-uk',grid:'grid-hvac-boiler'},
+  // HVAC — ventilation
+  {id:'p33',name:'AirFlow Inspections Ltd',address:'8 Gateway Industrial Park, Milton Keynes, MK11 3LR',website:'https://www.airflowinspections.co.uk',email:'inspect@airflowinspections.co.uk',tel:'01908 551 320',cat:'HVAC',sub:'Ventilation system inspections',desc:'Ductwork and ventilation system inspections to TR19 and BESA standards. Includes pre and post-clean inspection reports with photographic evidence. Kitchen extract, general ventilation and MVHR systems covered.',price:480,period:'per_year',terms:'/terms/airflow-inspections',grid:'grid-hvac-vent'},
+  {id:'p34',name:'DuctSafe Services Ltd',address:'5 Station Approach, Guildford, GU1 4UT',website:'https://www.ductsafeservices.co.uk',email:'info@ductsafeservices.co.uk',tel:'01483 770 110',cat:'HVAC',sub:'Ventilation system inspections',desc:'Ventilation hygiene inspections and ductwork surveys for commercial estates. TR19 compliant reports with grease deposit assessment. CHAS accredited. Inspection frequency recommended based on cooking activity level.',price:42,period:'per_month',terms:'/terms/ductsafe-services',grid:'grid-hvac-vent'},
+  {id:'p35',name:'PureAir Ventilation Ltd',address:'20 Commerce Way, Crawley, RH10 9QJ',website:'https://www.pureairventilation.co.uk',email:'service@pureairventilation.co.uk',tel:'01293 515 780',cat:'HVAC',sub:'Ventilation system inspections',desc:'Independent ventilation system inspection and hygiene audits. Covers AHUs, fan coils, fresh air handling units and supply/extract ductwork. TR19 grease assessment and IAQ measurement included.',price:510,period:'per_year',terms:'/terms/pureair-ventilation',grid:'grid-hvac-vent'},
+  {id:'p36',name:'CleanDuct Solutions Ltd',address:'32 Parkway Industrial Estate, Northampton, NN3 8RJ',website:'https://www.cleanductsolutions.co.uk',email:'contracts@cleanductsolutions.co.uk',tel:'01604 780 220',cat:'HVAC',sub:'Ventilation system inspections',desc:'Annual and bi-annual ventilation inspections in compliance with TR19 and HTM 03-01. Includes video survey, deposit thickness measurement, written inspection report and recommended clean frequency report.',price:460,period:'per_year',terms:'/terms/cleanduct-solutions',grid:'grid-hvac-vent'},
+  // RISK — general
+  {id:'p37',name:'SafeSpace Consultancy Ltd',address:'10 New Street, Birmingham, B2 4EU',website:'https://www.safespaceconsultancy.co.uk',email:'assessments@safespaceconsultancy.co.uk',tel:'0121 643 8870',cat:'Risk assessments',sub:'General workplace risk assessments',desc:'Comprehensive workplace risk assessments covering manual handling, slips and trips, COSHH, lone working and general premises hazards. Written reports with RAG-rated action plans. NEBOSH-qualified assessors.',price:650,period:'per_year',terms:'/terms/safespace-consultancy',grid:'grid-risk-general'},
+  {id:'p38',name:'ClearRisk Solutions Ltd',address:'17 Exchange Square, Manchester, M2 7HA',website:'https://www.clearrisksolutions.co.uk',email:'risk@clearrisksolutions.co.uk',tel:'0161 833 2290',cat:'Risk assessments',sub:'General workplace risk assessments',desc:'On-site workplace risk assessment service for offices, warehouses and mixed-use estates. IOSH and NEBOSH certified consultants. Includes detailed report, photographic evidence and prioritised action log.',price:58,period:'per_month',terms:'/terms/clearrisk-solutions',grid:'grid-risk-general'},
+  {id:'p39',name:'Axiom Health & Safety Ltd',address:'6 St Andrew\'s Hill, Norwich, NR2 1AD',website:'https://www.axiomhealthsafety.co.uk',email:'info@axiomhealthsafety.co.uk',tel:'01603 660 450',cat:'Risk assessments',sub:'General workplace risk assessments',desc:'Tailored workplace risk assessments for all sectors. Services include general premises assessment, hazardous substance surveys and ergonomic evaluations. All assessors hold NEBOSH General Certificate as a minimum.',price:720,period:'per_year',terms:'/terms/axiom-health-safety',grid:'grid-risk-general'},
+  {id:'p40',name:'PinnacleHS Ltd',address:'30 Colmore Row, Birmingham, B3 2QD',website:'https://www.pinnaclehs.co.uk',email:'consulting@pinnaclehs.co.uk',tel:'0121 212 5540',cat:'Risk assessments',sub:'General workplace risk assessments',desc:'Full-spectrum health and safety risk assessment service. Suitable for SMEs and large multi-site estates. Includes hazard identification, risk rating, control measure recommendations and staff briefing.',price:680,period:'per_year',terms:'/terms/pinnaclehs',grid:'grid-risk-general'},
+  // RISK — DSE
+  {id:'p41',name:'WorkWell DSE Ltd',address:'22 High Holborn, London, WC1V 7DE',website:'https://www.workwelldse.co.uk',email:'assessments@workwelldse.co.uk',tel:'020 7421 6630',cat:'Risk assessments',sub:'DSE assessments',desc:'Display Screen Equipment assessments for office and home-based workers. Compliant with DSE Regulations 1992. Includes individual workstation checklist, posture and lighting assessment and written recommendations report.',price:35,period:'per_month',terms:'/terms/workwell-dse',grid:'grid-risk-dse'},
+  {id:'p42',name:'ErgoCare Assessments Ltd',address:'14 Queens Road, Brighton, BN1 3WA',website:'https://www.ergocare-assessments.co.uk',email:'dse@ergocare-assessments.co.uk',tel:'01273 729 880',cat:'Risk assessments',sub:'DSE assessments',desc:'On-site and remote DSE assessments by qualified ergonomists. Covers standard workstations, laptops, hot desks and home office setups. Immediate equipment recommendations and follow-up support included.',price:390,period:'per_year',terms:'/terms/ergocare-assessments',grid:'grid-risk-dse'},
+  {id:'p43',name:'DeskFit Professional Ltd',address:'7 King Street, Edinburgh, EH2 3AH',website:'https://www.deskfitpro.co.uk',email:'bookings@deskfitpro.co.uk',tel:'0131 555 2240',cat:'Risk assessments',sub:'DSE assessments',desc:'Individual and group DSE assessments for office environments. Assessors hold NEBOSH and Chartered Ergonomist credentials. Covers equipment setup, seating, lighting, glare and task rotation. Full written report per employee.',price:420,period:'per_year',terms:'/terms/deskfit-professional',grid:'grid-risk-dse'},
+  {id:'p44',name:'ScreenSafe Occupational Health Ltd',address:'3 Broad Street, Bristol, BS1 2EL',website:'https://www.screensafeocc.co.uk',email:'service@screensafeocc.co.uk',tel:'0117 929 6650',cat:'Risk assessments',sub:'DSE assessments',desc:'DSE workstation assessment programme for employers with 10 to 1,000+ users. Includes self-assessment tool, assessor review, equipment specification report and compliance tracking dashboard.',price:45,period:'per_month',terms:'/terms/screensafe-occupational',grid:'grid-risk-dse'},
+  // RISK — safety audits
+  {id:'p45',name:'Vigilance Safety Ltd',address:'18 St James Boulevard, Newcastle upon Tyne, NE1 4AX',website:'https://www.vigilancesafety.co.uk',email:'audits@vigilancesafety.co.uk',tel:'0191 261 8800',cat:'Risk assessments',sub:'Workplace safety audits',desc:'Independent workplace safety audits covering management systems, documentation, training records and physical workplace conditions. Scored against HSE and ISO 45001 benchmarks. Improvement roadmap included.',price:850,period:'per_year',terms:'/terms/vigilance-safety',grid:'grid-risk-audit'},
+  {id:'p46',name:'TrueSafe Audit Services Ltd',address:'11 Market Street, Leeds, LS1 6DH',website:'https://www.truesafeaudit.co.uk',email:'info@truesafeaudit.co.uk',tel:'0113 245 7780',cat:'Risk assessments',sub:'Workplace safety audits',desc:'Structured safety management audits for all industry sectors. ISO 45001 gap analysis, HSE compliance checks and policy review included. Findings reported using a standardised scoring matrix with RAG status.',price:72,period:'per_month',terms:'/terms/truesafe-audit',grid:'grid-risk-audit'},
+  {id:'p47',name:'Safeguard FM Consultants Ltd',address:'25 Cannon Street, London, EC4M 5TA',website:'https://www.safeguardfm.co.uk',email:'audit@safeguardfm.co.uk',tel:'020 7626 3300',cat:'Risk assessments',sub:'Workplace safety audits',desc:'FM-specific workplace safety audits covering building fabric, M&E plant, contractor management and emergency procedures. Suitable for estates of 5 to 500+ buildings.',price:920,period:'per_year',terms:'/terms/safeguard-fm',grid:'grid-risk-audit'},
+  {id:'p48',name:'ProAudit Safety Ltd',address:'9 Waterloo Place, Edinburgh, EH1 3BG',website:'https://www.proauditsafety.co.uk',email:'team@proauditsafety.co.uk',tel:'0131 226 4410',cat:'Risk assessments',sub:'Workplace safety audits',desc:'Comprehensive workplace safety audits for public sector and corporate clients. Includes documentation review, site walk-through, worker consultation and board-level summary report. Follow-up audit at 6 months included.',price:880,period:'per_year',terms:'/terms/proaudit-safety',grid:'grid-risk-audit'},
+  // ELECTRICITY — PAT
+  {id:'p49',name:'PlugSafe Electrical Ltd',address:'3 Clifton Road, Bristol, BS8 1AF',website:'https://www.plugsafeelectrical.co.uk',email:'pat@plugsafeelectrical.co.uk',tel:'0117 973 6640',cat:'Electricity',sub:'PAT testing',desc:'Portable appliance testing for offices, schools and commercial premises. All appliances tested to IET Code of Practice. Pass/fail labels applied to all items. Full asset register and certificate issued.',price:180,period:'per_year',terms:'/terms/plugsafe-electrical',grid:'grid-elec-pat'},
+  {id:'p50',name:'VoltCheck Services Ltd',address:'27 London Road, Brighton, BN1 4JH',website:'https://www.voltcheckservices.co.uk',email:'bookings@voltcheckservices.co.uk',tel:'01273 841 200',cat:'Electricity',sub:'PAT testing',desc:'Annual PAT testing for up to 150 items per visit. NICEIC registered contractor. Detailed asset register provided with test results, retest dates and failed items highlighted.',price:15,period:'per_month',terms:'/terms/voltcheck-services',grid:'grid-elec-pat'},
+  {id:'p51',name:'CurrentSafe Compliance Ltd',address:'44 High Street, Swindon, SN1 3EP',website:'https://www.currentsafecompliance.co.uk',email:'service@currentsafecompliance.co.uk',tel:'01793 480 770',cat:'Electricity',sub:'PAT testing',desc:'Portable appliance testing with same-day labelling and digital report. Covers Class I and Class II appliances. NICEIC approved. All test data retained for 3 years on secure cloud platform.',price:200,period:'per_year',terms:'/terms/currentsafe-compliance',grid:'grid-elec-pat'},
+  {id:'p52',name:'EarthLine Testing Ltd',address:'6 Tollgate Road, Colchester, CO3 8AB',website:'https://www.earthlinetesting.co.uk',email:'info@earthlinetesting.co.uk',tel:'01206 591 100',cat:'Electricity',sub:'PAT testing',desc:'Portable appliance testing service for multi-site estates. Fixed price per item regardless of type. ECA member. Provides combined PAT and visual inspection report with recommended next test intervals.',price:165,period:'per_year',terms:'/terms/earthline-testing',grid:'grid-elec-pat'},
+  // ELECTRICITY — EICR
+  {id:'p53',name:'CableCheck Electrical Ltd',address:'10 Granby Street, Leicester, LE1 1DJ',website:'https://www.cablecheckelectrical.co.uk',email:'eicr@cablecheckelectrical.co.uk',tel:'0116 254 3300',cat:'Electricity',sub:'EICR inspections',desc:'Electrical Installation Condition Reports (EICR) for commercial premises in accordance with BS 7671 (18th Edition). NICEIC approved. Full inspection of distribution boards, wiring, earthing and bonding.',price:450,period:'per_year',terms:'/terms/cablecheck-electrical',grid:'grid-elec-eicr'},
+  {id:'p54',name:'WireWise Inspections Ltd',address:'15 Victoria Road, Bournemouth, BH1 4RG',website:'https://www.wirewiseinspections.co.uk',email:'survey@wirewiseinspections.co.uk',tel:'01202 291 440',cat:'Electricity',sub:'EICR inspections',desc:'Fixed and periodic wiring inspection and testing for offices and commercial buildings. All inspectors are City & Guilds 2391 qualified. EICR certificate issued within 5 working days.',price:38,period:'per_month',terms:'/terms/wirewise-inspections',grid:'grid-elec-eicr'},
+  {id:'p55',name:'PowerCheck Solutions Ltd',address:'8 Brunel Way, Slough, SL1 1XL',website:'https://www.powerchecksolutions.co.uk',email:'compliance@powerchecksolutions.co.uk',tel:'01753 521 880',cat:'Electricity',sub:'EICR inspections',desc:'Commercial EICR inspections carried out by NICEIC approved contractors. Full schedule of test results, observations and recommendations issued. Prioritised remedial works report provided.',price:490,period:'per_year',terms:'/terms/powercheck-solutions',grid:'grid-elec-eicr'},
+  {id:'p56',name:'CircuitAudit Ltd',address:'33 Kings Road, Windsor, SL4 2AQ',website:'https://www.circuitaudit.co.uk',email:'inspect@circuitaudit.co.uk',tel:'01753 860 110',cat:'Electricity',sub:'EICR inspections',desc:'Electrical installation condition reporting for single and multi-site clients. Findings classified C1, C2 and C3 per BS 7671. Digital report with photographic evidence. Reinspection intervals advised.',price:420,period:'per_year',terms:'/terms/circuitaudit',grid:'grid-elec-eicr'},
+  // ELECTRICITY — emergency lighting
+  {id:'p57',name:'SafeGlow Electrical Ltd',address:'5 Deansgate, Manchester, M3 2FF',website:'https://www.safeglow-electrical.co.uk',email:'emergency@safeglow-electrical.co.uk',tel:'0161 834 7700',cat:'Electricity',sub:'Emergency lighting electrical checks',desc:'Electrical testing of emergency lighting circuits, self-contained luminaires and central battery systems. Compliant with BS 5266 and BS 7671. NICEIC registered. Includes annual 3-hour functional test.',price:350,period:'per_year',terms:'/terms/safeglow-electrical',grid:'grid-elec-em'},
+  {id:'p58',name:'ExitCircuit Services Ltd',address:'19 Frederick Street, Edinburgh, EH2 2EY',website:'https://www.exitcircuit.co.uk',email:'testing@exitcircuit.co.uk',tel:'0131 225 9910',cat:'Electricity',sub:'Emergency lighting electrical checks',desc:'Periodic electrical inspection and testing of emergency lighting installations. Covers self-contained, slave and maintained luminaires. Fault finding and lamp replacement included in contract.',price:30,period:'per_month',terms:'/terms/exitcircuit-services',grid:'grid-elec-em'},
+  {id:'p59',name:'LitePath Compliance Ltd',address:'9 Charles Street, Cardiff, CF10 2GD',website:'https://www.litepathcompliance.co.uk',email:'info@litepathcompliance.co.uk',tel:'029 2039 6620',cat:'Electricity',sub:'Emergency lighting electrical checks',desc:'Emergency lighting electrical compliance service for commercial and public buildings. Annual inspections include circuit continuity testing, battery capacity checks and photometric measurement. ECA member.',price:370,period:'per_year',terms:'/terms/litepath-compliance',grid:'grid-elec-em'},
+  {id:'p60',name:'BrightCircuit Testing Ltd',address:'14 Union Street, Aberdeen, AB10 1BD',website:'https://www.brightcircuittesting.co.uk',email:'bookings@brightcircuittesting.co.uk',tel:'01224 630 440',cat:'Electricity',sub:'Emergency lighting electrical checks',desc:'Emergency lighting electrical testing across Scotland and Northern England. Full BS 5266-1 compliance programme. Covers luminaire testing, maintained signage checks and battery replacement.',price:340,period:'per_year',terms:'/terms/brightcircuit-testing',grid:'grid-elec-em'},
+];
+
+var TC_TEXT = 'These Terms and Conditions govern the provision of facilities management services arranged through the Agora FM platform.\n\n1. SERVICE ENGAGEMENT\nBy adding a service to your basket and completing checkout, you agree to engage the selected service provider on the terms stated. Agora FM acts as an intermediary marketplace only and is not a party to the contract between you and the provider.\n\n2. PRICING AND PAYMENT\nAll prices are shown exclusive of VAT unless otherwise stated. VAT at the current rate (20%) will be added at checkout. Payment is due within the provider\'s stated terms (30, 60 or 90 days from job completion). A 5% Agora FM commission is charged to the service provider — not to you as the customer.\n\n3. SERVICE DELIVERY\nService providers are responsible for delivering the contracted service to the standard described. All providers listed on Agora FM have been verified as holding the relevant accreditations and insurance at the time of listing.\n\n4. CANCELLATION\nYou may cancel a commissioned service before work commences without charge. Cancellation after commencement may be subject to a pro-rata charge as agreed with the provider.\n\n5. COMPLAINTS\nAny complaints regarding service quality should be raised with the provider in the first instance. Agora FM provides a dispute resolution service for unresolved complaints. Contact disputes@agorafm.co.uk.\n\n6. DATA PROTECTION\nYour personal and organisational data is processed in accordance with the Agora FM Privacy Policy and UK GDPR. Provider details are shared only as necessary to deliver the contracted service.\n\n7. LIMITATION OF LIABILITY\nAgora FM\'s liability in connection with any transaction shall not exceed the commission charged on that transaction. Agora FM is not liable for any failure by a provider to deliver services.\n\n8. GOVERNING LAW\nThese terms are governed by the laws of England and Wales.';
+
+// ── Basket state ───────────────────────────────────────────────────────────
+// Basket state managed by basket.js
+
+function fmtPrice(p, period) {
+  var s = '£' + p.toFixed(2);
+  return s + ' / ' + (period === 'per_month' ? 'month' : 'year');
+}
+function fmtMoney(n) { return '£' + n.toFixed(2); }
+
+// ── Render cards ───────────────────────────────────────────────────────────
+function renderCards() {
+  PROVIDERS.forEach(function(p) {
+    var grid = document.getElementById(p.grid);
+    if (!grid) return;
+    var card = document.createElement('div');
+    card.className = 'provider-card';
+    card.id = 'card-' + p.id;
+    card.innerHTML =
+      '<div class="provider-name">' + p.name + '</div>' +
+      '<div class="provider-address">📍 ' + p.address + '</div>' +
+      '<div class="provider-links">' +
+        '<a class="provider-link" href="' + p.website + '" target="_blank" rel="noopener">🌐 Website</a>' +
+        '<a class="provider-link" href="mailto:' + p.email + '">✉ ' + p.email + '</a>' +
+        '<a class="provider-link" href="tel:' + p.tel.replace(/\s/g,'') + '">📞 ' + p.tel + '</a>' +
+      '</div>' +
+      '<div class="provider-desc">' + p.desc + '</div>' +
+      '<div class="provider-footer">' +
+        '<div><div class="provider-price">' + fmtMoney(p.price) + '</div><div class="provider-period">' + (p.period === 'per_month' ? 'per month' : 'per year') + '</div></div>' +
+        '<div class="provider-actions">' +
+          '<button class="btn-tc" onclick="toggleTC(\'' + p.id + '\')">T&amp;Cs</button>' +
+          '<button class="btn-basket" id="btn-' + p.id + '" onclick="addToBasket(\'' + p.id + '\')" disabled>🛒 Add to Basket</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tc-panel" id="tc-' + p.id + '">' +
+        '<div class="tc-panel-title">Terms &amp; Conditions — ' + p.name + '</div>' +
+        '<div class="tc-text">' + TC_TEXT.replace(/\n/g,'<br>') + '</div>' +
+        '<label class="tc-accept"><input type="checkbox" onchange="tcChanged(\'' + p.id + '\',this)"> I have read and accept these Terms &amp; Conditions</label>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function toggleTC(id) {
+  var panel = document.getElementById('tc-' + id);
+  panel.classList.toggle('open');
+}
+
+function tcChanged(id, cb) {
+  var btn = document.getElementById('btn-' + id);
+  btn.disabled = !cb.checked;
+}
+
+function addToBasket(id) {
+  var p = PROVIDERS.find(function(x){ return x.id === id; });
+  if (!p) return;
+  // Use the shared AgoraBasket (nav dropdown) from basket.js
+  AgoraBasket.add({
+    id:           p.id,
+    name:         p.name,
+    supplierName: p.sub,
+    price:        p.price,
+    unit:         p.period === 'per_month' ? 'per month' : 'per year',
+    category:     p.cat
+  });
+  // Update the button state locally
+  var btn = document.getElementById('btn-' + id);
+  if (btn) {
+    btn.textContent = '✓ Added';
+    btn.disabled = true;
+    btn.style.background = 'rgba(92,184,92,0.15)';
+    btn.style.borderColor = 'rgba(92,184,92,0.4)';
+    btn.style.color = '#5cb85c';
+  }
+}
+
+function showCategory(id, btn) {
+  document.querySelectorAll('.category-section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.cat-nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('cat-' + id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: document.querySelector('.catalogue-body').offsetTop - 60, behavior:'smooth'});
+}
+
+// ── Search ─────────────────────────────────────────────────────────────────
+function filterProviders(q) {
+  q = q.toLowerCase().trim();
+  PROVIDERS.forEach(function(p) {
+    var card = document.getElementById('card-' + p.id);
+    if (!card) return;
+    var match = !q ||
+      p.name.toLowerCase().includes(q) ||
+      p.address.toLowerCase().includes(q) ||
+      p.sub.toLowerCase().includes(q) ||
+      p.cat.toLowerCase().includes(q) ||
+      p.desc.toLowerCase().includes(q);
+    card.style.display = match ? '' : 'none';
+  });
+  // Show all category sections when searching
+  if (q) {
+    document.querySelectorAll('.category-section').forEach(function(s){ s.classList.add('active'); });
+    document.querySelectorAll('.cat-nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  } else {
+    document.querySelectorAll('.category-section').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById('cat-fire').classList.add('active');
+    document.querySelector('.cat-nav-btn').classList.add('active');
+  }
+}
+
+// ── Checkout ───────────────────────────────────────────────────────────────
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  renderCards();
+  renderBasket();
+});
+</script>
+</body>
+</html>

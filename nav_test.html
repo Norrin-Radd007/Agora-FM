@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Click Test</title>
+<link rel="stylesheet" href="agora_fm.css">
+<script src="db.js"></script>
+<script src="nav-auth.js"></script>
+<script src="basket.js"></script>
+</head>
+<body style="padding:40px;background:#0A1A2F;">
+
+<h2 style="color:#F18F01;font-family:sans-serif;">Provider Navigation Test</h2>
+<p style="color:#E3E5E8;font-family:sans-serif;margin-bottom:20px;">
+  Click any button below. If navigation works, you will go to provider_profile.html
+</p>
+
+<div style="display:flex;flex-direction:column;gap:12px;max-width:400px;">
+  <button onclick="window.location.href='provider_profile.html?provider=sup_001'"
+    style="padding:14px;background:#F18F01;border:none;border-radius:2px;color:#0A1A2F;font-size:1rem;cursor:pointer;font-family:sans-serif;font-weight:bold;">
+    Direct button → Apollo Fire (sup_001)
+  </button>
+  
+  <button onclick="go('sup_001')"
+    style="padding:14px;background:#3E6B89;border:none;border-radius:2px;color:#E3E5E8;font-size:1rem;cursor:pointer;font-family:sans-serif;">
+    Via function → Apollo Fire (sup_001)
+  </button>
+
+  <a href="provider_profile.html?provider=sup_001" 
+    style="padding:14px;background:#112240;border:1px solid #F18F01;border-radius:2px;color:#F18F01;font-size:1rem;font-family:sans-serif;text-decoration:none;text-align:center;">
+    Anchor tag → Apollo Fire (sup_001)
+  </a>
+  
+  <div id="card-test" 
+    style="padding:20px;background:#112240;border:1px solid #3E6B89;border-radius:4px;cursor:pointer;color:#E3E5E8;font-family:sans-serif;"
+    onclick="go('sup_002')">
+    Click this div → AquaSafe (sup_002)
+    <div style="font-size:0.8rem;color:#5589A8;margin-top:4px;">This simulates a card click</div>
+  </div>
+</div>
+
+<div id="log" style="margin-top:30px;padding:16px;background:#112240;border:1px solid #3E6B89;border-radius:4px;color:#E3E5E8;font-family:monospace;font-size:0.85rem;">
+  Log: waiting for click...
+</div>
+
+<script>
+function go(supplierId) {
+  document.getElementById('log').innerHTML = 'Navigating to: provider_profile.html?provider=' + supplierId;
+  setTimeout(function() {
+    window.location.href = 'provider_profile.html?provider=' + supplierId;
+  }, 500);
+}
+
+document.getElementById('card-test').addEventListener('click', function() {
+  document.getElementById('log').innerHTML += '<br>addEventListener fired!';
+});
+</script>
+</body>
+</html>

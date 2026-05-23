@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agora FM — List Your Business</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="agora_fm.css">
+  <script>
+/**
+ * AGORA FM — API Client (db.js)
+ * Talks to Flask backend instead of LocalStorage.
+ * All async methods return Promises.
+ */
+var AgoraDB = (function () {
+
+  async function api(method, path, body) {
+    try {
+      var opts = { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      var res = await fetch(path, opts);
+      return await res.json();
+    } catch(e) {
+      console.error('[AgoraDB]', path, e.message);
+      return { ok: false, error: 'Cannot reach server. Is app.py running?' };
+    }
+  }
+
+  var auth = {
+    login:      function(email, password) { return api('POST', '/api/auth/login', {email, password}); },
+    logout:     async function() { await api('POST', '/api/auth/logout'); window.location.href = 'index.html'; },
+    getSession: function() { return api('GET', '/api/auth/session'); },
+    isLoggedIn: async function() { var s = await api('GET', '/api/auth/session'); return !!(s && s.loggedIn); },
+    _session:   null,
+    getCachedSession: function() { return AgoraDB.auth._session || {}; }
+  };
+
+  var customers = {
+    create: function(d) { return api('POST', '/api/customers/register', d); }
+  };
+
+  var suppliers = {
+    create: function(d) { return api('POST', '/api/suppliers/register', d); },
+    getAll: function()  { return api('GET',  '/api/suppliers'); },
+    getById: function(id) { return api('GET', '/api/suppliers/' + id); }
+  };
+
+  var basket = {
+    get:        function()      { return api('GET',    '/api/basket'); },
+    addItem:    function(item)  { return api('POST',   '/api/basket/add', item); },
+    removeItem: function(id)    { return api('DELETE', '/api/basket/item/' + id); },
+    updateQty:  function(id, q) { return api('PUT',    '/api/basket/qty', {id, qty: q}); },
+    clear:      function()      { return api('POST',   '/api/basket/clear'); },
+    getCount:   async function() { var b = await basket.get(); return (b.items||[]).length; },
+    getTotals:  async function() { var b = await basket.get(); return {subtotal:b.subtotal||0, vat:b.vat||0, commission:b.commission||0, total:b.total||0}; }
+  };
+
+  var orders = {
+    create: function(d)   { return api('POST', '/api/orders', d); },
+    getAll: function()    { return api('GET',  '/api/orders'); },
+    getPdf: function(oid) { window.open('/api/orders/' + oid + '/pdf', '_blank'); }
+  };
+
+  var admin = {
+    dump:  function() { return api('GET',  '/api/admin/dump'); },
+    reset: function() { return api('POST', '/api/admin/reset'); }
+  };
+
+  // Pre-cache session on load
+  api('GET', '/api/auth/session').then(function(s) {
+    AgoraDB.auth._session = s;
+  }).catch(function() {
+    AgoraDB.auth._session = { loggedIn: false };
+  });
+
+  return { auth, customers, suppliers, basket, orders, admin,
+           COMMISSION_RATE: 0.05, VAT_RATE: 0.20 };
+})();
+window.AgoraDB = AgoraDB;
+
+</script>
+  <script>
+/**
+ * AGORA FM — Nav Auth + Basket Badge (nav-auth.js)
+ * Async-aware version for Flask backend.
+ */
+(function () {
+
+  async function updateNav() {
+    var s = await AgoraDB.auth.getSession();
+    AgoraDB.auth._session = s;
+    var loginBtn = document.querySelector('.btn-nav-login');
+    var regBtn   = document.querySelector('.btn-nav-reg');
+    if (s && s.loggedIn) {
+      if (loginBtn) {
+        loginBtn.textContent = 'Sign Out';
+        loginBtn.href = '#';
+        loginBtn.onclick = function(e) { e.preventDefault(); AgoraDB.auth.logout(); };
+      }
+      if (regBtn) {
+        regBtn.textContent = s.type === 'supplier' ? 'My Dashboard' : 'My Dashboard';
+        regBtn.href = s.type === 'supplier' ? 'supplier_dashboard.html' : 'dashboard.html';
+        regBtn.onclick = null;
+      }
+    }
+  }
+
+  async function updateBasketBadge() {
+    // Badge is now managed by basket.js — just trigger a refresh if available
+    if (window.AgoraBasket && typeof AgoraBasket.refresh === 'function') {
+      AgoraBasket.refresh();
+    }
+  }
+
+  function injectAdminLink() {
+    var footer = document.querySelector('.footer-bottom');
+    if (!footer || document.getElementById('admin-db-link')) return;
+    var link = document.createElement('a');
+    link.id = 'admin-db-link';
+    link.href = '#';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.textContent = '⚙ View DB';
+    link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
+    footer.appendChild(link);
+  }
+
+  async function showAdminPanel() {
+    var existing = document.getElementById('admin-panel-overlay');
+    if (existing) { existing.remove(); return; }
+    var data = await AgoraDB.admin.dump();
+    var overlay = document.createElement('div');
+    overlay.id = 'admin-panel-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    var fmt = function(n){ return '£' + (n||0).toFixed(2); };
+    var html = '<div style="max-width:1000px;margin:0 auto;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;gap:12px;">';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '</div></div>';
+
+    if (data.stats) {
+      html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;">';
+      [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
+       ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
+       ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
+        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    function section(title, obj) {
+      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+             JSON.stringify(obj, null, 2) + '</pre>';
+    }
+    html += section('Session', data.session);
+    html += section('Basket', data.basket);
+    html += section('Customers (' + (data.customers||[]).length + ')', data.customers);
+    html += section('Suppliers (' + (data.suppliers||[]).length + ')', data.suppliers);
+    html += section('Orders (' + (data.orders||[]).length + ')', data.orders);
+    html += '</div>';
+    overlay.innerHTML = html;
+    document.body.appendChild(overlay);
+  }
+
+  async function init() {
+    await updateNav();
+    await updateBasketBadge();
+    injectAdminLink();
+  }
+
+  window.AgoraNavUpdate = async function() { await updateBasketBadge(); };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+  <style>
+    .hero{position:relative;z-index:1;padding:70px 80px 50px;display:grid;grid-template-columns:1fr 380px;gap:60px;align-items:center;border-bottom:1px solid var(--border-faint);}
+    .hero-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .hstat{background:rgba(17,34,64,0.7);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);padding:20px 18px;position:relative;overflow:hidden;}
+    .hstat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),transparent);}
+    .hstat:nth-child(2n)::before{background:linear-gradient(90deg,var(--steel),transparent);}
+    .hstat-num{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;color:var(--grey);line-height:1;}
+    .hstat-label{font-size:0.7rem;color:rgba(227,229,232,0.45);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+    .commission-bar{background:rgba(241,143,1,0.06);border:1px solid rgba(241,143,1,0.2);border-radius:var(--radius);padding:20px 28px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+    .comm-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--orange);letter-spacing:2px;line-height:1;flex-shrink:0;}
+    .comm-text h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;}
+    .comm-text p{font-size:0.82rem;color:var(--grey-dim);font-weight:300;line-height:1.5;max-width:600px;}
+    .benefits-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+    .benefit-card{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);padding:26px 22px;transition:all 0.25s;}
+    .benefit-card:hover{border-color:rgba(241,143,1,0.3);transform:translateY(-2px);}
+    .benefit-icon{width:38px;height:38px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:14px;}
+    .benefit-card h3{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey);margin-bottom:8px;}
+    .benefit-card p{font-size:0.8rem;color:var(--grey-dim);line-height:1.6;font-weight:300;}
+    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(62,107,137,0.15);border:1px solid rgba(62,107,137,0.15);}
+    .step{background:var(--navy);padding:28px 24px;position:relative;transition:background 0.25s;}
+    .step:hover{background:rgba(17,34,64,0.9);}
+    .step-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(241,143,1,0.12);line-height:1;margin-bottom:12px;}
+    .step-icon{font-size:1.4rem;margin-bottom:12px;}
+    .step h3{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);margin-bottom:6px;}
+    .step p{font-size:0.78rem;color:var(--grey-dim);line-height:1.6;font-weight:300;}
+    .step::after{content:'';position:absolute;top:0;left:0;width:2px;height:0;background:var(--orange);transition:height 0.3s;}
+    .step:hover::after{height:100%;}
+    .reg-section{position:relative;z-index:1;padding:70px 80px;background:rgba(11,22,44,0.5);}
+    .reg-grid{display:grid;grid-template-columns:1fr 360px;gap:48px;align-items:start;}
+    .form-panel{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);padding:40px 36px;border-radius:var(--radius);}
+    .form-step-label{font-size:0.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:600;margin-bottom:6px;}
+    .form-main-title{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:1px;color:var(--grey);margin-bottom:24px;}
+    .form-divider{height:1px;background:rgba(62,107,137,0.15);margin:28px 0 24px;}
+    /* Category tabs */
+    .cat-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+    .cat-tab{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--steel-light);cursor:pointer;transition:all 0.2s;}
+    .cat-tab:hover{border-color:var(--steel);color:var(--grey);}
+    .cat-tab.active{border-color:var(--orange);background:rgba(241,143,1,0.1);color:var(--orange);}
+    .cat-panel{display:none;}
+    .cat-panel.active{display:block;}
+    .cat-panel-title{font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);margin-bottom:12px;}
+    /* Service checkboxes */
+    .svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:4px;}
+    .svc-box{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(62,107,137,0.18);border-radius:var(--radius);cursor:pointer;transition:all 0.15s;font-size:0.75rem;color:rgba(227,229,232,0.6);}
+    .svc-box:hover{border-color:rgba(241,143,1,0.3);background:rgba(241,143,1,0.04);color:var(--grey);}
+    .svc-box input[type=checkbox]{appearance:none;width:13px;height:13px;border:1px solid rgba(62,107,137,0.5);border-radius:var(--radius);background:transparent;cursor:pointer;position:relative;flex-shrink:0;transition:all 0.15s;}
+    .svc-box input:checked{background:var(--orange);border-color:var(--orange);}
+    .svc-box input:checked::after{content:'✓';position:absolute;top:-2px;left:1px;font-size:10px;color:var(--navy);font-weight:bold;}
+    /* Accreditation checkboxes */
+    .check-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+    .check-box{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid rgba(62,107,137,0.18);border-radius:var(--radius);cursor:pointer;transition:all 0.15s;font-size:0.75rem;color:rgba(227,229,232,0.6);}
+    .check-box:hover{border-color:rgba(241,143,1,0.3);background:rgba(241,143,1,0.04);color:var(--grey);}
+    .check-box input[type=checkbox]{appearance:none;width:13px;height:13px;border:1px solid rgba(62,107,137,0.5);border-radius:var(--radius);background:transparent;cursor:pointer;position:relative;flex-shrink:0;transition:all 0.15s;}
+    .check-box input:checked{background:var(--orange);border-color:var(--orange);}
+    .check-box input:checked::after{content:'✓';position:absolute;top:-2px;left:1px;font-size:10px;color:var(--navy);font-weight:bold;}
+    /* Pricing options */
+    .pricing-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+    .pricing-opt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1px solid rgba(62,107,137,0.25);border-radius:var(--radius);cursor:pointer;transition:all 0.2s;text-align:center;}
+    .pricing-opt.selected{border-color:rgba(241,143,1,0.5);background:rgba(241,143,1,0.06);}
+    .pricing-opt input[type=radio]{display:none;}
+    .pricing-opt-icon{font-size:1.2rem;}
+    .pricing-opt-label{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey);}
+    .pricing-opt-desc{font-size:0.68rem;color:var(--grey-dim);font-weight:300;line-height:1.4;}
+    /* T&Cs modal */
+    .tc-modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,26,47,0.92);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+    .tc-modal-overlay.show{display:flex;}
+    .tc-modal{background:#0D2040;border:1px solid rgba(62,107,137,0.4);border-radius:var(--radius);max-width:720px;width:100%;max-height:80vh;display:flex;flex-direction:column;}
+    .tc-modal-header{padding:20px 24px;border-bottom:1px solid rgba(62,107,137,0.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .tc-modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--grey);}
+    .tc-modal-close{background:none;border:none;color:var(--grey-dim);font-size:1.2rem;cursor:pointer;padding:4px 8px;}
+    .tc-modal-close:hover{color:var(--orange);}
+    .tc-modal-body{padding:24px;overflow-y:auto;flex:1;}
+    .tc-modal-body h3{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin:20px 0 8px;}
+    .tc-modal-body h3:first-child{margin-top:0;}
+    .tc-modal-body p,.tc-modal-body li{font-size:0.8rem;color:var(--grey-dim);line-height:1.7;font-weight:300;}
+    .tc-modal-body ul{padding-left:18px;margin-bottom:8px;}
+    .tc-modal-footer{padding:16px 24px;border-top:1px solid rgba(62,107,137,0.2);display:flex;gap:12px;justify-content:flex-end;flex-shrink:0;}
+    /* Form elements */
+    .form-submit{width:100%;padding:15px;background:var(--orange);border:none;border-radius:var(--radius);color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.92rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+    .form-submit:hover{background:var(--orange-hover);box-shadow:0 8px 28px rgba(241,143,1,0.35);transform:translateY(-1px);}
+    .success-banner{display:none;background:rgba(2,122,72,0.12);border:1px solid rgba(108,233,166,0.3);border-radius:var(--radius);padding:14px 18px;align-items:center;gap:12px;margin-bottom:20px;}
+    .success-banner.show{display:flex;}
+    .success-icon-circle{width:28px;height:28px;border-radius:50%;background:#027A48;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .success-title{font-size:0.9rem;font-weight:600;color:#6CE9A6;}
+    .success-sub{font-size:0.8rem;color:rgba(108,233,166,0.7);margin-top:2px;}
+    /* Login sidebar */
+    .login-panel{background:rgba(17,34,64,0.4);border:1px solid rgba(62,107,137,0.18);padding:32px 28px;border-radius:var(--radius);position:sticky;top:90px;}
+    .login-label{font-size:0.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+    .login-label::after{content:'';flex:1;height:1px;background:rgba(241,143,1,0.25);}
+    .login-title{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:2px;margin-bottom:4px;}
+    .login-sub{font-size:0.78rem;color:var(--grey-dim);margin-bottom:24px;font-weight:300;}
+    .info-box{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.18);border-radius:var(--radius);padding:20px;margin-top:14px;}
+    .info-box-title{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:12px;}
+    .info-item{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+    .info-item:last-child{margin-bottom:0;}
+    .info-check{color:var(--orange);font-size:0.75rem;flex-shrink:0;margin-top:1px;}
+    .info-text{font-size:0.78rem;color:var(--grey-dim);line-height:1.5;font-weight:300;}
+    .tc-link{color:var(--orange);cursor:pointer;text-decoration:underline;font-size:0.78rem;}
+    .tc-link:hover{color:var(--orange-hover);}
+    @media(max-width:1024px){.hero{padding:50px 40px;grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.benefits-grid{grid-template-columns:1fr 1fr}.reg-grid{grid-template-columns:1fr}.login-panel{position:static}.reg-section{padding:50px 40px}.check-grid{grid-template-columns:1fr 1fr}.svc-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:600px){.hero{padding:32px 20px}.steps{grid-template-columns:1fr}.benefits-grid{grid-template-columns:1fr}.form-panel{padding:24px 18px}.reg-section{padding:32px 20px}.check-grid{grid-template-columns:1fr 1fr}.svc-grid{grid-template-columns:1fr}.pricing-opts{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo"><span class="logo-text">AGORA<span class="logo-accent">FM</span></span><span class="logo-dot"></span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="service_providers.html">Services <span class="nav-chevron">▼</span></a>
+      <div class="nav-dropdown"><div class="dropdown-head">FM Categories</div><a href="service_providers.html">Fire Protection</a><a href="service_providers.html">Water Services</a><a href="service_providers.html">Electrical Services</a><a href="service_providers.html">Gas Services</a><a href="service_providers.html">HVAC</a><a href="service_providers.html">Lifts &amp; Lifting</a><a href="service_providers.html">Doors &amp; Access</a><a href="service_providers.html">Risk Assessments</a></div>
+    </li>
+    <li><a href="service_providers.html">Providers</a></li>
+    <li><a href="#">Benchmarks</a></li>
+    <li><a href="#">Analytics</a></li>
+    <li><a href="supplier_registration.html" class="active">List Your Business</a></li>
+  </ul>
+  <div class="nav-search"><div class="search-wrap"><input type="text" placeholder="Search services, providers…" id="navSearch"/><button onclick="handleSearch()">⌕</button></div></div>
+  <div class="nav-cta"><a href="registration.html" class="btn-nav-login">Customer Login</a><a href="#reg-form" class="btn-nav-reg">List Free</a></div>
+  <span class="nav-badge">Platform v3.0</span>
+</nav>
+
+<!-- TICKER -->
+<div class="site-ticker"><div class="ticker-label">Live Market</div><div class="ticker-track">
+  <span class="ticker-item">3,800+ verified providers listed</span>
+  <span class="ticker-item">Average enquiry value — £4,200 per contract</span>
+  <span class="ticker-item">New enquiries posted daily across 47 categories</span>
+  <span class="ticker-item">5% commission — only on completed jobs</span>
+  <span class="ticker-item">CHAS · SafeContractor · NICEIC · Gas Safe all accepted</span>
+  <span class="ticker-item">Payments within 30, 60 or 90 days</span>
+  <span class="ticker-item">3,800+ verified providers listed</span>
+  <span class="ticker-item">Average enquiry value — £4,200 per contract</span>
+  <span class="ticker-item">New enquiries posted daily across 47 categories</span>
+  <span class="ticker-item">5% commission — only on completed jobs</span>
+  <span class="ticker-item">CHAS · SafeContractor · NICEIC · Gas Safe all accepted</span>
+  <span class="ticker-item">Payments within 30, 60 or 90 days</span>
+</div></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-eyebrow"><span class="eyebrow-line"></span><span class="eyebrow-text">FM Service Provider Portal</span></div>
+    <h1>Grow Your FM<br><span>Business</span><em>Here.</em></h1>
+    <p class="hero-sub">List your services on the UK's most advanced FM platform. Get discovered by estates managers, FM directors, and procurement leads across 3,800+ organisations — at zero upfront cost.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <a href="#reg-form" class="btn-primary">List Your Business Free →</a>
+      <a href="service_providers.html" class="btn-secondary">See How We List Providers</a>
+    </div>
+  </div>
+  <div class="hero-stats-grid">
+    <div class="hstat"><div class="hstat-num">£2.4B</div><div class="hstat-label">Contracts Benchmarked</div></div>
+    <div class="hstat"><div class="hstat-num">47</div><div class="hstat-label">FM Categories</div></div>
+    <div class="hstat"><div class="hstat-num">5%</div><div class="hstat-label">Commission Only</div></div>
+    <div class="hstat"><div class="hstat-num">98.6%</div><div class="hstat-label">Client Satisfaction</div></div>
+  </div>
+</section>
+
+<!-- COMMISSION BAR -->
+<section class="section z1" style="padding:40px 80px;">
+  <div class="commission-bar">
+    <div class="comm-num">5%</div>
+    <div class="comm-text">
+      <h3>No Upfront Cost. Ever.</h3>
+      <p>Listing on Agora FM is completely free. We charge a <strong style="color:var(--orange);">5% commission</strong> only when a job is completed and payment is received. No monthly fees, no subscription, no risk.</p>
+    </div>
+    <a href="#reg-form" class="btn-primary" style="flex-shrink:0;white-space:nowrap;">List Free →</a>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- BENEFITS -->
+<section class="section z1">
+  <div class="section-eyebrow"><span class="eyebrow-line"></span><span class="eyebrow-text">Why List on Agora FM</span></div>
+  <h2>Win More FM Contracts</h2>
+  <p class="section-sub">Built specifically for FM service providers who want qualified leads from serious buyers.</p>
+  <div class="benefits-grid">
+    <div class="benefit-card"><div class="benefit-icon">🎯</div><h3>Qualified Enquiries</h3><p>Every customer is a verified estate manager or FM director with a real budget and a genuine requirement.</p></div>
+    <div class="benefit-card"><div class="benefit-icon">📊</div><h3>Market Rate Visibility</h3><p>Your pricing is benchmarked against live market rates — helping you position competitively and win more tenders.</p></div>
+    <div class="benefit-card"><div class="benefit-icon">🏆</div><h3>Accreditation Showcase</h3><p>Display CHAS, SafeContractor, Gas Safe, NICEIC, BAFE credentials prominently on your provider profile.</p></div>
+    <div class="benefit-card"><div class="benefit-icon">📄</div><h3>Instant PO Generation</h3><p>Customers raise and e-sign purchase orders directly on the platform — reducing admin and accelerating payment.</p></div>
+    <div class="benefit-card"><div class="benefit-icon">⭐</div><h3>Verified Reviews</h3><p>Build your reputation with verified reviews from real FM clients. High ratings drive more enquiries.</p></div>
+    <div class="benefit-card"><div class="benefit-icon">📈</div><h3>Performance Dashboard</h3><p>Track enquiries, contracts won, revenue earned, and commission statements from your supplier dashboard.</p></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- HOW IT WORKS -->
+<section class="section z1">
+  <div class="section-eyebrow"><span class="eyebrow-line"></span><span class="eyebrow-text">Onboarding Process</span></div>
+  <h2>Up and Running in Under 10 Minutes</h2>
+  <p class="section-sub">Complete your profile once. Start receiving qualified enquiries immediately.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">01</div><div class="step-icon">📋</div><h3>Register</h3><p>Complete your company profile, select the FM services you supply, upload accreditation details and set your pricing.</p></div>
+    <div class="step"><div class="step-num">02</div><div class="step-icon">✅</div><h3>Verification</h3><p>Our team verifies your accreditations and insurance within 24 hours. Your profile then goes live on the platform.</p></div>
+    <div class="step"><div class="step-num">03</div><div class="step-icon">📬</div><h3>Receive Enquiries</h3><p>Qualified enquiries and POs from estate managers land directly in your supplier dashboard.</p></div>
+    <div class="step"><div class="step-num">04</div><div class="step-icon">💷</div><h3>Get Paid</h3><p>Complete the job. Payment is released minus the 5% Agora FM commission within your agreed payment terms.</p></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- REGISTRATION FORM -->
+<div class="reg-section" id="reg-form">
+  <div class="section-eyebrow" style="margin-bottom:10px;position:relative;z-index:1;"><span class="eyebrow-line"></span><span class="eyebrow-text">Supplier Registration</span></div>
+  <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;margin-bottom:8px;position:relative;z-index:1;">List Your Business</h2>
+  <p style="font-size:0.88rem;color:var(--grey-dim);margin-bottom:36px;font-weight:300;position:relative;z-index:1;">Complete the form below. Takes under 10 minutes. We verify your profile within 24 hours.</p>
+
+  <div id="successBanner" class="success-banner">
+    <div class="success-icon-circle"><span style="color:#fff;font-size:0.8rem;">✓</span></div>
+    <div><div class="success-title" id="successTitle"></div><div class="success-sub" id="successSub"></div></div>
+  </div>
+
+  <div class="reg-grid">
+    <!-- FORM -->
+    <div class="form-panel">
+
+      <!-- STEP 1: Company Details -->
+      <div class="form-step-label">Step 1 of 4 — Company Details</div>
+      <div class="form-main-title">Your Business</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Company Name *</label><input class="form-input" id="companyName" type="text" placeholder="Apollo Fire Technicians Ltd"/></div>
+        <div class="form-group"><label class="form-label">Company Registration No. *</label><input class="form-input" id="companyReg" type="text" placeholder="12345678"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">VAT Number</label><input class="form-input" id="vatNumber" type="text" placeholder="GB 123 4567 89"/></div>
+        <div class="form-group"><label class="form-label">Year Established</label><input class="form-input" id="yearEst" type="text" placeholder="e.g. 2005"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Registered Address *</label><input class="form-input" id="regAddress" type="text" placeholder="Registered business address"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Main Telephone *</label><input class="form-input" id="mainTel" type="tel" placeholder="+44 20 0000 0000"/></div>
+        <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="website" type="url" placeholder="https://yourcompany.co.uk"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Company Description *</label><textarea class="form-textarea" id="companyDesc" placeholder="Describe your company, areas of expertise, and what sets you apart from competitors…" style="min-height:80px;"></textarea></div>
+
+      <div class="form-divider"></div>
+
+      <!-- STEP 2: Key Contact -->
+      <div class="form-step-label" style="margin-bottom:6px;">Step 2 of 4 — Key Contact</div>
+      <div style="font-size:0.78rem;color:var(--grey-dim);margin-bottom:18px;font-weight:300;">The person responsible for managing your Agora FM account and receiving enquiries.</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="contactFirst" type="text" placeholder="First name"/></div>
+        <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="contactLast" type="text" placeholder="Last name"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Job Title *</label><input class="form-input" id="contactRole" type="text" placeholder="e.g. Operations Director"/></div>
+        <div class="form-group"><label class="form-label">Direct Email *</label><input class="form-input" id="contactEmail" type="email" placeholder="you@yourcompany.co.uk"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Direct Mobile *</label><input class="form-input" id="contactMobile" type="tel" placeholder="+44 7700 000000"/></div>
+        <div class="form-group"><label class="form-label">Enquiries Email</label><input class="form-input" id="enquiriesEmail" type="email" placeholder="enquiries@yourcompany.co.uk"/></div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- STEP 3: Services Supplied & Accreditations -->
+      <div class="form-step-label" style="margin-bottom:6px;">Step 3 of 4 — Services Supplied &amp; Accreditations</div>
+      <div style="font-size:0.78rem;color:var(--grey-dim);margin-bottom:16px;font-weight:300;">Select every FM service your company supplies. Tick all that apply — this determines where you appear in customer searches.</div>
+
+      <!-- Service category tabs -->
+      <label class="form-label" style="margin-bottom:10px;">FM Services You Supply *</label>
+      <div class="cat-tabs">
+        <button class="cat-tab active" onclick="switchCat(this,'cat-fire')">🔥 Fire</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-water')">💧 Water</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-electric')">⚡ Electricity</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-gas')">🔵 Gas</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-hvac')">🌡 HVAC</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-lifts')">🛗 Lifts</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-doors')">🚪 Doors</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-risk')">📋 Risk</button>
+        <button class="cat-tab" onclick="switchCat(this,'cat-pressure')">⚙️ Pressure</button>
+      </div>
+
+      <div class="cat-panel active" id="cat-fire">
+        <div class="cat-panel-title">Fire Protection Services</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fire Alarm Maintenance"> Fire Alarm Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fire Extinguisher Maintenance"> Fire Extinguisher Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fire Door Inspection"> Fire Door Inspection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fire Curtain Maintenance"> Fire Curtain Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Sprinkler System Maintenance"> Sprinkler System Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fire Suppression (Ansul)"> Fire Suppression (Ansul)</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="VESDA System Maintenance"> VESDA System Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Wet Risers"> Wet Risers</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Staircase Extract (Colt)"> Staircase Extract (Colt)</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Ductwork Dampers"> Ductwork Dampers</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Gas Detection Service"> Gas Detection Service</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Area Integrity Test"> Area Integrity Test</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-water">
+        <div class="cat-panel-title">Water Services</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Legionella Testing (L8)"> Legionella Testing (L8)</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Cooling Tower Chlorination"> Cooling Tower Chlorination</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Cooling Tower Maintenance"> Cooling Tower Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Water Tank Chlorination"> Water Tank Chlorination</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="RPZ Valve Maintenance"> RPZ Valve Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Closed System Treatment"> Closed System Treatment (L8)</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Water Risk Assessment"> Water Risk Assessment</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Hot & Cold Water Sampling"> Hot &amp; Cold Water Sampling</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Window Deluge System"> Window Deluge System</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-electric">
+        <div class="cat-panel-title">Electrical Services</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fixed Wire Testing"> Fixed Wire Testing</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="PAT Testing"> PAT Testing</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Emergency Lighting Service"> Emergency Lighting Service</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Generator Maintenance"> Generator Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="UPS Maintenance"> UPS Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Lightning Protection"> Lightning Protection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="LV Switchboard Thermographic"> LV Switchboard Thermographic</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="HV Live Inspection"> HV Live Inspection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fuel & Oil Sampling"> Fuel &amp; Oil Sampling</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-gas">
+        <div class="cat-panel-title">Gas Services</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Boiler Servicing"> Boiler Servicing</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Boiler Flue Inspection"> Boiler Flue Inspection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Gas Pipework Pressure Test"> Gas Pipework Pressure Test</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Kitchen Equipment Gas Service"> Kitchen Equipment Gas Service</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Gas Water Heaters"> Gas Water Heaters</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Gas Safety Inspection"> Gas Safety Inspection</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-hvac">
+        <div class="cat-panel-title">HVAC Services</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="AHU Maintenance"> AHU Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fan Coil Maintenance"> Fan Coil Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Air Conditioning Service"> Air Conditioning Service</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Ductwork Cleaning"> Ductwork Cleaning</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Duct Hygiene Samples"> Duct Hygiene Samples</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Chiller Maintenance"> Chiller Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Kitchen Deep Clean"> Kitchen Deep Clean</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Heat Pump Maintenance"> Heat Pump Maintenance</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-lifts">
+        <div class="cat-panel-title">Lifts &amp; Lifting Equipment</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Passenger Lift Maintenance"> Passenger Lift Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="LOLER Inspections"> LOLER Inspections</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Goods Lift Maintenance"> Goods Lift Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="BMU Servicing"> BMU Servicing</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Escalator Maintenance"> Escalator Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Stairlift Maintenance"> Stairlift Maintenance</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Genie Lifts"> Genie Lifts</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Pallet Trucks"> Pallet Trucks</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-doors">
+        <div class="cat-panel-title">Doors &amp; Access Control</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Loading Bay Doors"> Loading Bay Doors</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Roller Shutters"> Roller Shutters</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Automatic Gates"> Automatic Gates</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Disabled Access Doors"> Disabled Access Doors</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Automatic Doors"> Automatic Doors</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Access Control Systems"> Access Control Systems</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Barrier Systems"> Barrier Systems</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Kitchen Doors"> Kitchen Doors</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-risk">
+        <div class="cat-panel-title">Risk &amp; Compliance</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Fire Risk Assessment"> Fire Risk Assessment</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Water Risk Assessment (L8)"> Water Risk Assessment (L8)</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Asbestos Register"> Asbestos Register</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Asbestos Survey"> Asbestos Survey</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Energy Performance Certificate"> Energy Performance Certificate</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Health & Safety Audit"> Health &amp; Safety Audit</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="CDM Principal Designer"> CDM Principal Designer</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="DSE Assessment"> DSE Assessment</label>
+        </div>
+      </div>
+
+      <div class="cat-panel" id="cat-pressure">
+        <div class="cat-panel-title">Pressure Vessels</div>
+        <div class="svc-grid">
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Pressure Vessel Service"> Pressure Vessel Service</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Chiller Insurance Inspection"> Chiller Insurance Inspection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Steam Boiler Inspection"> Steam Boiler Inspection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Air Receiver Inspection"> Air Receiver Inspection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Autoclave Inspection"> Autoclave Inspection</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Hydraulic Testing"> Hydraulic Testing</label>
+          <label class="svc-box"><input type="checkbox" class="svc-cat" value="Coffee Machine Maintenance"> Coffee Machine Maintenance</label>
+        </div>
+      </div>
+
+      <!-- Accreditations -->
+      <div style="margin-top:20px;">
+        <label class="form-label" style="margin-bottom:10px;">Accreditations Held</label>
+        <div class="check-grid">
+          <label class="check-box"><input type="checkbox" value="CHAS"> CHAS</label>
+          <label class="check-box"><input type="checkbox" value="SafeContractor"> SafeContractor</label>
+          <label class="check-box"><input type="checkbox" value="Constructionline"> Constructionline</label>
+          <label class="check-box"><input type="checkbox" value="ISO 9001"> ISO 9001</label>
+          <label class="check-box"><input type="checkbox" value="ISO 14001"> ISO 14001</label>
+          <label class="check-box"><input type="checkbox" value="ISO 45001"> ISO 45001</label>
+          <label class="check-box"><input type="checkbox" value="BAFE"> BAFE</label>
+          <label class="check-box"><input type="checkbox" value="NICEIC"> NICEIC</label>
+          <label class="check-box"><input type="checkbox" value="ECA Member"> ECA Member</label>
+          <label class="check-box"><input type="checkbox" value="Gas Safe"> Gas Safe</label>
+          <label class="check-box"><input type="checkbox" value="OFTEC"> OFTEC</label>
+          <label class="check-box"><input type="checkbox" value="REFCOM"> REFCOM</label>
+          <label class="check-box"><input type="checkbox" value="F-Gas Certified"> F-Gas</label>
+          <label class="check-box"><input type="checkbox" value="LEIA Member"> LEIA Member</label>
+          <label class="check-box"><input type="checkbox" value="UKAS"> UKAS</label>
+          <label class="check-box"><input type="checkbox" value="Legionella Control"> Legionella Control</label>
+          <label class="check-box"><input type="checkbox" value="BOHS"> BOHS Member</label>
+          <label class="check-box"><input type="checkbox" value="IOSH"> IOSH Member</label>
+        </div>
+      </div>
+
+      <!-- Insurance -->
+      <div class="form-row" style="margin-top:18px;">
+        <div class="form-group"><label class="form-label">Public Liability Insurance *</label>
+          <select class="form-select" id="plInsurance"><option value="">Select cover…</option><option>£1 million</option><option>£2 million</option><option>£5 million</option><option>£10 million</option><option>£20 million+</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Employers Liability *</label>
+          <select class="form-select" id="elInsurance"><option value="">Select cover…</option><option>£5 million</option><option>£10 million</option><option>£20 million+</option></select>
+        </div>
+      </div>
+
+      <!-- Coverage & size -->
+      <div class="form-row" style="margin-top:16px;">
+        <div class="form-group"><label class="form-label">Coverage Area *</label>
+          <select class="form-select" id="coverage"><option value="">Select coverage…</option><option>Local (single city/county)</option><option>Regional (multi-county)</option><option>National (England)</option><option>National (England &amp; Wales)</option><option>UK-wide</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Number of Employees</label>
+          <select class="form-select" id="employees"><option value="">Select…</option><option>1–5</option><option>6–15</option><option>16–50</option><option>51–100</option><option>100–500</option><option>500+</option></select>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- STEP 4: Payment, Bank & Account -->
+      <div class="form-step-label" style="margin-bottom:6px;">Step 4 of 4 — Payment Details &amp; Account Setup</div>
+      <div style="font-size:0.78rem;color:var(--grey-dim);margin-bottom:18px;font-weight:300;">Bank details are used to pay you after job completion (minus 5% commission). Encrypted and stored securely.</div>
+
+      <!-- Pricing structure -->
+      <div style="margin-bottom:18px;">
+        <label class="form-label" style="margin-bottom:10px;">Pricing Structure</label>
+        <div class="pricing-opts">
+          <label class="pricing-opt" id="opt-fixed" onclick="selectPricing('fixed')"><input type="radio" name="pricingType" value="fixed"><span class="pricing-opt-icon">🏷️</span><span class="pricing-opt-label">Fixed Price</span><span class="pricing-opt-desc">Set per-visit or per-unit rates</span></label>
+          <label class="pricing-opt" id="opt-quoted" onclick="selectPricing('quoted')"><input type="radio" name="pricingType" value="quoted"><span class="pricing-opt-icon">📋</span><span class="pricing-opt-label">Quote-Based</span><span class="pricing-opt-desc">Tailored quote per job</span></label>
+          <label class="pricing-opt" id="opt-both" onclick="selectPricing('both')"><input type="radio" name="pricingType" value="both"><span class="pricing-opt-icon">⚡</span><span class="pricing-opt-label">Both</span><span class="pricing-opt-desc">Fixed standard, quotes for complex</span></label>
+        </div>
+      </div>
+
+      <!-- Payment terms -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Preferred Payment Terms *</label>
+          <select class="form-select" id="paymentTerms">
+            <option value="">Select payment terms…</option>
+            <option value="30">30 days from job completion</option>
+            <option value="60">60 days from job completion</option>
+            <option value="90">90 days from job completion</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Pricing Structure Note</label>
+          <input class="form-input" id="pricingNote" type="text" placeholder="e.g. Min. contract value £500"/>
+        </div>
+      </div>
+
+      <!-- Bank details -->
+      <div class="form-row" style="margin-top:16px;">
+        <div class="form-group"><label class="form-label">Account Holder Name *</label><input class="form-input" id="bankName" type="text" placeholder="Company name as on bank account"/></div>
+        <div class="form-group"><label class="form-label">Sort Code *</label><input class="form-input" id="sortCode" type="text" placeholder="00-00-00" maxlength="8" oninput="formatSortCode(this)"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Account Number *</label><input class="form-input" id="accountNum" type="text" placeholder="12345678" maxlength="8"/></div>
+        <div class="form-group"><label class="form-label">Bank Name</label><input class="form-input" id="bankBrand" type="text" placeholder="e.g. Barclays"/></div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- Login credentials -->
+      <div class="form-step-label" style="margin-bottom:12px;">Login Credentials</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Email (login) *</label><input class="form-input" id="loginEmail" type="email" placeholder="your@company.co.uk"/></div>
+        <div class="form-group"><label class="form-label">Password *</label><input class="form-input" id="loginPassword" type="password" placeholder="Min. 8 characters"/></div>
+      </div>
+
+      <!-- T&Cs -->
+      <div style="margin-top:24px;">
+        <label class="check-label" style="margin-bottom:12px;align-items:flex-start;gap:10px;">
+          <input type="checkbox" id="terms" style="margin-top:2px;accent-color:var(--orange);">
+          <span style="font-size:0.78rem;color:var(--grey-dim);line-height:1.5;">I have read and agree to the <span class="tc-link" onclick="openTC()">Agora FM Supplier Terms &amp; Conditions</span> and <a href="#" style="color:var(--orange);">Privacy Policy</a>. I understand and accept the <strong style="color:var(--grey);">5% commission structure</strong> on completed jobs. <span style="color:var(--orange);">*</span></span>
+        </label>
+        <label class="check-label" style="align-items:flex-start;gap:10px;">
+          <input type="checkbox" id="accurate" style="margin-top:2px;accent-color:var(--orange);">
+          <span style="font-size:0.78rem;color:var(--grey-dim);line-height:1.5;">I confirm that all information provided is accurate, that my company holds the accreditations stated above, and that our insurance is current and valid.</span>
+        </label>
+      </div>
+
+      <button class="form-submit" onclick="handleSupplierRegister()">Submit for Verification →</button>
+      <p style="text-align:center;font-size:0.72rem;color:rgba(227,229,232,0.25);margin-top:12px;">Our team will verify your profile within 24 hours and email you once you go live.</p>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <div class="login-panel" id="login-panel">
+        <div class="login-label">Existing Suppliers</div>
+        <div class="login-title">Supplier<br>Sign In</div>
+        <div class="login-sub">Access your supplier dashboard</div>
+        <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="sideEmail" type="email" placeholder="you@yourcompany.co.uk"/></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="sidePassword" type="password" placeholder="••••••••••••"/></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:-12px;margin-bottom:16px;"><a href="#" style="font-size:0.72rem;color:var(--steel-light);text-decoration:none;">Forgot password?</a></div>
+        <button class="btn-signin" onclick="handleLogin()">Sign In →</button>
+        <div class="trust-bar"><span class="trust-icon">🔒</span><p class="trust-text">256-bit SSL encrypted · ISO 27001 certified · GDPR compliant</p></div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-title">What Happens Next</div>
+        <div class="info-item"><span class="info-check">①</span><span class="info-text">Submit your registration — under 10 minutes</span></div>
+        <div class="info-item"><span class="info-check">②</span><span class="info-text">We verify accreditations &amp; insurance within 24 hours</span></div>
+        <div class="info-item"><span class="info-check">③</span><span class="info-text">Profile goes live — visible to 3,800+ organisations</span></div>
+        <div class="info-item"><span class="info-check">④</span><span class="info-text">Enquiries and POs arrive in your supplier dashboard</span></div>
+        <div class="info-item"><span class="info-check">⑤</span><span class="info-text">Complete jobs, get paid. 5% deducted at settlement</span></div>
+      </div>
+      <div class="info-box" style="margin-top:12px;">
+        <div class="info-box-title">Supplier Support</div>
+        <div class="info-item"><span class="info-check">📧</span><span class="info-text"><a href="mailto:suppliers@agorafm.co.uk" style="color:var(--orange);text-decoration:none;">suppliers@agorafm.co.uk</a></span></div>
+        <div class="info-item"><span class="info-check">📞</span><span class="info-text"><a href="tel:+443300000001" style="color:var(--steel-light);text-decoration:none;">0330 000 0001</a></span></div>
+        <div class="info-item"><span class="info-check">🕐</span><span class="info-text">Mon–Fri 8am–6pm</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- T&Cs MODAL -->
+<div class="tc-modal-overlay" id="tcModal">
+  <div class="tc-modal">
+    <div class="tc-modal-header">
+      <span class="tc-modal-title">Supplier Terms &amp; Conditions</span>
+      <button class="tc-modal-close" onclick="closeTC()">✕</button>
+    </div>
+    <div class="tc-modal-body">
+      <p style="font-size:0.72rem;color:rgba(227,229,232,0.3);margin-bottom:16px;">Last updated: April 2026 · Version 3.0 · Agora FM Ltd, Registered in England &amp; Wales</p>
+
+      <h3>1. Definitions</h3>
+      <p>"Agora FM" means Agora FM Ltd, the operator of the Agora FM platform. "Supplier" means any company or individual registered on the platform to provide FM services. "Customer" means any organisation using the platform to commission FM services. "Platform" means the Agora FM web-based marketplace at agorafm.co.uk and associated applications.</p>
+
+      <h3>2. Registration &amp; Verification</h3>
+      <p>2.1 All information provided at registration must be accurate, complete and kept up to date. 2.2 Agora FM reserves the right to verify all accreditations, insurance documents and company information prior to activating a supplier profile. 2.3 Profiles found to contain false or misleading information will be suspended immediately and may be permanently removed. 2.4 Suppliers must notify Agora FM within 7 days of any change to their accreditation status or insurance cover.</p>
+
+      <h3>3. Commission Structure</h3>
+      <p>3.1 Agora FM charges a commission of <strong style="color:var(--orange);">5% of the gross contract value</strong> on all jobs completed through the platform. 3.2 Commission is deducted at the point of payment settlement and is not charged to the customer. 3.3 The commission rate may be reviewed annually with 90 days' written notice to suppliers. 3.4 No commission is payable on jobs that are cancelled prior to commencement, provided the supplier notifies Agora FM within 48 hours of cancellation.</p>
+
+      <h3>4. Payment Terms</h3>
+      <p>4.1 Suppliers select their preferred payment terms (30, 60 or 90 days) at registration. 4.2 Payment is processed by Agora FM upon receipt of a confirmed job completion report from both parties. 4.3 Agora FM reserves the right to withhold payment pending resolution of any customer dispute. 4.4 Payments are made via BACS to the bank account details provided at registration. Suppliers are responsible for ensuring bank details are accurate and current.</p>
+
+      <h3>5. Service Standards</h3>
+      <p>5.1 Suppliers must maintain all accreditations and certifications listed on their profile at all times. 5.2 All work must be carried out by suitably qualified and insured engineers. 5.3 Suppliers must respond to customer enquiries within 2 business days. 5.4 Emergency callout requests must receive an acknowledgement within 4 hours. 5.5 Suppliers must provide all required compliance documentation (service reports, certificates) within 5 business days of job completion.</p>
+
+      <h3>6. Insurance Requirements</h3>
+      <p>6.1 Suppliers must maintain public liability insurance of a minimum of £2 million per occurrence and employers liability insurance of a minimum of £5 million. 6.2 Proof of insurance must be provided at registration and upon each annual renewal. 6.3 Agora FM must be notified immediately if insurance lapses or is reduced below the required minimum levels.</p>
+
+      <h3>7. Intellectual Property &amp; Data</h3>
+      <p>7.1 Suppliers grant Agora FM a non-exclusive licence to display their company name, logo, description, accreditations and pricing on the platform. 7.2 Agora FM will process supplier personal data in accordance with its Privacy Policy and applicable data protection legislation including UK GDPR. 7.3 Suppliers must not use customer data obtained through the platform for any purpose other than fulfilling the commissioned service.</p>
+
+      <h3>8. Reviews &amp; Ratings</h3>
+      <p>8.1 Customers may submit verified reviews following job completion. Agora FM will not remove negative reviews unless they are found to be fraudulent or in breach of platform guidelines. 8.2 Suppliers may respond to reviews via their supplier dashboard. 8.3 Agora FM reserves the right to suspend suppliers whose average rating falls below 3.0 stars following a minimum of 10 reviews.</p>
+
+      <h3>9. Termination</h3>
+      <p>9.1 Either party may terminate this agreement with 30 days' written notice. 9.2 Agora FM may suspend or terminate a supplier account immediately in cases of fraud, misrepresentation, serious breach of service standards, or reputational risk to the platform. 9.3 Upon termination, any outstanding payments owed to the supplier will be settled within 30 days, subject to deduction of any outstanding commission or disputed amounts.</p>
+
+      <h3>10. Limitation of Liability</h3>
+      <p>10.1 Agora FM acts solely as an intermediary marketplace and is not a party to any contract between supplier and customer. 10.2 Agora FM's total liability to any supplier in any 12-month period shall not exceed the total commission paid by that supplier in the same period. 10.3 Agora FM shall not be liable for any indirect, consequential or economic loss arising from use of the platform.</p>
+
+      <h3>11. Governing Law</h3>
+      <p>These terms are governed by the laws of England and Wales. Any disputes shall be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
+    </div>
+    <div class="tc-modal-footer">
+      <button class="btn-secondary" onclick="closeTC()" style="padding:10px 24px;">Close</button>
+      <button class="btn-primary" onclick="acceptTC()" style="padding:10px 24px;">I Accept These Terms</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand"><a href="index.html" class="nav-logo" style="text-decoration:none;"><span class="logo-text">AGORA<span class="logo-accent">FM</span></span><span class="logo-dot" style="animation:none;opacity:0.7;"></span></a><p>The UK's most advanced facilities management comparison and commissioning platform.</p></div>
+    <div class="footer-col"><h4>Platform</h4><ul><li><a href="service_providers.html">Find Providers</a></li><li><a href="#">Benchmarking</a></li><li><a href="#">Compliance</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About Agora FM</a></li><li><a href="#">Contact Us</a></li></ul></div>
+    <div class="footer-col"><h4>Legal</h4><ul><li><a href="#" onclick="openTC()">Supplier T&amp;Cs</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 Agora FM Ltd. All rights reserved. Registered in England &amp; Wales.</div>
+    <div class="footer-badge">Built for excellence in FM ◆</div>
+  </div>
+</footer>
+
+<script>
+function handleSearch(){var q=document.getElementById('navSearch').value;if(q)window.location.href='service_providers.html?search='+encodeURIComponent(q);}
+document.getElementById('navSearch').addEventListener('keydown',function(e){if(e.key==='Enter')handleSearch();});
+
+function switchCat(btn, panelId){
+  document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.cat-panel').forEach(function(p){p.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
+function selectPricing(t){['fixed','quoted','both'].forEach(function(x){document.getElementById('opt-'+x).classList.toggle('selected',x===t);});}
+
+function formatSortCode(i){var v=i.value.replace(/\D/g,'').substring(0,6);if(v.length>4)v=v.substring(0,2)+'-'+v.substring(2,4)+'-'+v.substring(4);else if(v.length>2)v=v.substring(0,2)+'-'+v.substring(2);i.value=v;}
+
+function showBanner(t,s){
+  document.getElementById('successTitle').textContent=t;
+  document.getElementById('successSub').textContent=s;
+  document.getElementById('successBanner').classList.add('show');
+  window.scrollTo({top:document.getElementById('reg-form').offsetTop-90,behavior:'smooth'});
+}
+
+function openTC(){ document.getElementById('tcModal').classList.add('show'); }
+function closeTC(){ document.getElementById('tcModal').classList.remove('show'); }
+function acceptTC(){
+  document.getElementById('terms').checked = true;
+  closeTC();
+}
+
+async function handleSupplierRegister(){
+  var req=[
+    {id:'companyName',l:'Company Name'},{id:'companyReg',l:'Company Registration Number'},
+    {id:'regAddress',l:'Registered Address'},{id:'mainTel',l:'Main Telephone'},
+    {id:'companyDesc',l:'Company Description'},{id:'contactFirst',l:'First Name'},
+    {id:'contactLast',l:'Last Name'},{id:'contactRole',l:'Job Title'},
+    {id:'contactEmail',l:'Contact Email'},{id:'contactMobile',l:'Direct Mobile'},
+    {id:'plInsurance',l:'Public Liability Insurance'},{id:'elInsurance',l:'Employers Liability'},
+    {id:'coverage',l:'Coverage Area'},{id:'paymentTerms',l:'Payment Terms'},
+    {id:'bankName',l:'Account Holder Name'},{id:'sortCode',l:'Sort Code'},
+    {id:'accountNum',l:'Account Number'},{id:'loginEmail',l:'Login Email'},
+    {id:'loginPassword',l:'Password'}
+  ];
+  for(var i=0;i<req.length;i++){
+    var el=document.getElementById(req[i].id);
+    if(el&&!el.value.trim()){el.focus();showBanner('Required field missing','Please complete "'+req[i].l+'" before submitting.');return;}
+  }
+  if(document.querySelectorAll('.svc-cat:checked').length===0){
+    showBanner('No services selected','Please tick at least one FM service you supply.');return;
+  }
+  if(!document.getElementById('terms').checked){
+    showBanner('Terms required','Please read and accept the Supplier Terms & Conditions.');return;
+  }
+  if(!document.getElementById('accurate').checked){
+    showBanner('Accuracy confirmation required','Please confirm that all information provided is accurate.');return;
+  }
+
+  var cats=[], accreds=[];
+  document.querySelectorAll('.svc-cat:checked').forEach(function(cb){cats.push(cb.value);});
+  document.querySelectorAll('.check-box input:checked').forEach(function(cb){accreds.push(cb.value);});
+
+  var btn=document.querySelector('.form-submit');
+  if(btn){btn.textContent='Submitting…';btn.disabled=true;}
+
+  var result = await AgoraDB.suppliers.create({
+    companyName:  document.getElementById('companyName').value.trim(),
+    companyReg:   document.getElementById('companyReg').value.trim(),
+    regAddress:   document.getElementById('regAddress').value.trim(),
+    mainTel:      document.getElementById('mainTel').value.trim(),
+    website:      document.getElementById('website').value.trim(),
+    contactFirst: document.getElementById('contactFirst').value.trim(),
+    contactLast:  document.getElementById('contactLast').value.trim(),
+    contactRole:  document.getElementById('contactRole').value.trim(),
+    email:        document.getElementById('loginEmail').value.trim(),
+    password:     document.getElementById('loginPassword').value,
+    coverage:     document.getElementById('coverage').value,
+    categories:   cats,
+    accreditations: accreds,
+    plInsurance:  document.getElementById('plInsurance').value,
+    elInsurance:  document.getElementById('elInsurance').value,
+    paymentTerms: document.getElementById('paymentTerms').value + ' days',
+    bankName:     document.getElementById('bankName').value.trim(),
+    sortCode:     document.getElementById('sortCode').value.trim(),
+    accountNum:   document.getElementById('accountNum').value.trim(),
+    companyDesc:  document.getElementById('companyDesc').value.trim()
+  });
+
+  if(btn){btn.textContent='Submit for Verification →';btn.disabled=false;}
+
+  if(!result.ok){showBanner('Registration Failed',result.error||'Please try again.');return;}
+
+  showBanner('Registration Submitted — Thank You!','We will verify your profile within 24 hours. Redirecting to your dashboard…');
+  setTimeout(function(){window.location.href='supplier_dashboard.html';},2500);
+}
+
+async function handleLogin(){
+  var e=document.getElementById('sideEmail').value.trim();
+  var p=document.getElementById('sidePassword').value;
+  if(!e||!p){alert('Please enter your email and password.');return;}
+  var btn=document.querySelector('#login-panel .btn-signin');
+  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
+  var result=await AgoraDB.auth.login(e,p);
+  if(btn){btn.textContent='Sign In →';btn.disabled=false;}
+  if(!result.ok){alert(result.error||'Invalid email or password.');return;}
+  window.location.href=result.session.type==='supplier'?'supplier_dashboard.html':'dashboard.html';
+}
+</script>
+</body>
+</html>

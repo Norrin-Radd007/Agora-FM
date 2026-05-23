@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agora FM — Customer Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="agora_fm.css">
+  <style>
+
+    /* ── Dashboard layout ── */
+    .dash-wrap {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: calc(100vh - var(--nav-height) - 38px);
+    }
+
+    /* ── Sidebar ── */
+    .dash-sidebar {
+      background: rgba(10,26,47,0.85);
+      border-right: 1px solid rgba(62,107,137,0.2);
+      padding: 28px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-user {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid rgba(62,107,137,0.15);
+      margin-bottom: 16px;
+    }
+    .sidebar-avatar {
+      width: 44px; height: 44px;
+      background: rgba(241,143,1,0.15);
+      border: 1px solid rgba(241,143,1,0.3);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--orange);
+      margin-bottom: 12px;
+    }
+    .sidebar-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 0.5px; color: var(--grey);
+      margin-bottom: 2px;
+    }
+    .sidebar-org {
+      font-size: 0.72rem; color: var(--grey-dim);
+      font-weight: 300;
+    }
+    .sidebar-plan {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 3px 10px;
+      background: rgba(241,143,1,0.1);
+      border: 1px solid rgba(241,143,1,0.3);
+      border-radius: var(--radius);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--orange);
+    }
+    .sidebar-nav { flex: 1; }
+    .sidebar-section-label {
+      padding: 0 20px 6px;
+      font-size: 0.58rem; letter-spacing: 2.5px;
+      text-transform: uppercase; color: rgba(241,143,1,0.6);
+      font-weight: 700;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: rgba(227,229,232,0.5);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-link:hover { color: var(--grey); background: rgba(62,107,137,0.08); }
+    .sidebar-link.active {
+      color: var(--orange);
+      border-left-color: var(--orange);
+      background: rgba(241,143,1,0.06);
+    }
+    .sidebar-icon { font-size: 0.9rem; width: 18px; text-align: center; flex-shrink: 0; }
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--orange);
+      color: var(--navy);
+      font-size: 0.6rem; font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+    .sidebar-divider { height: 1px; background: rgba(62,107,137,0.12); margin: 12px 20px; }
+    .sidebar-footer {
+      padding: 16px 20px 0;
+      border-top: 1px solid rgba(62,107,137,0.15);
+      margin-top: 12px;
+    }
+    .sidebar-footer a {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.72rem; color: rgba(227,229,232,0.35);
+      text-decoration: none; transition: color 0.2s;
+      margin-bottom: 6px;
+    }
+    .sidebar-footer a:hover { color: var(--orange); }
+
+    /* ── Main content ── */
+    .dash-main {
+      padding: 32px 40px;
+      overflow-y: auto;
+    }
+
+    /* Page header */
+    .dash-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .dash-header-left {}
+    .dash-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem; letter-spacing: 1px;
+      color: var(--grey); line-height: 1;
+      margin-bottom: 4px;
+    }
+    .dash-subtitle {
+      font-size: 0.82rem; color: var(--grey-dim);
+      font-weight: 300;
+    }
+    .dash-header-actions { display: flex; gap: 10px; align-items: center; }
+
+    /* KPI cards row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: rgba(17,34,64,0.5);
+      border: 1px solid rgba(62,107,137,0.2);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .kpi-card:hover { border-color: rgba(241,143,1,0.3); }
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .kpi-card.orange::before { background: linear-gradient(90deg, var(--orange), transparent); }
+    .kpi-card.steel::before  { background: linear-gradient(90deg, var(--steel), transparent); }
+    .kpi-card.green::before  { background: linear-gradient(90deg, #5cb85c, transparent); }
+    .kpi-card.red::before    { background: linear-gradient(90deg, #e74c3c, transparent); }
+    .kpi-label {
+      font-size: 0.62rem; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--grey-dim);
+      font-weight: 600; margin-bottom: 10px;
+    }
+    .kpi-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem; letter-spacing: 1px;
+      color: var(--grey); line-height: 1;
+      margin-bottom: 6px;
+    }
+    .kpi-value.orange { color: var(--orange); }
+    .kpi-value.red    { color: #e74c3c; }
+    .kpi-value.green  { color: #5cb85c; }
+    .kpi-delta {
+      font-size: 0.7rem; color: var(--grey-dim);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .kpi-delta.up   { color: #5cb85c; }
+    .kpi-delta.down { color: #e74c3c; }
+
+    /* Two-col layout */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .dash-grid.three {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    /* Panel / card */
+    .panel {
+      background: rgba(17,34,64,0.5);
+      border: 1px solid rgba(62,107,137,0.2);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(62,107,137,0.15);
+      background: rgba(10,26,47,0.4);
+    }
+    .panel-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--grey);
+    }
+    .panel-action {
+      font-size: 0.68rem; color: var(--orange);
+      text-decoration: none; letter-spacing: 1px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600; text-transform: uppercase;
+      transition: opacity 0.2s; cursor: pointer;
+    }
+    .panel-action:hover { opacity: 0.7; }
+    .panel-body { padding: 20px; }
+    .panel-body.no-pad { padding: 0; }
+
+    /* Contracts table */
+    .contracts-table { width: 100%; border-collapse: collapse; }
+    .contracts-table th {
+      text-align: left;
+      font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(227,229,232,0.35);
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(62,107,137,0.12);
+    }
+    .contracts-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(62,107,137,0.08);
+      font-size: 0.82rem; color: var(--grey-dim);
+      vertical-align: middle;
+    }
+    .contracts-table tr:last-child td { border-bottom: none; }
+    .contracts-table tr:hover td { background: rgba(62,107,137,0.05); color: var(--grey); }
+    .contract-name {
+      font-weight: 500; color: var(--grey);
+      font-size: 0.85rem;
+    }
+    .contract-provider {
+      font-size: 0.72rem; color: var(--steel-light);
+      margin-top: 2px;
+    }
+
+    /* Status badges */
+    .status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: var(--radius);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .status.active  { background: rgba(92,184,92,0.12); border: 1px solid rgba(92,184,92,0.3);  color: #5cb85c; }
+    .status.due     { background: rgba(241,143,1,0.12); border: 1px solid rgba(241,143,1,0.3);  color: var(--orange); }
+    .status.overdue { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.3);  color: #e74c3c; }
+    .status.pending { background: rgba(85,137,168,0.12);border: 1px solid rgba(85,137,168,0.3); color: var(--steel-light); }
+
+    /* Compliance calendar */
+    .compliance-list { list-style: none; }
+    .compliance-item {
+      display: flex; align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(62,107,137,0.1);
+    }
+    .compliance-item:last-child { border-bottom: none; }
+    .comp-date-box {
+      width: 44px; flex-shrink: 0;
+      text-align: center;
+      background: rgba(10,26,47,0.6);
+      border: 1px solid rgba(62,107,137,0.2);
+      border-radius: var(--radius);
+      padding: 6px 4px;
+    }
+    .comp-date-box.urgent { border-color: rgba(231,76,60,0.4); background: rgba(231,76,60,0.06); }
+    .comp-date-box.soon   { border-color: rgba(241,143,1,0.4); background: rgba(241,143,1,0.06); }
+    .comp-day {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; line-height: 1;
+      color: var(--grey);
+    }
+    .comp-mon {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--grey-dim);
+      margin-top: 2px;
+    }
+    .comp-info { flex: 1; }
+    .comp-service {
+      font-size: 0.83rem; font-weight: 500;
+      color: var(--grey); margin-bottom: 3px;
+    }
+    .comp-provider {
+      font-size: 0.72rem; color: var(--steel-light);
+    }
+    .comp-days-left {
+      flex-shrink: 0;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .comp-days-left.urgent { color: #e74c3c; }
+    .comp-days-left.soon   { color: var(--orange); }
+    .comp-days-left.ok     { color: var(--steel-light); }
+
+    /* Spend chart (pure CSS bars) */
+    .spend-chart { padding: 4px 0; }
+    .spend-bar-row {
+      display: flex; align-items: center;
+      gap: 12px; margin-bottom: 14px;
+    }
+    .spend-bar-label {
+      font-size: 0.72rem; color: var(--grey-dim);
+      width: 120px; flex-shrink: 0;
+      white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .spend-bar-track {
+      flex: 1; height: 8px;
+      background: rgba(62,107,137,0.15);
+      border-radius: 1px; overflow: hidden;
+    }
+    .spend-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--orange), rgba(241,143,1,0.6));
+      border-radius: 1px;
+      transition: width 0.8s ease;
+    }
+    .spend-bar-val {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem; font-weight: 600;
+      color: var(--grey); width: 60px;
+      text-align: right; flex-shrink: 0;
+    }
+
+    /* Activity feed */
+    .activity-item {
+      display: flex; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(62,107,137,0.08);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 5px; flex-shrink: 0;
+    }
+    .activity-dot.orange { background: var(--orange); }
+    .activity-dot.green  { background: #5cb85c; }
+    .activity-dot.steel  { background: var(--steel); }
+    .activity-dot.red    { background: #e74c3c; }
+    .activity-text {
+      font-size: 0.8rem; color: var(--grey-dim);
+      line-height: 1.5; flex: 1;
+    }
+    .activity-text strong { color: var(--grey); font-weight: 500; }
+    .activity-time {
+      font-size: 0.68rem; color: rgba(227,229,232,0.25);
+      flex-shrink: 0; margin-top: 2px;
+    }
+
+    /* Quick actions */
+    .quick-actions {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .quick-action {
+      display: flex; flex-direction: column;
+      align-items: flex-start; gap: 6px;
+      padding: 16px;
+      background: rgba(10,26,47,0.5);
+      border: 1px solid rgba(62,107,137,0.2);
+      border-radius: var(--radius);
+      cursor: pointer; transition: all 0.2s;
+      text-decoration: none;
+    }
+    .quick-action:hover {
+      border-color: rgba(241,143,1,0.35);
+      background: rgba(241,143,1,0.04);
+    }
+    .qa-icon { font-size: 1.2rem; }
+    .qa-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--grey);
+    }
+    .qa-desc {
+      font-size: 0.7rem; color: var(--grey-dim);
+      font-weight: 300; line-height: 1.4;
+    }
+
+    /* Sites overview */
+    .site-row {
+      display: flex; align-items: center;
+      gap: 14px; padding: 10px 0;
+      border-bottom: 1px solid rgba(62,107,137,0.08);
+    }
+    .site-row:last-child { border-bottom: none; }
+    .site-icon {
+      width: 32px; height: 32px;
+      background: rgba(62,107,137,0.12);
+      border: 1px solid rgba(62,107,137,0.2);
+      border-radius: var(--radius);
+      display: flex; align-items: center;
+      justify-content: center;
+      font-size: 0.85rem; flex-shrink: 0;
+    }
+    .site-name {
+      font-size: 0.83rem; font-weight: 500;
+      color: var(--grey); flex: 1;
+    }
+    .site-services {
+      font-size: 0.7rem; color: var(--steel-light);
+    }
+    .site-count {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; font-weight: 700;
+      color: var(--grey-dim); letter-spacing: 1px;
+    }
+
+    /* Welcome banner */
+    .welcome-bar {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      background: rgba(241,143,1,0.06);
+      border: 1px solid rgba(241,143,1,0.2);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin-bottom: 28px;
+    }
+    .welcome-text {
+      font-size: 0.83rem; color: var(--grey-dim);
+      font-weight: 300;
+    }
+    .welcome-text strong { color: var(--grey); font-weight: 500; }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .dash-grid { grid-template-columns: 1fr; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .dash-grid.three { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .dash-wrap { grid-template-columns: 1fr; }
+      .dash-sidebar { display: none; }
+      .dash-main { padding: 20px; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+  <script>
+/**
+ * AGORA FM — API Client (db.js)
+ * Talks to Flask backend instead of LocalStorage.
+ * All async methods return Promises.
+ */
+var AgoraDB = (function () {
+
+  async function api(method, path, body) {
+    try {
+      var opts = { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      var res = await fetch(path, opts);
+      return await res.json();
+    } catch(e) {
+      console.error('[AgoraDB]', path, e.message);
+      return { ok: false, error: 'Cannot reach server. Is app.py running?' };
+    }
+  }
+
+  var auth = {
+    login:      function(email, password) { return api('POST', '/api/auth/login', {email, password}); },
+    logout:     async function() { await api('POST', '/api/auth/logout'); window.location.href = 'index.html'; },
+    getSession: function() { return api('GET', '/api/auth/session'); },
+    isLoggedIn: async function() { var s = await api('GET', '/api/auth/session'); return !!(s && s.loggedIn); },
+    _session:   null,
+    getCachedSession: function() { return AgoraDB.auth._session || {}; }
+  };
+
+  var customers = {
+    create: function(d) { return api('POST', '/api/customers/register', d); }
+  };
+
+  var suppliers = {
+    create: function(d) { return api('POST', '/api/suppliers/register', d); },
+    getAll: function()  { return api('GET',  '/api/suppliers'); },
+    getById: function(id) { return api('GET', '/api/suppliers/' + id); }
+  };
+
+  var basket = {
+    get:        function()      { return api('GET',    '/api/basket'); },
+    addItem:    function(item)  { return api('POST',   '/api/basket/add', item); },
+    removeItem: function(id)    { return api('DELETE', '/api/basket/item/' + id); },
+    updateQty:  function(id, q) { return api('PUT',    '/api/basket/qty', {id, qty: q}); },
+    clear:      function()      { return api('POST',   '/api/basket/clear'); },
+    getCount:   async function() { var b = await basket.get(); return (b.items||[]).length; },
+    getTotals:  async function() { var b = await basket.get(); return {subtotal:b.subtotal||0, vat:b.vat||0, commission:b.commission||0, total:b.total||0}; }
+  };
+
+  var orders = {
+    create: function(d)   { return api('POST', '/api/orders', d); },
+    getAll: function()    { return api('GET',  '/api/orders'); },
+    getPdf: function(oid) { window.open('/api/orders/' + oid + '/pdf', '_blank'); }
+  };
+
+  var admin = {
+    dump:  function() { return api('GET',  '/api/admin/dump'); },
+    reset: function() { return api('POST', '/api/admin/reset'); }
+  };
+
+  // Pre-cache session on load
+  api('GET', '/api/auth/session').then(function(s) {
+    AgoraDB.auth._session = s;
+  }).catch(function() {
+    AgoraDB.auth._session = { loggedIn: false };
+  });
+
+  return { auth, customers, suppliers, basket, orders, admin,
+           COMMISSION_RATE: 0.05, VAT_RATE: 0.20 };
+})();
+window.AgoraDB = AgoraDB;
+
+</script>
+  <script>
+/**
+ * AGORA FM — Nav Auth + Basket Badge (nav-auth.js)
+ * Async-aware version for Flask backend.
+ */
+(function () {
+
+  async function updateNav() {
+    var s = await AgoraDB.auth.getSession();
+    AgoraDB.auth._session = s;
+    var loginBtn = document.querySelector('.btn-nav-login');
+    var regBtn   = document.querySelector('.btn-nav-reg');
+    if (s && s.loggedIn) {
+      if (loginBtn) {
+        loginBtn.textContent = 'Sign Out';
+        loginBtn.href = '#';
+        loginBtn.onclick = function(e) { e.preventDefault(); AgoraDB.auth.logout(); };
+      }
+      if (regBtn) {
+        regBtn.textContent = s.type === 'supplier' ? 'My Dashboard' : 'My Dashboard';
+        regBtn.href = s.type === 'supplier' ? 'supplier_dashboard.html' : 'dashboard.html';
+        regBtn.onclick = null;
+      }
+    }
+  }
+
+  async function updateBasketBadge() {
+    // Badge is now managed by basket.js — just trigger a refresh if available
+    if (window.AgoraBasket && typeof AgoraBasket.refresh === 'function') {
+      AgoraBasket.refresh();
+    }
+  }
+
+  function injectAdminLink() {
+    var footer = document.querySelector('.footer-bottom');
+    if (!footer || document.getElementById('admin-db-link')) return;
+    var link = document.createElement('a');
+    link.id = 'admin-db-link';
+    link.href = '#';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.textContent = '⚙ View DB';
+    link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
+    footer.appendChild(link);
+  }
+
+  async function showAdminPanel() {
+    var existing = document.getElementById('admin-panel-overlay');
+    if (existing) { existing.remove(); return; }
+    var data = await AgoraDB.admin.dump();
+    var overlay = document.createElement('div');
+    overlay.id = 'admin-panel-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    var fmt = function(n){ return '£' + (n||0).toFixed(2); };
+    var html = '<div style="max-width:1000px;margin:0 auto;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;gap:12px;">';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '</div></div>';
+
+    if (data.stats) {
+      html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;">';
+      [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
+       ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
+       ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
+        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    function section(title, obj) {
+      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+             JSON.stringify(obj, null, 2) + '</pre>';
+    }
+    html += section('Session', data.session);
+    html += section('Basket', data.basket);
+    html += section('Customers (' + (data.customers||[]).length + ')', data.customers);
+    html += section('Suppliers (' + (data.suppliers||[]).length + ')', data.suppliers);
+    html += section('Orders (' + (data.orders||[]).length + ')', data.orders);
+    html += '</div>';
+    overlay.innerHTML = html;
+    document.body.appendChild(overlay);
+  }
+
+  async function init() {
+    await updateNav();
+    await updateBasketBadge();
+    injectAdminLink();
+  }
+
+  window.AgoraNavUpdate = async function() { await updateBasketBadge(); };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+  <script>
+/**
+ * AGORA FM — Basket Nav Dropdown (basket.js)
+ * Basket icon sits in the nav bar. Clicking it opens a compact
+ * dropdown panel anchored below the nav. Does not cover page content.
+ */
+(function () {
+  var fmt = function(n){ return '£' + (parseFloat(n)||0).toFixed(2); };
+  var isOpen = false;
+
+  // ── Build the nav basket button + dropdown ──────────────────────────────
+  function buildBasket() {
+    if (document.getElementById('agora-basket-wrap')) return;
+
+    // Wrapper injected into .nav-cta
+    var navCta = document.querySelector('.nav-cta');
+    if (!navCta) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'agora-basket-wrap';
+    wrap.style.cssText = 'position:relative;display:inline-flex;align-items:center;';
+
+    // Nav button
+    wrap.innerHTML = [
+      '<button id="agora-basket-btn" onclick="AgoraBasket.toggle()" style="',
+        'position:relative;display:inline-flex;align-items:center;gap:6px;',
+        'padding:7px 14px;background:transparent;',
+        'border:1px solid rgba(62,107,137,0.4);border-radius:2px;',
+        'color:rgba(227,229,232,0.6);font-family:\'Barlow Condensed\',sans-serif;',
+        'font-size:0.78rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;',
+        'cursor:pointer;transition:all 0.2s;white-space:nowrap;',
+      '">',
+        '🛒 Basket',
+        '<span id="agora-basket-badge" style="',
+          'display:none;background:#F18F01;color:#0A1A2F;',
+          'font-size:0.6rem;font-weight:700;padding:1px 5px;',
+          'border-radius:8px;min-width:16px;text-align:center;',
+          'font-family:\'Barlow Condensed\',sans-serif;',
+        '">0</span>',
+      '</button>',
+
+      // Dropdown panel
+      '<div id="agora-basket-panel" style="',
+        'display:none;position:absolute;top:calc(100% + 10px);right:0;',
+        'width:360px;background:rgba(10,26,47,0.99);',
+        'border:1px solid rgba(62,107,137,0.35);border-radius:2px;',
+        'box-shadow:0 16px 48px rgba(0,0,0,0.6);z-index:600;',
+        'backdrop-filter:blur(16px);',
+        'animation:fadeDown 0.18s ease both;',
+      '">',
+
+        // Arrow pointer
+        '<div style="position:absolute;top:-6px;right:20px;width:12px;height:12px;',
+          'background:rgba(10,26,47,0.99);border-left:1px solid rgba(62,107,137,0.35);',
+          'border-top:1px solid rgba(62,107,137,0.35);transform:rotate(45deg);"></div>',
+
+        // Header
+        '<div style="padding:14px 18px;border-bottom:1px solid rgba(62,107,137,0.2);',
+          'display:flex;align-items:center;justify-content:space-between;">',
+          '<div>',
+            '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;',
+              'letter-spacing:2px;color:#E3E5E8;">Service Basket</div>',
+            '<div id="agora-basket-count-lbl" style="font-size:0.65rem;',
+              'color:rgba(227,229,232,0.4);letter-spacing:1.5px;text-transform:uppercase;',
+              'margin-top:2px;">0 services</div>',
+          '</div>',
+          '<button onclick="AgoraBasket.close()" style="background:none;border:none;',
+            'color:rgba(227,229,232,0.3);font-size:1rem;cursor:pointer;padding:4px 6px;',
+            'transition:color 0.15s;" ',
+            'onmouseover="this.style.color=\'#F18F01\'" ',
+            'onmouseout="this.style.color=\'rgba(227,229,232,0.3)\'">✕</button>',
+        '</div>',
+
+        // Items
+        '<div id="agora-basket-items" style="max-height:240px;overflow-y:auto;padding:6px 0;">',
+          '<div id="agora-basket-empty" style="padding:28px 18px;text-align:center;',
+            'color:rgba(227,229,232,0.3);font-size:0.78rem;">',
+            '<div style="font-size:1.6rem;margin-bottom:8px;">🛒</div>',
+            'No services added yet<br>',
+            '<span style="font-size:0.7rem;font-weight:300;">Browse services and click Commission to add them</span>',
+          '</div>',
+        '</div>',
+
+        // Footer
+        '<div id="agora-basket-footer" style="display:none;border-top:1px solid rgba(62,107,137,0.2);padding:14px 18px;">',
+          '<div style="margin-bottom:12px;">',
+            '<div style="display:flex;justify-content:space-between;font-size:0.75rem;',
+              'color:rgba(227,229,232,0.5);margin-bottom:5px;">',
+              '<span>Subtotal</span><span id="bkt-sub">£0.00</span>',
+            '</div>',
+            '<div style="display:flex;justify-content:space-between;font-size:0.75rem;',
+              'color:rgba(227,229,232,0.5);margin-bottom:5px;">',
+              '<span>VAT (20%)</span><span id="bkt-vat">£0.00</span>',
+            '</div>',
+            '<div style="display:flex;justify-content:space-between;font-size:0.7rem;',
+              'color:rgba(241,143,1,0.6);margin-bottom:10px;">',
+              '<span>Commission (5%)</span><span id="bkt-comm">£0.00</span>',
+            '</div>',
+            '<div style="display:flex;justify-content:space-between;',
+              'font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:1px;',
+              'border-top:1px solid rgba(62,107,137,0.2);padding-top:10px;">',
+              '<span style="color:#E3E5E8;">Total inc. VAT</span>',
+              '<span id="bkt-total" style="color:#F18F01;">£0.00</span>',
+            '</div>',
+          '</div>',
+          '<button onclick="AgoraBasket.checkout()" style="width:100%;padding:12px;',
+            'background:#F18F01;border:none;border-radius:2px;color:#0A1A2F;',
+            'font-family:\'Barlow Condensed\',sans-serif;font-size:0.85rem;font-weight:700;',
+            'letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;" ',
+            'onmouseover="this.style.background=\'#FF9F0A\'" ',
+            'onmouseout="this.style.background=\'#F18F01\'">',
+            'Proceed to Payment →',
+          '</button>',
+          '<button onclick="AgoraBasket.clearAll()" style="width:100%;padding:8px;',
+            'background:transparent;border:1px solid rgba(62,107,137,0.25);border-radius:2px;',
+            'color:rgba(227,229,232,0.35);font-family:\'Barlow Condensed\',sans-serif;',
+            'font-size:0.68rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;',
+            'cursor:pointer;margin-top:6px;transition:all 0.2s;" ',
+            'onmouseover="this.style.borderColor=\'rgba(231,76,60,0.4)\';this.style.color=\'#e74c3c\'" ',
+            'onmouseout="this.style.borderColor=\'rgba(62,107,137,0.25)\';this.style.color=\'rgba(227,229,232,0.35)\'">',
+            'Clear Basket',
+          '</button>',
+        '</div>',
+
+      '</div>' // end panel
+    ].join('');
+
+    // Insert before the first child of nav-cta
+    navCta.insertBefore(wrap, navCta.firstChild);
+
+    // Add fadeDown keyframe if not already present
+    if (!document.getElementById('basket-keyframes')) {
+      var style = document.createElement('style');
+      style.id = 'basket-keyframes';
+      style.textContent = '@keyframes fadeDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}';
+      document.head.appendChild(style);
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      var wrap = document.getElementById('agora-basket-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        AgoraBasket.close();
+      }
+    });
+
+    // Hover styles on nav button
+    var btn = document.getElementById('agora-basket-btn');
+    if (btn) {
+      btn.addEventListener('mouseover', function(){ this.style.borderColor='#F18F01'; this.style.color='#F18F01'; });
+      btn.addEventListener('mouseout',  function(){
+        if (!isOpen) { this.style.borderColor='rgba(62,107,137,0.4)'; this.style.color='rgba(227,229,232,0.6)'; }
+      });
+    }
+  }
+
+  // ── Render basket contents ──────────────────────────────────────────────
+  async function render() {
+    var b       = await AgoraDB.basket.get();
+    var items   = b.items || [];
+    var container = document.getElementById('agora-basket-items');
+    var footer    = document.getElementById('agora-basket-footer');
+    var empty     = document.getElementById('agora-basket-empty');
+    var countLbl  = document.getElementById('agora-basket-count-lbl');
+    var badge     = document.getElementById('agora-basket-badge');
+    if (!container) return;
+
+    var count = items.length;
+    if (countLbl) countLbl.textContent = count + (count === 1 ? ' service' : ' services');
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    if (count === 0) {
+      if (empty)  empty.style.display  = 'block';
+      if (footer) footer.style.display = 'none';
+      container.querySelectorAll('.bkt-item').forEach(function(r){ r.remove(); });
+      return;
+    }
+
+    if (empty)  empty.style.display  = 'none';
+    if (footer) footer.style.display = 'block';
+    container.querySelectorAll('.bkt-item').forEach(function(r){ r.remove(); });
+
+    items.forEach(function(item) {
+      var lineTotal = parseFloat(item.price) * (item.qty || 1);
+      var row = document.createElement('div');
+      row.className = 'bkt-item';
+      row.style.cssText = 'padding:9px 18px;border-bottom:1px solid rgba(62,107,137,0.08);display:flex;align-items:center;gap:8px;';
+      row.innerHTML = [
+        '<div style="flex:1;min-width:0;">',
+          '<div style="font-size:0.78rem;font-weight:500;color:#E3E5E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + item.name + '</div>',
+          '<div style="font-size:0.67rem;color:#5589A8;margin-top:1px;">' + (item.supplierName||'') + '</div>',
+        '</div>',
+        '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">',
+          '<input type="number" min="1" max="99" value="' + (item.qty||1) + '" ',
+            'onchange="AgoraBasket.updateQty(\'' + item.id + '\',this.value)" ',
+            'style="width:40px;padding:3px 5px;background:rgba(10,26,47,0.8);border:1px solid rgba(62,107,137,0.3);',
+            'border-radius:2px;color:#E3E5E8;font-size:0.72rem;text-align:center;">',
+          '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:0.85rem;font-weight:700;color:#F18F01;min-width:52px;text-align:right;">' + fmt(lineTotal) + '</div>',
+          '<button onclick="AgoraBasket.remove(\'' + item.id + '\')" ',
+            'style="background:none;border:none;color:rgba(227,229,232,0.2);cursor:pointer;font-size:0.8rem;padding:2px 4px;transition:color 0.15s;" ',
+            'onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'rgba(227,229,232,0.2)\'">✕</button>',
+        '</div>'
+      ].join('');
+      container.appendChild(row);
+    });
+
+    if (document.getElementById('bkt-sub'))   document.getElementById('bkt-sub').textContent   = fmt(b.subtotal);
+    if (document.getElementById('bkt-vat'))   document.getElementById('bkt-vat').textContent   = fmt(b.vat);
+    if (document.getElementById('bkt-comm'))  document.getElementById('bkt-comm').textContent  = fmt(b.commission);
+    if (document.getElementById('bkt-total')) document.getElementById('bkt-total').textContent = fmt(b.total);
+  }
+
+  // ── Public API ──────────────────────────────────────────────────────────
+  window.AgoraBasket = {
+    open: function() {
+      var panel = document.getElementById('agora-basket-panel');
+      var btn   = document.getElementById('agora-basket-btn');
+      if (!panel) return;
+      panel.style.display = 'block';
+      if (btn) { btn.style.borderColor='#F18F01'; btn.style.color='#F18F01'; }
+      isOpen = true;
+      render();
+    },
+    close: function() {
+      var panel = document.getElementById('agora-basket-panel');
+      var btn   = document.getElementById('agora-basket-btn');
+      if (panel) panel.style.display = 'none';
+      if (btn) { btn.style.borderColor='rgba(62,107,137,0.4)'; btn.style.color='rgba(227,229,232,0.6)'; }
+      isOpen = false;
+    },
+    toggle: function() {
+      if (isOpen) { AgoraBasket.close(); } else { AgoraBasket.open(); }
+    },
+    add: async function(item) {
+      var s = await AgoraDB.auth.getSession();
+      if (!s || !s.loggedIn) {
+        if (confirm('Please sign in to add services to your basket. Go to sign in now?')) {
+          window.location.href = 'index.html';
+        }
+        return;
+      }
+      var result = await AgoraDB.basket.addItem(item);
+      await render();
+      AgoraBasket.open();
+      if (result && result.added === false) {
+        // Already in basket — flash the badge
+        var badge = document.getElementById('agora-basket-badge');
+        if (badge) {
+          var orig = badge.style.background;
+          badge.style.background = '#5cb85c';
+          setTimeout(function(){ badge.style.background = orig; }, 800);
+        }
+      }
+    },
+    remove: async function(id) {
+      await AgoraDB.basket.removeItem(id);
+      render();
+    },
+    updateQty: async function(id, qty) {
+      await AgoraDB.basket.updateQty(id, qty);
+      render();
+    },
+    clearAll: async function() {
+      if (confirm('Clear all items from your basket?')) {
+        await AgoraDB.basket.clear();
+        render();
+      }
+    },
+    checkout: async function() {
+      var s = await AgoraDB.auth.getSession();
+      if (!s || !s.loggedIn) { window.location.href = 'index.html'; return; }
+      var count = await AgoraDB.basket.getCount();
+      if (count === 0) { alert('Your basket is empty.'); return; }
+      AgoraBasket.close();
+      window.location.href = 'payment.html';
+    },
+    refresh: function() { render(); }
+  };
+
+  // ── Init ────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    buildBasket();
+    render();
+  });
+
+})();
+
+</script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     NAV
+════════════════════════════════════════════════════ -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-text">AGORA<span class="logo-accent">FM</span></span>
+    <span class="logo-dot"></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li>
+      <a href="service_providers.html">Services <span class="nav-chevron">▼</span></a>
+      <div class="nav-dropdown">
+        <div class="dropdown-head">FM Categories</div>
+        <a href="service_providers.html">Fire Protection</a>
+        <a href="service_providers.html">Water Services</a>
+        <a href="service_providers.html">Electrical Services</a>
+        <a href="service_providers.html">Gas Services</a>
+        <a href="service_providers.html">HVAC</a>
+        <a href="service_providers.html">Lifts &amp; Lifting</a>
+        <a href="service_providers.html">Doors &amp; Access</a>
+        <a href="service_providers.html">Risk Assessments</a>
+      </div>
+    </li>
+    <li><a href="service_providers.html">Providers</a></li>
+    <li><a href="service_providers_catalogue.html">Catalogue</a></li>
+    <li><a href="#">Benchmarks</a></li>
+    <li><a href="#">Analytics</a></li>
+    <li><a href="#">Enterprise</a></li>
+  </ul>
+  <div class="nav-search">
+    <div class="search-wrap">
+      <input type="text" placeholder="Search services, providers…" id="navSearch" />
+      <button onclick="handleSearch()">⌕</button>
+    </div>
+  </div>
+  <div class="nav-cta">
+    <a href="#" onclick="AgoraDB.auth.logout()" class="btn-nav-login">Sign Out</a>
+    <a href="service_providers.html" class="btn-nav-reg">Find Providers</a>
+  </div>
+  <span class="nav-badge">Platform v3.0</span>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     TICKER
+════════════════════════════════════════════════════ -->
+<div class="site-ticker">
+  <div class="ticker-label">Live Market</div>
+  <div class="ticker-track">
+    <span class="ticker-item">Fire Alarm Maintenance — 312 providers available</span>
+    <span class="ticker-item">Legionella Testing — L8 compliant specialists</span>
+    <span class="ticker-item">Generator Servicing — Avg contract value up 2.8%</span>
+    <span class="ticker-item">Lift Maintenance — 94 LOLER-certified contractors</span>
+    <span class="ticker-item">Fixed Wire Testing — from £0.45/circuit</span>
+    <span class="ticker-item">Asbestos Register — HSE compliance module updated</span>
+    <span class="ticker-item">UPS Maintenance — 24/7 emergency response verified</span>
+    <span class="ticker-item">Fire Alarm Maintenance — 312 providers available</span>
+    <span class="ticker-item">Legionella Testing — L8 compliant specialists</span>
+    <span class="ticker-item">Generator Servicing — Avg contract value up 2.8%</span>
+    <span class="ticker-item">Lift Maintenance — 94 LOLER-certified contractors</span>
+    <span class="ticker-item">Fixed Wire Testing — from £0.45/circuit</span>
+    <span class="ticker-item">Asbestos Register — HSE compliance module updated</span>
+    <span class="ticker-item">UPS Maintenance — 24/7 emergency response verified</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     DASHBOARD LAYOUT
+════════════════════════════════════════════════════ -->
+<div class="dash-wrap">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="dash-sidebar">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="dash-avatar">JH</div>
+      <div class="sidebar-name" id="dash-name">James Hartley</div>
+      <div class="sidebar-org" id="dash-org">Whitmore Estate Services Ltd</div>
+      <span class="sidebar-plan">Professional</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="sidebar-link active" onclick="showView('overview')">
+        <span class="sidebar-icon">⊞</span> Dashboard
+      </a>
+      <a class="sidebar-link" onclick="showView('contracts')">
+        <span class="sidebar-icon">📄</span> Contracts
+        <span class="sidebar-badge">12</span>
+      </a>
+      <a class="sidebar-link" onclick="showView('compliance')">
+        <span class="sidebar-icon">✅</span> Compliance
+        <span class="sidebar-badge" style="background:#e74c3c;">3</span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">Procurement</div>
+      <a class="sidebar-link" href="service_providers.html">
+        <span class="sidebar-icon">🔍</span> Find Providers
+      </a>
+      <a class="sidebar-link" onclick="showView('tenders')">
+        <span class="sidebar-icon">📋</span> Tenders
+      </a>
+      <a class="sidebar-link" href="payment.html">
+        <span class="sidebar-icon">💳</span> Payments &amp; POs
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">Intelligence</div>
+      <a class="sidebar-link" onclick="showView('spend')">
+        <span class="sidebar-icon">📊</span> Spend Analytics
+      </a>
+      <a class="sidebar-link" onclick="showView('benchmarks')">
+        <span class="sidebar-icon">⚖️</span> Benchmarks
+      </a>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">Estate</div>
+      <a class="sidebar-link" onclick="showView('sites')">
+        <span class="sidebar-icon">🏢</span> Sites
+      </a>
+      <a class="sidebar-link" onclick="showView('suppliers')">
+        <span class="sidebar-icon">🤝</span> My Suppliers
+      </a>
+      <a class="sidebar-link" onclick="showView('orders');loadOrders();">
+        <span class="sidebar-icon">📦</span> My Orders
+        <span class="sidebar-badge" id="orders-badge" style="display:none;">0</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#"><span>⚙</span> Account Settings</a>
+      <a href="#"><span>❓</span> Help &amp; Support</a>
+      <a href="#" onclick="AgoraDB.auth.logout()"><span>↩</span> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="dash-main">
+
+    <!-- ════════ OVERVIEW VIEW ════════ -->
+    <div id="view-overview">
+
+      <div class="dash-header">
+        <div class="dash-header-left">
+          <div class="section-eyebrow" style="margin-bottom:6px;">
+            <span class="eyebrow-line"></span>
+            <span class="eyebrow-text">Customer Dashboard</span>
+          </div>
+          <div class="dash-title" id="dash-welcome">Good morning, <span style="color:var(--orange)" id="dash-firstname">James</span></div>
+          <div class="dash-subtitle" id="dash-subtitle">Here's your FM estate overview — Thursday 17 April 2026</div>
+        </div>
+        <div class="dash-header-actions">
+          <a href="service_providers.html" class="btn-secondary" style="padding:9px 18px;font-size:0.78rem;">Find Providers</a>
+          <a href="payment.html" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">New PO →</a>
+        </div>
+      </div>
+
+      <!-- Welcome bar -->
+      <div class="welcome-bar">
+        <span class="welcome-text">⚠️ You have <strong>3 compliance items</strong> due within 30 days. <a href="#" onclick="showView('compliance')" style="color:var(--orange);text-decoration:none;">Review now →</a></span>
+        <span style="font-size:0.7rem;color:rgba(227,229,232,0.25);">Last updated 08:42</span>
+      </div>
+
+      <!-- KPI row -->
+      <div class="kpi-row">
+        <div class="kpi-card orange">
+          <div class="kpi-label">Active Contracts</div>
+          <div class="kpi-value">12</div>
+          <div class="kpi-delta up">↑ 2 added this quarter</div>
+        </div>
+        <div class="kpi-card steel">
+          <div class="kpi-label">Annual FM Spend</div>
+          <div class="kpi-value">£84,320</div>
+          <div class="kpi-delta down">↓ £6,200 vs last year</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Compliance Score</div>
+          <div class="kpi-value green">87%</div>
+          <div class="kpi-delta up">↑ 4pts since last audit</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">Actions Required</div>
+          <div class="kpi-value red">3</div>
+          <div class="kpi-delta down">2 overdue · 1 due soon</div>
+        </div>
+      </div>
+
+      <!-- Main grid: contracts + compliance -->
+      <div class="dash-grid">
+
+        <!-- Active contracts -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Active Contracts</span>
+            <a class="panel-action" onclick="showView('contracts')">View All →</a>
+          </div>
+          <div class="panel-body no-pad">
+            <table class="contracts-table">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Provider</th>
+                  <th>Renewal</th>
+                  <th>Value</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="contract-name">Fire Alarm Maintenance</div><div class="contract-provider">3 sites</div></td>
+                  <td>Apollo Fire Technicians</td>
+                  <td>Jun 2026</td>
+                  <td>£8,400/yr</td>
+                  <td><span class="status active">Active</span></td>
+                </tr>
+                <tr>
+                  <td><div class="contract-name">Legionella Testing (L8)</div><div class="contract-provider">All sites</div></td>
+                  <td>AquaSafe Testing Ltd</td>
+                  <td>May 2026</td>
+                  <td>£3,200/yr</td>
+                  <td><span class="status due">Due Soon</span></td>
+                </tr>
+                <tr>
+                  <td><div class="contract-name">Fixed Wire Testing</div><div class="contract-provider">2 sites</div></td>
+                  <td>Volt Electrical Compliance</td>
+                  <td>Apr 2026</td>
+                  <td>£2,100/yr</td>
+                  <td><span class="status overdue">Overdue</span></td>
+                </tr>
+                <tr>
+                  <td><div class="contract-name">Passenger Lift Maintenance</div><div class="contract-provider">1 site</div></td>
+                  <td>Kone Lifts UK</td>
+                  <td>Sep 2026</td>
+                  <td>£4,800/yr</td>
+                  <td><span class="status active">Active</span></td>
+                </tr>
+                <tr>
+                  <td><div class="contract-name">Boiler Servicing</div><div class="contract-provider">2 sites</div></td>
+                  <td>BritHeat Services</td>
+                  <td>Nov 2026</td>
+                  <td>£1,950/yr</td>
+                  <td><span class="status active">Active</span></td>
+                </tr>
+                <tr>
+                  <td><div class="contract-name">PAT Testing</div><div class="contract-provider">1 site</div></td>
+                  <td>SafeTest Electrical</td>
+                  <td>Aug 2026</td>
+                  <td>£680/yr</td>
+                  <td><span class="status pending">Pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right col: compliance + quick actions -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Upcoming compliance -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Upcoming Compliance</span>
+              <a class="panel-action" onclick="showView('compliance')">View All →</a>
+            </div>
+            <div class="panel-body">
+              <ul class="compliance-list">
+                <li class="compliance-item">
+                  <div class="comp-date-box urgent">
+                    <div class="comp-day">18</div>
+                    <div class="comp-mon">Apr</div>
+                  </div>
+                  <div class="comp-info">
+                    <div class="comp-service">Fixed Wire Testing</div>
+                    <div class="comp-provider">Volt Electrical — 2 sites</div>
+                  </div>
+                  <div class="comp-days-left urgent">1 day</div>
+                </li>
+                <li class="compliance-item">
+                  <div class="comp-date-box soon">
+                    <div class="comp-day">02</div>
+                    <div class="comp-mon">May</div>
+                  </div>
+                  <div class="comp-info">
+                    <div class="comp-service">Legionella Testing (L8)</div>
+                    <div class="comp-provider">AquaSafe — all sites</div>
+                  </div>
+                  <div class="comp-days-left soon">15 days</div>
+                </li>
+                <li class="compliance-item">
+                  <div class="comp-date-box soon">
+                    <div class="comp-day">14</div>
+                    <div class="comp-mon">May</div>
+                  </div>
+                  <div class="comp-info">
+                    <div class="comp-service">Fire Extinguisher Service</div>
+                    <div class="comp-provider">Unassigned</div>
+                  </div>
+                  <div class="comp-days-left soon">27 days</div>
+                </li>
+                <li class="compliance-item">
+                  <div class="comp-date-box">
+                    <div class="comp-day">12</div>
+                    <div class="comp-mon">Jun</div>
+                  </div>
+                  <div class="comp-info">
+                    <div class="comp-service">Fire Alarm Maintenance</div>
+                    <div class="comp-provider">Apollo Fire — 3 sites</div>
+                  </div>
+                  <div class="comp-days-left ok">56 days</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Quick Actions</span>
+            </div>
+            <div class="panel-body">
+              <div class="quick-actions">
+                <a class="quick-action" href="service_providers.html">
+                  <span class="qa-icon">🔍</span>
+                  <span class="qa-label">Find Provider</span>
+                  <span class="qa-desc">Browse 3,800+ verified FM contractors</span>
+                </a>
+                <a class="quick-action" href="payment.html">
+                  <span class="qa-icon">📄</span>
+                  <span class="qa-label">Raise PO</span>
+                  <span class="qa-desc">Generate a purchase order</span>
+                </a>
+                <a class="quick-action" onclick="showView('benchmarks')">
+                  <span class="qa-icon">⚖️</span>
+                  <span class="qa-label">Benchmark</span>
+                  <span class="qa-desc">Compare your rates to market</span>
+                </a>
+                <a class="quick-action" onclick="showView('tenders')">
+                  <span class="qa-icon">📋</span>
+                  <span class="qa-label">New Tender</span>
+                  <span class="qa-desc">Run a competitive tender</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /dash-grid -->
+
+      <!-- Bottom grid: spend + activity + sites -->
+      <div class="dash-grid three">
+
+        <!-- Spend by category -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Spend by Category</span>
+            <a class="panel-action" onclick="showView('spend')">Full Analytics →</a>
+          </div>
+          <div class="panel-body">
+            <div class="spend-chart">
+              <div class="spend-bar-row">
+                <span class="spend-bar-label">Fire</span>
+                <div class="spend-bar-track"><div class="spend-bar-fill" style="width:88%"></div></div>
+                <span class="spend-bar-val">£22,400</span>
+              </div>
+              <div class="spend-bar-row">
+                <span class="spend-bar-label">Electrical</span>
+                <div class="spend-bar-track"><div class="spend-bar-fill" style="width:68%"></div></div>
+                <span class="spend-bar-val">£17,200</span>
+              </div>
+              <div class="spend-bar-row">
+                <span class="spend-bar-label">Lifts</span>
+                <div class="spend-bar-track"><div class="spend-bar-fill" style="width:52%"></div></div>
+                <span class="spend-bar-val">£13,100</span>
+              </div>
+              <div class="spend-bar-row">
+                <span class="spend-bar-label">Water</span>
+                <div class="spend-bar-track"><div class="spend-bar-fill" style="width:38%"></div></div>
+                <span class="spend-bar-val">£9,620</span>
+              </div>
+              <div class="spend-bar-row">
+                <span class="spend-bar-label">Gas / HVAC</span>
+                <div class="spend-bar-track"><div class="spend-bar-fill" style="width:28%"></div></div>
+                <span class="spend-bar-val">£7,200</span>
+              </div>
+              <div class="spend-bar-row">
+                <span class="spend-bar-label">Risk</span>
+                <div class="spend-bar-track"><div class="spend-bar-fill" style="width:20%"></div></div>
+                <span class="spend-bar-val">£5,100</span>
+              </div>
+              <div class="spend-bar-row">
+                <span class="spend-bar-label">Other</span>
+                <div class="spend-bar-track"><div class="spend-bar-fill" style="width:14%"></div></div>
+                <span class="spend-bar-val">£3,700</span>
+              </div>
+            </div>
+            <div style="border-top:1px solid rgba(62,107,137,0.12);margin-top:14px;padding-top:14px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.72rem;color:var(--grey-dim);font-weight:300;">Total annual spend</span>
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--orange);letter-spacing:1px;">£84,320</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Recent Activity</span>
+          </div>
+          <div class="panel-body">
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div class="activity-text"><strong>PO #AG-2026-0441</strong> issued to Apollo Fire Technicians for Fire Alarm Maintenance — 3 sites</div>
+              <div class="activity-time">2h ago</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot orange"></div>
+              <div class="activity-text"><strong>Compliance alert:</strong> Fixed Wire Testing at Whitmore House overdue by 2 days</div>
+              <div class="activity-time">5h ago</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot steel"></div>
+              <div class="activity-text">Benchmarking report updated — <strong>Fire services</strong> 14% above market rate</div>
+              <div class="activity-time">Yesterday</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div class="activity-text"><strong>Kone Lifts UK</strong> confirmed Q2 maintenance visit for 24 April 2026</div>
+              <div class="activity-time">Yesterday</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot red"></div>
+              <div class="activity-text"><strong>PAT Testing</strong> contract at Merchant House — awaiting provider confirmation</div>
+              <div class="activity-time">2 days ago</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot steel"></div>
+              <div class="activity-text">New provider registered: <strong>PureAir HVAC Solutions</strong> — matches your HVAC requirements</div>
+              <div class="activity-time">3 days ago</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sites -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">My Sites</span>
+            <a class="panel-action" onclick="showView('sites')">Manage →</a>
+          </div>
+          <div class="panel-body">
+            <div class="site-row">
+              <div class="site-icon">🏢</div>
+              <div style="flex:1">
+                <div class="site-name">Whitmore House</div>
+                <div class="site-services">Fire · Electrical · Lifts · Water</div>
+              </div>
+              <div class="site-count">6 contracts</div>
+            </div>
+            <div class="site-row">
+              <div class="site-icon">🏭</div>
+              <div style="flex:1">
+                <div class="site-name">Merchant House</div>
+                <div class="site-services">Fire · Gas · Risk</div>
+              </div>
+              <div class="site-count">4 contracts</div>
+            </div>
+            <div class="site-row">
+              <div class="site-icon">🏗️</div>
+              <div style="flex:1">
+                <div class="site-name">Quayside Exchange</div>
+                <div class="site-services">Fire · Electrical · Doors</div>
+              </div>
+              <div class="site-count">2 contracts</div>
+            </div>
+            <div style="margin-top:16px;">
+              <a href="#" class="btn-secondary" style="display:block;text-align:center;font-size:0.75rem;padding:9px;">+ Add Site</a>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /three grid -->
+    </div><!-- /view-overview -->
+
+    <!-- ════════ CONTRACTS VIEW ════════ -->
+    <div id="view-contracts" style="display:none;">
+      <div class="dash-header">
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Contract Management</span></div>
+          <div class="dash-title">All <span style="color:var(--orange)">Contracts</span></div>
+          <div class="dash-subtitle">12 active service contracts across 3 sites</div>
+        </div>
+        <div class="dash-header-actions">
+          <a href="service_providers.html" class="btn-secondary" style="padding:9px 18px;font-size:0.78rem;">+ Add Contract</a>
+          <a href="payment.html" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">New PO →</a>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Contract Register</span>
+          <span style="font-size:0.72rem;color:var(--grey-dim);">12 contracts · £84,320/yr total</span>
+        </div>
+        <div class="panel-body no-pad">
+          <table class="contracts-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Provider</th>
+                <th>Site(s)</th>
+                <th>Start</th>
+                <th>Renewal</th>
+                <th>Annual Value</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><div class="contract-name">Fire Alarm Maintenance</div></td><td>Apollo Fire Technicians</td><td>3 sites</td><td>Jun 2025</td><td>Jun 2026</td><td>£8,400</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">Legionella Testing (L8)</div></td><td>AquaSafe Testing Ltd</td><td>All sites</td><td>May 2025</td><td>May 2026</td><td>£3,200</td><td><span class="status due">Due Soon</span></td><td><a href="service_providers.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">Renew →</a></td></tr>
+              <tr><td><div class="contract-name">Fixed Wire Testing</div></td><td>Volt Electrical Compliance</td><td>2 sites</td><td>Apr 2025</td><td>Apr 2026</td><td>£2,100</td><td><span class="status overdue">Overdue</span></td><td><a href="service_providers.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">Renew →</a></td></tr>
+              <tr><td><div class="contract-name">Passenger Lift Maintenance</div></td><td>Kone Lifts UK</td><td>Whitmore House</td><td>Sep 2025</td><td>Sep 2026</td><td>£4,800</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">LOLER Inspections</div></td><td>Kone Lifts UK</td><td>Whitmore House</td><td>Sep 2025</td><td>Sep 2026</td><td>£1,200</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">Boiler Servicing</div></td><td>BritHeat Services</td><td>2 sites</td><td>Nov 2025</td><td>Nov 2026</td><td>£1,950</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">PAT Testing</div></td><td>SafeTest Electrical</td><td>Merchant House</td><td>—</td><td>Aug 2026</td><td>£680</td><td><span class="status pending">Pending</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">Emergency Lighting</div></td><td>Volt Electrical Compliance</td><td>All sites</td><td>Mar 2025</td><td>Mar 2027</td><td>£2,400</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">Fire Risk Assessment</div></td><td>SafeHouse Risk Ltd</td><td>All sites</td><td>Jan 2025</td><td>Jan 2027</td><td>£3,600</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">AHU Maintenance</div></td><td>PureAir HVAC Solutions</td><td>Whitmore House</td><td>Feb 2026</td><td>Feb 2027</td><td>£5,200</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">Asbestos Register</div></td><td>Apex Environmental</td><td>Quayside Exchange</td><td>Jun 2024</td><td>Jun 2026</td><td>£1,890</td><td><span class="status due">Due Soon</span></td><td><a href="service_providers.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">Renew →</a></td></tr>
+              <tr><td><div class="contract-name">Roller Shutters</div></td><td>SecureDoor UK</td><td>Quayside Exchange</td><td>Oct 2025</td><td>Oct 2026</td><td>£1,500</td><td><span class="status active">Active</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ COMPLIANCE VIEW ════════ -->
+    <div id="view-compliance" style="display:none;">
+      <div class="dash-header">
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Compliance Management</span></div>
+          <div class="dash-title">Compliance <span style="color:var(--orange)">Calendar</span></div>
+          <div class="dash-subtitle">Statutory inspections and service deadlines across all sites</div>
+        </div>
+        <div class="dash-header-actions">
+          <a href="service_providers.html" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">Find Provider →</a>
+        </div>
+      </div>
+      <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="kpi-card red"><div class="kpi-label">Overdue</div><div class="kpi-value red">2</div><div class="kpi-delta down">Immediate action required</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Due within 30 days</div><div class="kpi-value orange">3</div><div class="kpi-delta">Schedule now</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Compliant</div><div class="kpi-value green">18</div><div class="kpi-delta up">All current</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">All Compliance Items</span></div>
+        <div class="panel-body no-pad">
+          <table class="contracts-table">
+            <thead>
+              <tr><th>Service</th><th>Site</th><th>Frequency</th><th>Last Done</th><th>Due Date</th><th>Provider</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr><td><div class="contract-name">Fixed Wire Testing</div></td><td>Whitmore House</td><td>5-yearly</td><td>Apr 2021</td><td>Apr 2026</td><td>Volt Electrical</td><td><span class="status overdue">Overdue</span></td><td><a href="service_providers.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">Book →</a></td></tr>
+              <tr><td><div class="contract-name">Fixed Wire Testing</div></td><td>Merchant House</td><td>5-yearly</td><td>Apr 2021</td><td>Apr 2026</td><td>Volt Electrical</td><td><span class="status overdue">Overdue</span></td><td><a href="service_providers.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">Book →</a></td></tr>
+              <tr><td><div class="contract-name">Legionella Testing (L8)</div></td><td>All sites</td><td>Quarterly</td><td>Feb 2026</td><td>02 May 2026</td><td>AquaSafe Testing</td><td><span class="status due">Due Soon</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">Fire Extinguisher Service</div></td><td>All sites</td><td>Annual</td><td>May 2025</td><td>14 May 2026</td><td>Unassigned</td><td><span class="status due">Due Soon</span></td><td><a href="service_providers.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">Find →</a></td></tr>
+              <tr><td><div class="contract-name">Asbestos Register Review</div></td><td>Quayside Exchange</td><td>Annual</td><td>Jun 2025</td><td>Jun 2026</td><td>Apex Environmental</td><td><span class="status due">Due Soon</span></td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+              <tr><td><div class="contract-name">Fire Alarm Maintenance</div></td><td>All sites</td><td>Annual</td><td>Jun 2025</td><td>Jun 2026</td><td>Apollo Fire</td><td><span class="status active">On Track</span></td><td></td></tr>
+              <tr><td><div class="contract-name">LOLER Inspections</div></td><td>Whitmore House</td><td>6-monthly</td><td>Oct 2025</td><td>Sep 2026</td><td>Kone Lifts UK</td><td><span class="status active">On Track</span></td><td></td></tr>
+              <tr><td><div class="contract-name">Boiler Servicing</div></td><td>2 sites</td><td>Annual</td><td>Nov 2025</td><td>Nov 2026</td><td>BritHeat Services</td><td><span class="status active">On Track</span></td><td></td></tr>
+              <tr><td><div class="contract-name">Emergency Lighting</div></td><td>All sites</td><td>Annual</td><td>Mar 2026</td><td>Mar 2027</td><td>Volt Electrical</td><td><span class="status active">On Track</span></td><td></td></tr>
+              <tr><td><div class="contract-name">Fire Risk Assessment</div></td><td>All sites</td><td>Annual</td><td>Jan 2026</td><td>Jan 2027</td><td>SafeHouse Risk</td><td><span class="status active">On Track</span></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ SPEND VIEW ════════ -->
+    <div id="view-spend" style="display:none;">
+      <div class="dash-header">
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Spend Analytics</span></div>
+          <div class="dash-title">Spend <span style="color:var(--orange)">Analytics</span></div>
+          <div class="dash-subtitle">Annual FM expenditure breakdown — Financial year 2025/26</div>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-card orange"><div class="kpi-label">Total Annual Spend</div><div class="kpi-value">£84,320</div><div class="kpi-delta down">↓ £6,200 vs last year</div></div>
+        <div class="kpi-card steel"><div class="kpi-label">Avg Cost Per Site</div><div class="kpi-value">£28,107</div><div class="kpi-delta">3 active sites</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Savings vs Market</div><div class="kpi-value green">£9,840</div><div class="kpi-delta up">↑ 10.4% below benchmark</div></div>
+        <div class="kpi-card steel"><div class="kpi-label">Contracts Managed</div><div class="kpi-value">12</div><div class="kpi-delta">Across 7 categories</div></div>
+      </div>
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Spend by Category</span></div>
+          <div class="panel-body">
+            <div class="spend-chart">
+              <div class="spend-bar-row"><span class="spend-bar-label">Fire</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:88%"></div></div><span class="spend-bar-val">£22,400</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Electrical</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:68%"></div></div><span class="spend-bar-val">£17,200</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Lifts</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:52%"></div></div><span class="spend-bar-val">£13,100</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">HVAC</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:42%"></div></div><span class="spend-bar-val">£10,700</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Water</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:38%"></div></div><span class="spend-bar-val">£9,620</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Risk</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:22%"></div></div><span class="spend-bar-val">£5,600</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Doors / Access</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:15%"></div></div><span class="spend-bar-val">£3,900</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Gas</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:10%"></div></div><span class="spend-bar-val">£1,800</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Spend by Site</span></div>
+          <div class="panel-body">
+            <div class="spend-chart">
+              <div class="spend-bar-row"><span class="spend-bar-label">Whitmore House</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:80%"></div></div><span class="spend-bar-val">£38,400</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Merchant House</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:55%"></div></div><span class="spend-bar-val">£26,800</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Quayside Exchange</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:40%"></div></div><span class="spend-bar-val">£19,120</span></div>
+            </div>
+            <div style="border-top:1px solid rgba(62,107,137,0.12);margin-top:20px;padding-top:14px;">
+              <div style="font-size:0.68rem;color:var(--grey-dim);margin-bottom:12px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Benchmark Comparison</div>
+              <div class="spend-bar-row"><span class="spend-bar-label">Your Fire spend</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:65%"></div></div><span class="spend-bar-val">£22,400</span></div>
+              <div class="spend-bar-row"><span class="spend-bar-label" style="color:#e74c3c;">Market average</span><div class="spend-bar-track"><div class="spend-bar-fill" style="width:88%;background:linear-gradient(90deg,#e74c3c,rgba(231,76,60,0.4));"></div></div><span class="spend-bar-val" style="color:#e74c3c;">£26,000</span></div>
+              <div style="font-size:0.72rem;color:#5cb85c;margin-top:8px;">✓ You are 14% below the market rate for fire services</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ BENCHMARKS VIEW ════════ -->
+    <div id="view-benchmarks" style="display:none;">
+      <div class="dash-header">
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Market Intelligence</span></div>
+          <div class="dash-title">Market <span style="color:var(--orange)">Benchmarks</span></div>
+          <div class="dash-subtitle">Compare your contract rates against live market data</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Your Rates vs Market Average</span><span style="font-size:0.72rem;color:var(--grey-dim);">Data updated April 2026</span></div>
+        <div class="panel-body no-pad">
+          <table class="contracts-table">
+            <thead><tr><th>Service</th><th>Your Rate</th><th>Market Avg</th><th>Difference</th><th>Verdict</th></tr></thead>
+            <tbody>
+              <tr><td><div class="contract-name">Fire Alarm Maintenance</div></td><td>£2,800/site/yr</td><td>£3,250/site/yr</td><td style="color:#5cb85c;">–14.2%</td><td><span class="status active">Good Rate</span></td></tr>
+              <tr><td><div class="contract-name">Legionella Testing (L8)</div></td><td>£195/visit</td><td>£210/visit</td><td style="color:#5cb85c;">–7.1%</td><td><span class="status active">Good Rate</span></td></tr>
+              <tr><td><div class="contract-name">Fixed Wire Testing</div></td><td>£0.52/circuit</td><td>£0.45/circuit</td><td style="color:#e74c3c;">+15.6%</td><td><span class="status overdue">Overpaying</span></td></tr>
+              <tr><td><div class="contract-name">Passenger Lift Maintenance</div></td><td>£4,800/yr</td><td>£4,200/yr</td><td style="color:#e74c3c;">+14.3%</td><td><span class="status overdue">Overpaying</span></td></tr>
+              <tr><td><div class="contract-name">Boiler Servicing</div></td><td>£975/unit/yr</td><td>£950/unit/yr</td><td style="color:var(--orange);">+2.6%</td><td><span class="status due">Fair Rate</span></td></tr>
+              <tr><td><div class="contract-name">PAT Testing</div></td><td>£1.20/item</td><td>£1.25/item</td><td style="color:#5cb85c;">–4.0%</td><td><span class="status active">Good Rate</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ TENDERS / SITES / SUPPLIERS (placeholder views) ════════ -->
+    <div id="view-tenders" style="display:none;">
+      <div class="dash-header"><div><div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Procurement</span></div><div class="dash-title">Tender <span style="color:var(--orange)">Management</span></div><div class="dash-subtitle">Coming soon — run competitive tenders across all FM categories</div></div></div>
+      <div class="panel"><div class="panel-body" style="text-align:center;padding:60px 20px;"><div style="font-size:2.5rem;margin-bottom:16px;">📋</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:var(--grey);margin-bottom:8px;">Tender Management</div><div style="font-size:0.85rem;color:var(--grey-dim);font-weight:300;max-width:400px;margin:0 auto 24px;">Create competitive tenders, receive bids from verified providers, and compare proposals side-by-side. Coming in the next platform release.</div><a href="service_providers.html" class="btn-primary">Browse Providers Now →</a></div></div>
+    </div>
+    <div id="view-sites" style="display:none;">
+      <div class="dash-header"><div><div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Estate Management</span></div><div class="dash-title">My <span style="color:var(--orange)">Sites</span></div><div class="dash-subtitle">3 active sites · 12 contracts</div></div><div class="dash-header-actions"><a href="#" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">+ Add Site</a></div></div>
+      <div class="dash-grid three">
+        <div class="panel"><div class="panel-header"><span class="panel-title">Whitmore House</span><span class="status active">Active</span></div><div class="panel-body"><div style="font-size:0.82rem;color:var(--grey-dim);margin-bottom:16px;font-weight:300;">1 Canada Square, London E14 5AB</div><div style="font-size:0.7rem;color:var(--orange);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Active Contracts</div><div style="font-size:0.8rem;color:var(--grey-dim);">Fire Alarm · Legionella · Lifts · LOLER · Fixed Wire · AHU</div><div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:0.72rem;color:var(--grey-dim);">Annual spend</span><span style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--orange);">£38,400</span></div></div></div>
+        <div class="panel"><div class="panel-header"><span class="panel-title">Merchant House</span><span class="status active">Active</span></div><div class="panel-body"><div style="font-size:0.82rem;color:var(--grey-dim);margin-bottom:16px;font-weight:300;">30 St Mary Axe, London EC3A 8BF</div><div style="font-size:0.7rem;color:var(--orange);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Active Contracts</div><div style="font-size:0.8rem;color:var(--grey-dim);">Fire Alarm · Boiler · Risk Assessment · PAT Testing</div><div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:0.72rem;color:var(--grey-dim);">Annual spend</span><span style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--orange);">£26,800</span></div></div></div>
+        <div class="panel"><div class="panel-header"><span class="panel-title">Quayside Exchange</span><span class="status active">Active</span></div><div class="panel-body"><div style="font-size:0.82rem;color:var(--grey-dim);margin-bottom:16px;font-weight:300;">3 More London Riverside, SE1 2RE</div><div style="font-size:0.7rem;color:var(--orange);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Active Contracts</div><div style="font-size:0.8rem;color:var(--grey-dim);">Fire Alarm · Asbestos Register · Roller Shutters</div><div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:0.72rem;color:var(--grey-dim);">Annual spend</span><span style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--orange);">£19,120</span></div></div></div>
+      </div>
+    </div>
+    <div id="view-suppliers" style="display:none;">
+      <div class="dash-header"><div><div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Supplier Management</span></div><div class="dash-title">My <span style="color:var(--orange)">Suppliers</span></div><div class="dash-subtitle">6 active supplier relationships</div></div><div class="dash-header-actions"><a href="service_providers.html" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">Find New Supplier →</a></div></div>
+      <div class="panel"><div class="panel-body no-pad"><table class="contracts-table"><thead><tr><th>Supplier</th><th>Category</th><th>Contracts</th><th>Annual Value</th><th>Rating</th><th></th></tr></thead><tbody>
+        <tr><td><div class="contract-name">Apollo Fire Technicians</div><div class="contract-provider">BAFE · ISO 9001</div></td><td>Fire</td><td>1</td><td>£8,400</td><td style="color:var(--orange);">★★★★★ 4.9</td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+        <tr><td><div class="contract-name">AquaSafe Testing Ltd</div><div class="contract-provider">UKAS · Legionella Control Assoc.</div></td><td>Water</td><td>1</td><td>£3,200</td><td style="color:var(--orange);">★★★★★ 4.8</td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+        <tr><td><div class="contract-name">Volt Electrical Compliance</div><div class="contract-provider">NICEIC · ECA Member</div></td><td>Electrical</td><td>2</td><td>£4,500</td><td style="color:var(--orange);">★★★★☆ 4.3</td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+        <tr><td><div class="contract-name">Kone Lifts UK</div><div class="contract-provider">LEIA Member · ISO 45001</div></td><td>Lifts</td><td>2</td><td>£6,000</td><td style="color:var(--orange);">★★★★★ 4.7</td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+        <tr><td><div class="contract-name">BritHeat Services</div><div class="contract-provider">Gas Safe · OFTEC</div></td><td>Gas</td><td>1</td><td>£1,950</td><td style="color:var(--orange);">★★★★☆ 4.4</td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+        <tr><td><div class="contract-name">PureAir HVAC Solutions</div><div class="contract-provider">REFCOM · F-Gas Certified</div></td><td>HVAC</td><td>1</td><td>£5,200</td><td style="color:var(--orange);">★★★★★ 4.6</td><td><a href="payment.html" style="color:var(--orange);font-size:0.72rem;text-decoration:none;">PO →</a></td></tr>
+      </tbody></table></div></div>
+    </div>
+
+    <!-- ORDERS VIEW -->
+    <div id="view-orders" style="display:none;">
+      <div class="dash-header">
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Order History</span></div>
+          <div class="dash-title">My <span style="color:var(--orange)">Orders</span></div>
+          <div class="dash-subtitle" id="orders-subtitle">Your commissioned services</div>
+        </div>
+        <div class="dash-header-actions">
+          <a href="service_providers.html" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">Commission New Service →</a>
+        </div>
+      </div>
+      <div id="orders-list">
+        <div style="padding:40px;text-align:center;color:var(--grey-dim);">
+          <div style="font-size:2rem;margin-bottom:12px;">📦</div>
+          Click "My Orders" to load your order history.
+        </div>
+      </div>
+      <!-- Order detail modal -->
+      <div id="order-modal" style="display:none;position:fixed;inset:0;background:rgba(10,26,47,0.92);z-index:500;overflow:auto;padding:32px 24px;">
+        <div style="max-width:760px;margin:0 auto;background:#0D2040;border:1px solid rgba(62,107,137,0.3);border-radius:2px;">
+          <div style="padding:20px 24px;border-bottom:1px solid rgba(62,107,137,0.2);display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--grey);" id="modal-order-id">Order Detail</div>
+            <button onclick="document.getElementById('order-modal').style.display='none'" style="background:none;border:none;color:var(--grey-dim);font-size:1.2rem;cursor:pointer;">✕</button>
+          </div>
+          <div style="padding:24px;" id="modal-order-body">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /dash-wrap -->
+
+<!-- ══════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo" style="text-decoration:none;">
+        <span class="logo-text">AGORA<span class="logo-accent">FM</span></span>
+        <span class="logo-dot" style="animation:none;opacity:0.7;"></span>
+      </a>
+      <p>The UK's most advanced facilities management comparison and commissioning platform.</p>
+    </div>
+    <div class="footer-col"><h4>Platform</h4><ul><li><a href="service_providers.html">Find Providers</a></li><li><a href="#">Benchmarking</a></li><li><a href="#">Compliance</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About Agora FM</a></li><li><a href="#">Contact Us</a></li></ul></div>
+    <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Terms &amp; Conditions</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 Agora FM Ltd. All rights reserved. Registered in England &amp; Wales.</div>
+    <div class="footer-badge">Built for excellence in FM ◆</div>
+  </div>
+</footer>
+
+<script>
+  /* ── View switching ── */
+  var views = ['overview','contracts','compliance','spend','benchmarks','tenders','sites','suppliers'];
+  function showView(id) {
+    views.forEach(function(v) {
+      document.getElementById('view-' + v).style.display = (v === id) ? '' : 'none';
+    });
+    document.querySelectorAll('.sidebar-link').forEach(function(l) {
+      l.classList.remove('active');
+    });
+    event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.add('active');
+  }
+
+  /* ── Nav search ── */
+  function handleSearch() {
+    var q = document.getElementById('navSearch').value;
+    if (q) window.location.href = 'service_providers.html?search=' + encodeURIComponent(q);
+  }
+  document.getElementById('navSearch').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleSearch();
+  });
+
+  // Load real session data and update user elements
+  (async function() {
+    try {
+      var s = await AgoraDB.auth.getSession();
+      if (!s || !s.loggedIn) { window.location.href = 'index.html'; return; }
+      if (s.type === 'supplier') { window.location.href = 'supplier_dashboard.html'; return; }
+
+      // Update sidebar
+      var name     = s.name  || 'User';
+      var org      = s.org   || 'Your Organisation';
+      var initials = name.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+
+      var avatar   = document.getElementById('dash-avatar');
+      var dashName = document.getElementById('dash-name');
+      var dashOrg  = document.getElementById('dash-org');
+      var firstName= document.getElementById('dash-firstname');
+      var subtitle = document.getElementById('dash-subtitle');
+
+      if (avatar)    avatar.textContent    = initials;
+      if (dashName)  dashName.textContent  = name;
+      if (dashOrg)   dashOrg.textContent   = org;
+      if (firstName) firstName.textContent = name.split(' ')[0];
+
+      // Update subtitle with today's date
+      var days  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var months= ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      var now   = new Date();
+      var dateStr = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+      if (subtitle) subtitle.textContent = "Here's your FM estate overview — " + dateStr;
+
+    } catch(e) {
+      console.warn('Session load failed:', e.message);
+    }
+  })();
+
+  // ── Orders ─────────────────────────────────────────────────────────────
+  async function loadOrders() {
+    var list     = document.getElementById('orders-list');
+    var subtitle = document.getElementById('orders-subtitle');
+    var badge    = document.getElementById('orders-badge');
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--grey-dim);font-size:0.85rem;">Loading…</div>';
+
+    var orders = await AgoraDB.orders.getAll();
+
+    if (!orders || orders.length === 0) {
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--grey-dim);font-size:0.85rem;"><div style=\'font-size:2rem;margin-bottom:12px;\'>📦</div>No orders yet. <a href=\'service_providers.html\' style=\'color:var(--orange);\'>Find a provider →</a></div>';
+      subtitle.textContent = '0 orders placed';
+      return;
+    }
+
+    subtitle.textContent = orders.length + ' order' + (orders.length === 1 ? '' : 's') + ' placed';
+    badge.textContent    = orders.length;
+    badge.style.display  = 'inline-block';
+
+    var fmt = function(n){ return '£' + parseFloat(n).toFixed(2); };
+    var statusColour = function(s){ return s === 'completed' ? '#5cb85c' : s === 'confirmed' ? '#F18F01' : 'var(--steel-light)'; };
+
+    var html = '<div style="overflow:hidden;">';
+    orders.forEach(function(o) {
+      var items = o.items || [];
+      var svcNames = items.map(function(i){ return i.name; }).join(', ') || 'Service';
+      var date     = o.created_at ? o.created_at.substring(0,10) : '—';
+      var method   = (o.payment_method || 'card').replace('_',' ').replace(/\b\w/g,function(l){return l.toUpperCase();});
+      html += '<div style="padding:18px 20px;border-bottom:1px solid rgba(62,107,137,0.1);display:flex;align-items:center;gap:16px;cursor:pointer;transition:background 0.15s;" onmouseover=\'this.style.background=\"rgba(62,107,137,0.06)\"\'  onmouseout=\'this.style.background=\"\"\'  onclick=\'showOrderDetail("'+o.id+'")\'>';
+      html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.2rem;color:var(--orange);letter-spacing:1px;flex-shrink:0;min-width:160px;">'+o.id+'</div>';
+      html += '<div style="flex:1;min-width:0;"><div style="font-size:0.82rem;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+svcNames+'</div><div style="font-size:0.7rem;color:var(--grey-dim);margin-top:2px;">'+date+' · '+method+'</div></div>';
+      html += '<div style="text-align:right;flex-shrink:0;"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:0.95rem;font-weight:700;color:var(--orange);">'+fmt(o.total)+'</div><div style="font-size:0.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:'+statusColour(o.status)+';margin-top:2px;">'+o.status.toUpperCase()+'</div></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    list.innerHTML = html;
+  }
+
+  async function showOrderDetail(orderId) {
+    var modal = document.getElementById('order-modal');
+    var body  = document.getElementById('modal-order-body');
+    document.getElementById('modal-order-id').textContent = orderId;
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--grey-dim);">Loading…</div>';
+    modal.style.display = 'block';
+
+    try {
+      var resp = await fetch('/api/orders/' + orderId, {credentials:'same-origin'});
+      var o    = await resp.json();
+      if (!o || o.error) { body.innerHTML = '<p style="color:#e74c3c;">Could not load order.</p>'; return; }
+
+      var items  = o.items || [];
+      var fmt    = function(n){ return '£' + parseFloat(n).toFixed(2); };
+      var method = (o.payment_method || 'card').replace('_',' ').replace(/\b\w/g,function(l){return l.toUpperCase();});
+      var date   = o.created_at ? o.created_at.substring(0,10) : '—';
+      var statusColour = o.status === 'completed' ? '#5cb85c' : '#F18F01';
+
+      var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">';
+      html += '<div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);margin-bottom:6px;">Customer</div><div style="font-size:0.85rem;color:var(--grey);">'+o.customer_org+'</div><div style="font-size:0.75rem;color:var(--grey-dim);">'+o.customer_email+'</div></div>';
+      html += '<div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);margin-bottom:6px;">Payment Method</div><div style="font-size:0.85rem;color:var(--grey);">'+method+'</div><div style="font-size:0.75rem;color:var(--grey-dim);">'+date+'</div></div>';
+      html += '<div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);margin-bottom:6px;">Handshake</div><div style="font-size:0.78rem;color:var(--grey-dim);">'+(o.handshake_at||'—').substring(0,19).replace('T',' ')+'</div></div>';
+      html += '<div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);margin-bottom:6px;">Status</div><div style="font-size:0.85rem;font-weight:700;color:'+statusColour+';letter-spacing:1px;">'+o.status.toUpperCase()+'</div></div>';
+      html += '</div>';
+
+      // Items table
+      html += '<div style="margin-bottom:16px;"><table style="width:100%;border-collapse:collapse;">';
+      html += '<thead><tr><th style="text-align:left;font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);padding:8px 0;border-bottom:1px solid rgba(62,107,137,0.2);">Service</th><th style="text-align:left;font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);padding:8px 0;border-bottom:1px solid rgba(62,107,137,0.2);">Supplier</th><th style="text-align:right;font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);padding:8px 0;border-bottom:1px solid rgba(62,107,137,0.2);">Qty</th><th style="text-align:right;font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);padding:8px 0;border-bottom:1px solid rgba(62,107,137,0.2);">Total</th></tr></thead><tbody>';
+      items.forEach(function(i){
+        var line = parseFloat(i.price||0) * parseInt(i.qty||1);
+        html += '<tr><td style="padding:10px 0;border-bottom:1px solid rgba(62,107,137,0.08);font-size:0.82rem;color:var(--grey);">'+i.name+'</td><td style="padding:10px 0;border-bottom:1px solid rgba(62,107,137,0.08);font-size:0.75rem;color:var(--grey-dim);">'+(i.supplierName||'—')+'</td><td style="padding:10px 0;border-bottom:1px solid rgba(62,107,137,0.08);font-size:0.82rem;color:var(--grey);text-align:right;">'+i.qty+'</td><td style="padding:10px 0;border-bottom:1px solid rgba(62,107,137,0.08);font-size:0.82rem;color:var(--orange);text-align:right;font-weight:700;">'+fmt(line)+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+
+      // Totals
+      html += '<div style="background:rgba(10,26,47,0.5);border:1px solid rgba(62,107,137,0.2);border-radius:2px;padding:16px 20px;">';
+      html += '<div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--grey-dim);margin-bottom:6px;"><span>Subtotal</span><span>'+fmt(o.subtotal)+'</span></div>';
+      html += '<div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--grey-dim);margin-bottom:6px;"><span>VAT (20%)</span><span>'+fmt(o.vat)+'</span></div>';
+      html += '<div style="display:flex;justify-content:space-between;font-size:0.72rem;color:rgba(241,143,1,0.6);margin-bottom:10px;"><span>Commission (5% — charged to provider)</span><span>'+fmt(o.commission)+'</span></div>';
+      html += '<div style="display:flex;justify-content:space-between;font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:1px;border-top:1px solid rgba(62,107,137,0.2);padding-top:10px;"><span style="color:var(--grey);">Total inc. VAT</span><span style="color:var(--orange);">'+fmt(o.total)+'</span></div>';
+      html += '</div>';
+
+      // PDF download link
+      html += '<div style="margin-top:16px;"><a href="/api/orders/'+o.id+'/pdf" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(62,107,137,0.15);border:1px solid rgba(62,107,137,0.3);border-radius:2px;color:var(--steel-light);font-family:\'Barlow Condensed\',sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">↓ Download PDF</a></div>';
+
+      body.innerHTML = html;
+    } catch(e) {
+      body.innerHTML = '<p style="color:#e74c3c;">Error loading order: ' + e.message + '</p>';
+    }
+  }
+</script>
+</body>
+</html>

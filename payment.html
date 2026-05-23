@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agora FM — Payment &amp; Purchase Order</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="agora_fm.css">
+  <style>
+    .page-content {
+      position: relative;
+      z-index: 1;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+    .page-intro {
+      margin-bottom: 28px;
+    }
+    .page-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .page-headline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      letter-spacing: 1px;
+      color: var(--grey);
+      margin-bottom: 6px;
+    }
+    .page-sub { font-size: 0.85rem; color: var(--grey-dim); font-weight: 300; }
+
+    /* Success banner */
+    .success-banner {
+      display: none;
+      background: rgba(2,122,72,0.12);
+      border: 1px solid rgba(108,233,166,0.3);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .success-banner.show { display: flex; }
+    .success-icon-circle {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #027A48;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .success-title { font-size: 0.9rem; font-weight: 600; color: #6CE9A6; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+    .success-sub { font-size: 0.82rem; color: rgba(108,233,166,0.7); margin-top: 3px; }
+
+    /* Payment mode toggle */
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+    .pay-mode-btn {
+      padding: 18px 20px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(62,107,137,0.3);
+      cursor: pointer;
+      text-align: left;
+      background: rgba(17,34,64,0.5);
+      transition: all 0.15s;
+    }
+    .pay-mode-btn:hover { border-color: rgba(241,143,1,0.4); }
+    .pay-mode-btn.active {
+      border-color: var(--orange);
+      background: rgba(241,143,1,0.08);
+      box-shadow: 0 0 0 3px rgba(241,143,1,0.1);
+    }
+    .pay-mode-icon { font-size: 22px; margin-bottom: 8px; }
+    .pay-mode-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--grey); margin-bottom: 3px; }
+    .pay-mode-desc { font-size: 0.78rem; color: var(--grey-dim); font-weight: 300; }
+
+    /* Panel */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Cards */
+    .pay-card {
+      background: rgba(17,34,64,0.55);
+      border: 1px solid rgba(62,107,137,0.25);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 16px;
+    }
+    .pay-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; padding-bottom: 12px;
+      border-bottom: 1px solid rgba(62,107,137,0.2);
+    }
+    .pay-card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--grey);
+    }
+    .lock-tag { font-size: 0.65rem; color: rgba(227,229,232,0.4); background: rgba(62,107,137,0.15); border: 1px solid rgba(62,107,137,0.2); padding: 2px 8px; border-radius: var(--radius); letter-spacing: 0.5px; }
+    .editable-tag { font-size: 0.65rem; color: var(--orange); background: rgba(241,143,1,0.1); border: 1px solid rgba(241,143,1,0.3); padding: 2px 8px; border-radius: var(--radius); letter-spacing: 0.5px; }
+
+    /* Form fields in dark theme */
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .field-row.single { grid-template-columns: 1fr; }
+    .field-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.5); text-transform: uppercase; letter-spacing: 1.5px; }
+    .field input, .field select {
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(62,107,137,0.3);
+      background: rgba(10,26,47,0.8);
+      color: var(--grey);
+      font-size: 0.88rem;
+      font-family: 'Barlow', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input::placeholder { color: rgba(227,229,232,0.2); }
+    .field input:focus, .field select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(241,143,1,0.1); }
+    .field input:disabled { background: rgba(10,26,47,0.4); color: rgba(227,229,232,0.35); cursor: not-allowed; border-color: rgba(62,107,137,0.12); }
+    .field select option { background: #0D2040; }
+
+    /* Cost table */
+    .table-wrap { overflow-x: auto; }
+    .cost-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 580px; }
+    .cost-table th { text-align: left; font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.4); text-transform: uppercase; letter-spacing: 1px; padding: 8px 10px; border-bottom: 1px solid rgba(62,107,137,0.2); }
+    .cost-table td { padding: 10px; border-bottom: 1px solid rgba(62,107,137,0.1); color: var(--grey); vertical-align: middle; }
+    .cost-table tr:last-child td { border-bottom: none; }
+    .cost-table input[type=number] { width: 80px; padding: 6px 8px; border: 1px solid rgba(62,107,137,0.3); border-radius: var(--radius); background: rgba(10,26,47,0.8); color: var(--grey); font-size: 0.82rem; font-family: 'Barlow', sans-serif; outline: none; }
+    .cost-table input[type=number]:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(241,143,1,0.1); }
+    .total-cell { font-weight: 700; color: var(--orange); font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; }
+
+    /* Desc box */
+    .desc-box { background: rgba(10,26,47,0.5); border-left: 3px solid var(--orange); padding: 12px 14px; font-size: 0.85rem; color: var(--grey-dim); line-height: 1.65; }
+    .desc-box strong { color: var(--orange); font-weight: 600; }
+
+    /* Signatures */
+    .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .sig-box { border: 1px solid rgba(62,107,137,0.2); border-radius: var(--radius); padding: 16px; background: rgba(10,26,47,0.4); }
+    .sig-label { font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.4); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+    .sig-input { width: 100%; background: transparent; border: none; border-bottom: 1px dashed rgba(62,107,137,0.5); color: var(--grey); font-size: 1.1rem; font-style: italic; font-family: Georgia, serif; padding: 4px 2px 8px; margin-bottom: 8px; outline: none; transition: border-color 0.2s; }
+    .sig-input:focus { border-bottom-color: var(--orange); }
+    .sig-date { font-size: 0.68rem; color: rgba(227,229,232,0.3); }
+
+    /* Action row */
+    .action-row { display: flex; gap: 12px; margin-top: 22px; }
+    .action-btn { flex: 1; padding: 14px 20px; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 0.92rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; border: none; }
+    .action-btn-primary { background: var(--orange); color: var(--navy); }
+    .action-btn-primary:hover { background: var(--orange-hover); box-shadow: 0 6px 24px rgba(241,143,1,0.35); transform: translateY(-1px); }
+    .action-btn-outline { background: transparent; color: var(--grey); border: 1px solid rgba(62,107,137,0.4); }
+    .action-btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+
+    /* Renewal note */
+    .renewal-note { font-size: 0.78rem; color: var(--grey-dim); display: flex; gap: 8px; margin-top: 14px; padding: 10px 14px; background: rgba(62,107,137,0.08); border: 1px solid rgba(62,107,137,0.15); border-radius: var(--radius); line-height: 1.5; }
+
+    /* PO badge */
+    .po-badge { display: inline-block; font-size: 0.62rem; font-weight: 700; background: rgba(241,143,1,0.1); color: var(--orange); padding: 3px 12px; border-radius: var(--radius); letter-spacing: 2px; margin-bottom: 14px; border: 1px solid rgba(241,143,1,0.3); text-transform: uppercase; }
+
+    /* Section label */
+    .section-label { font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.35); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
+
+    /* Page footer */
+    .page-rule { height: 1px; background: rgba(62,107,137,0.15); margin: 32px 0 18px; }
+    .page-foot { text-align: center; font-size: 0.75rem; color: rgba(227,229,232,0.25); font-weight: 300; }
+
+    @media (max-width: 600px) {
+      .mode-grid, .field-row, .sig-grid, .action-row { grid-template-columns: 1fr; }
+      .field-row.triple { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+  <script>
+/**
+ * AGORA FM — API Client (db.js)
+ * Talks to Flask backend instead of LocalStorage.
+ * All async methods return Promises.
+ */
+var AgoraDB = (function () {
+
+  async function api(method, path, body) {
+    try {
+      var opts = { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      var res = await fetch(path, opts);
+      return await res.json();
+    } catch(e) {
+      console.error('[AgoraDB]', path, e.message);
+      return { ok: false, error: 'Cannot reach server. Is app.py running?' };
+    }
+  }
+
+  var auth = {
+    login:      function(email, password) { return api('POST', '/api/auth/login', {email, password}); },
+    logout:     async function() { await api('POST', '/api/auth/logout'); window.location.href = 'index.html'; },
+    getSession: function() { return api('GET', '/api/auth/session'); },
+    isLoggedIn: async function() { var s = await api('GET', '/api/auth/session'); return !!(s && s.loggedIn); },
+    _session:   null,
+    getCachedSession: function() { return AgoraDB.auth._session || {}; }
+  };
+
+  var customers = {
+    create: function(d) { return api('POST', '/api/customers/register', d); }
+  };
+
+  var suppliers = {
+    create: function(d) { return api('POST', '/api/suppliers/register', d); },
+    getAll: function()  { return api('GET',  '/api/suppliers'); },
+    getById: function(id) { return api('GET', '/api/suppliers/' + id); }
+  };
+
+  var basket = {
+    get:        function()      { return api('GET',    '/api/basket'); },
+    addItem:    function(item)  { return api('POST',   '/api/basket/add', item); },
+    removeItem: function(id)    { return api('DELETE', '/api/basket/item/' + id); },
+    updateQty:  function(id, q) { return api('PUT',    '/api/basket/qty', {id, qty: q}); },
+    clear:      function()      { return api('POST',   '/api/basket/clear'); },
+    getCount:   async function() { var b = await basket.get(); return (b.items||[]).length; },
+    getTotals:  async function() { var b = await basket.get(); return {subtotal:b.subtotal||0, vat:b.vat||0, commission:b.commission||0, total:b.total||0}; }
+  };
+
+  var orders = {
+    create: function(d)   { return api('POST', '/api/orders', d); },
+    getAll: function()    { return api('GET',  '/api/orders'); },
+    getPdf: function(oid) { window.open('/api/orders/' + oid + '/pdf', '_blank'); }
+  };
+
+  var admin = {
+    dump:  function() { return api('GET',  '/api/admin/dump'); },
+    reset: function() { return api('POST', '/api/admin/reset'); }
+  };
+
+  // Pre-cache session on load
+  api('GET', '/api/auth/session').then(function(s) {
+    AgoraDB.auth._session = s;
+  }).catch(function() {
+    AgoraDB.auth._session = { loggedIn: false };
+  });
+
+  return { auth, customers, suppliers, basket, orders, admin,
+           COMMISSION_RATE: 0.05, VAT_RATE: 0.20 };
+})();
+window.AgoraDB = AgoraDB;
+
+</script>
+  <script>
+/**
+ * AGORA FM — Nav Auth + Basket Badge (nav-auth.js)
+ * Async-aware version for Flask backend.
+ */
+(function () {
+
+  async function updateNav() {
+    var s = await AgoraDB.auth.getSession();
+    AgoraDB.auth._session = s;
+    var loginBtn = document.querySelector('.btn-nav-login');
+    var regBtn   = document.querySelector('.btn-nav-reg');
+    if (s && s.loggedIn) {
+      if (loginBtn) {
+        loginBtn.textContent = 'Sign Out';
+        loginBtn.href = '#';
+        loginBtn.onclick = function(e) { e.preventDefault(); AgoraDB.auth.logout(); };
+      }
+      if (regBtn) {
+        regBtn.textContent = s.type === 'supplier' ? 'My Dashboard' : 'My Dashboard';
+        regBtn.href = s.type === 'supplier' ? 'supplier_dashboard.html' : 'dashboard.html';
+        regBtn.onclick = null;
+      }
+    }
+  }
+
+  async function updateBasketBadge() {
+    // Badge is now managed by basket.js — just trigger a refresh if available
+    if (window.AgoraBasket && typeof AgoraBasket.refresh === 'function') {
+      AgoraBasket.refresh();
+    }
+  }
+
+  function injectAdminLink() {
+    var footer = document.querySelector('.footer-bottom');
+    if (!footer || document.getElementById('admin-db-link')) return;
+    var link = document.createElement('a');
+    link.id = 'admin-db-link';
+    link.href = '#';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.textContent = '⚙ View DB';
+    link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
+    footer.appendChild(link);
+  }
+
+  async function showAdminPanel() {
+    var existing = document.getElementById('admin-panel-overlay');
+    if (existing) { existing.remove(); return; }
+    var data = await AgoraDB.admin.dump();
+    var overlay = document.createElement('div');
+    overlay.id = 'admin-panel-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    var fmt = function(n){ return '£' + (n||0).toFixed(2); };
+    var html = '<div style="max-width:1000px;margin:0 auto;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;gap:12px;">';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '</div></div>';
+
+    if (data.stats) {
+      html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;">';
+      [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
+       ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
+       ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
+        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    function section(title, obj) {
+      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+             JSON.stringify(obj, null, 2) + '</pre>';
+    }
+    html += section('Session', data.session);
+    html += section('Basket', data.basket);
+    html += section('Customers (' + (data.customers||[]).length + ')', data.customers);
+    html += section('Suppliers (' + (data.suppliers||[]).length + ')', data.suppliers);
+    html += section('Orders (' + (data.orders||[]).length + ')', data.orders);
+    html += '</div>';
+    overlay.innerHTML = html;
+    document.body.appendChild(overlay);
+  }
+
+  async function init() {
+    await updateNav();
+    await updateBasketBadge();
+    injectAdminLink();
+  }
+
+  window.AgoraNavUpdate = async function() { await updateBasketBadge(); };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+  <script src="payment-demo.js"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-text">AGORA<span class="logo-accent">FM</span></span>
+    <span class="logo-dot"></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="service_providers.html">Services</a></li>
+    <li><a href="service_providers.html">Providers</a></li>
+    <li><a href="#">Benchmarks</a></li>
+    <li><a href="registration.html">Register</a></li>
+  </ul>
+  <div class="nav-search">
+    <div class="search-wrap">
+      <input type="text" placeholder="Search services, providers…" id="navSearch" />
+      <button>⌕</button>
+    </div>
+  </div>
+  <div class="nav-cta">
+    <a href="index.html" class="btn-nav-login">Sign In</a>
+    <a href="registration.html" class="btn-nav-reg">Register Free</a>
+  </div>
+  <span class="nav-badge">🔒 Secure</span>
+</nav>
+
+<!-- TICKER -->
+<div class="site-ticker">
+  <div class="ticker-label">Live Market</div>
+  <div class="ticker-track">
+    <span class="ticker-item">Secure transactions via Agora FM</span>
+    <span class="ticker-item">PO generation — auto-logged to supplier account</span>
+    <span class="ticker-item">Renewal reminders — 4 months before service date</span>
+    <span class="ticker-item">256-bit SSL encrypted · ISO 27001 certified</span>
+    <span class="ticker-item">Secure transactions via Agora FM</span>
+    <span class="ticker-item">PO generation — auto-logged to supplier account</span>
+    <span class="ticker-item">Renewal reminders — 4 months before service date</span>
+    <span class="ticker-item">256-bit SSL encrypted · ISO 27001 certified</span>
+  </div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="page-content">
+
+  <div class="page-intro">
+    <div class="page-eyebrow">
+      <span class="eyebrow-line"></span>
+      <span class="eyebrow-text">Secure Transaction</span>
+    </div>
+    <div class="page-headline">Payment &amp; <span style="color:var(--orange);">Purchase Order</span></div>
+    <p class="page-sub">Complete your FM service transaction — pay by card or generate a supplier-specific purchase order.</p>
+  </div>
+
+  <!-- Success Banner -->
+  <div id="success-banner" class="success-banner">
+    <div class="success-icon-circle">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div>
+      <div class="success-title" id="success-title">Transaction complete</div>
+      <div class="success-sub" id="success-sub"></div>
+      <div style="margin-top:12px;">
+        <a href="dashboard.html" style="display:inline-block;padding:9px 20px;background:#F18F01;color:#0A1A2F;font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;border-radius:2px;">View My Orders →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- HANDSHAKE SECTION -->
+  <div id="handshake-section" style="margin-bottom:28px;">
+    <div style="background:rgba(241,143,1,0.06);border:1px solid rgba(241,143,1,0.3);border-radius:2px;padding:24px 28px;">
+      <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:260px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#E3E5E8;margin-bottom:8px;">🤝 Agora FM Handshake</div>
+          <p style="font-size:0.82rem;color:rgba(227,229,232,0.6);line-height:1.65;font-weight:300;">Before proceeding, confirm your agreement by clicking the Handshake button:</p>
+          <ul style="margin:10px 0 0;padding:0;list-style:none;">
+            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>You agree to the Agora FM Terms &amp; Conditions</li>
+            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>You agree to the selected supplier terms of service</li>
+            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>You accept the 5% Agora FM commission (charged to the supplier)</li>
+            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>Your agreement will be timestamped and stored in the database</li>
+          </ul>
+        </div>
+        <div style="flex-shrink:0;display:flex;align-items:center;">
+          <button id="handshake-btn" onclick="doHandshake()" style="padding:18px 28px;background:rgba(241,143,1,0.12);border:2px solid #F18F01;border-radius:2px;color:#F18F01;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onmouseover="if(!this.disabled){this.style.background='#F18F01';this.style.color='#0A1A2F';}" onmouseout="if(!this.disabled){this.style.background='rgba(241,143,1,0.12)';this.style.color='#F18F01';}">🤝 Click to Handshake</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="payment-methods-section" style="position:relative;">
+  <div id="payment-lock-overlay" style="display:none;position:absolute;inset:0;background:rgba(10,26,47,0.75);z-index:10;border-radius:2px;flex-direction:column;align-items:center;justify-content:center;gap:12px;backdrop-filter:blur(3px);">
+    <div style="font-size:2rem;">🔒</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;letter-spacing:2px;text-transform:uppercase;color:rgba(227,229,232,0.7);">Complete Handshake to unlock payment</div>
+  </div>
+
+  <!-- Payment Method Toggle -->
+  <div class="section-label">Select payment method</div>
+  <div class="mode-grid">
+    <button class="pay-mode-btn active" id="btn-card" onclick="switchMode('card')">
+      <div class="pay-mode-icon">💳</div>
+      <div class="pay-mode-title">Pay by Credit Card</div>
+      <div class="pay-mode-desc">Full payment processed securely — receipt generated instantly</div>
+    </button>
+    <button class="pay-mode-btn" id="btn-po" onclick="switchMode('po')">
+      <div class="pay-mode-icon">📄</div>
+      <div class="pay-mode-title">Generate Purchase Order</div>
+      <div class="pay-mode-desc">Supplier-specific PO — download as PDF, emailed to both parties</div>
+    </button>
+  </div>
+
+  <!-- ═══════════════ CREDIT CARD PANEL ═══════════════ -->
+  <div id="panel-card" class="panel active">
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Customer details</span><span class="lock-tag">🔒 Auto-filled &amp; locked</span></div>
+      <div class="field-row">
+        <div class="field"><label>Full name</label><input type="text" value="Sarah Mitchell" disabled></div>
+        <div class="field"><label>Account ID</label><input type="text" value="AGF-20841" disabled></div>
+      </div>
+      <div class="field-row single"><div class="field"><label>Address</label><input type="text" value="42 Hillcroft Road, Manchester, M14 6PB" disabled></div></div>
+      <div class="field-row single"><div class="field"><label>Email</label><input type="text" value="sarah.mitchell@company.co.uk" disabled></div></div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Card details</span></div>
+      <div class="field-row single"><div class="field"><label>Cardholder name</label><input type="text" placeholder="As it appears on your card"></div></div>
+      <div class="field-row single"><div class="field"><label>Card number</label><input type="text" placeholder="•••• •••• •••• ••••" maxlength="19" oninput="formatCard(this)"></div></div>
+      <div class="field-row triple">
+        <div class="field"><label>Expiry month</label>
+          <select><option value="">MM</option><option>01</option><option>02</option><option>03</option><option>04</option><option>05</option><option>06</option><option>07</option><option>08</option><option>09</option><option>10</option><option>11</option><option>12</option></select>
+        </div>
+        <div class="field"><label>Expiry year</label>
+          <select><option value="">YY</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option></select>
+        </div>
+        <div class="field"><label>CVV</label><input type="text" placeholder="•••" maxlength="4"></div>
+      </div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Service summary</span></div>
+      <div class="table-wrap">
+        <table class="cost-table">
+          <thead><tr><th>Service description</th><th>Qty</th><th>Unit cost (£)</th><th>Line total</th><th>VAT (20%)</th><th>Commission (5%)</th><th>Grand total</th></tr></thead>
+          <tbody><tr>
+            <td>Fire extinguisher maintenance &amp; servicing</td>
+            <td><input type="number" id="cc-qty" value="10" min="1" oninput="calcCC()"></td>
+            <td><input type="number" id="cc-unit" value="35.00" min="0" step="0.01" oninput="calcCC()"></td>
+            <td id="cc-line">£350.00</td>
+            <td id="cc-vat">£70.00</td>
+            <td id="cc-comm">£17.50</td>
+            <td id="cc-total" class="total-cell">£437.50</td>
+          </tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn action-btn-primary" onclick="processCard()">Complete Payment →</button>
+    </div>
+    <div class="renewal-note">ℹ️ This payment will be logged in the Agora FM system. A renewal reminder email will be sent 4 months before the service renewal date (8 months from today).</div>
+
+  </div><!-- /panel-card -->
+
+  <!-- ═══════════════ PURCHASE ORDER PANEL ═══════════════ -->
+  <div id="panel-po" class="panel">
+
+    <div class="po-badge">Purchase Order</div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Customer details</span><span class="lock-tag">🔒 Auto-filled &amp; locked</span></div>
+      <div class="field-row">
+        <div class="field"><label>Full name</label><input type="text" value="Sarah Mitchell" disabled></div>
+        <div class="field"><label>Account ID</label><input type="text" value="AGF-20841" disabled></div>
+      </div>
+      <div class="field-row single"><div class="field"><label>Address</label><input type="text" value="42 Hillcroft Road, Manchester, M14 6PB" disabled></div></div>
+      <div class="field-row single"><div class="field"><label>Email</label><input type="text" value="sarah.mitchell@company.co.uk" disabled></div></div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Purchase Order Reference</span></div>
+      <div class="field-row">
+        <div class="field"><label>PO Number *</label><input type="text" id="po-number" placeholder="e.g. PO-2026-0042" /></div>
+        <div class="field"><label>Billing Address *</label><input type="text" id="po-billing" placeholder="e.g. 1 Canada Square, London E14 5AB" /></div>
+      </div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Supplier details</span><span class="editable-tag">✏ Editable</span></div>
+      <div class="field-row">
+        <div class="field"><label>Supplier name</label><input type="text" id="sup-name" placeholder="e.g. SafeGuard Fire Services Ltd" oninput="updateDesc()"></div>
+        <div class="field"><label>Phone</label><input type="text" id="sup-phone" placeholder="e.g. 0161 555 0100"></div>
+      </div>
+      <div class="field-row single"><div class="field"><label>Registered address</label><input type="text" id="sup-address" placeholder="Supplier registered address"></div></div>
+      <div class="field-row single"><div class="field"><label>Email</label><input type="text" id="sup-email" placeholder="accounts@supplier.co.uk"></div></div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Service description</span></div>
+      <div class="desc-box">Annual fire-extinguisher maintenance arranged through Agora FM. The customer selected this supplier after reviewing search results based on location, cost, competency, and customer reviews. The customer confirmed the service by entering the number of extinguishers requiring maintenance and clicking the Agora FM 'handshake' button. This purchase order covers the servicing of <strong id="desc-qty">10</strong> fire extinguishers by <strong id="desc-supplier">the selected supplier</strong>.</div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Cost breakdown</span></div>
+      <div class="table-wrap">
+        <table class="cost-table">
+          <thead><tr><th>Service description</th><th>Qty</th><th>Unit cost (£)</th><th>Line total</th><th>VAT (20%)</th><th>Commission (5%)</th><th>Grand total</th></tr></thead>
+          <tbody><tr>
+            <td>Fire extinguisher servicing</td>
+            <td><input type="number" id="po-qty" value="10" min="1" oninput="calcPO(); updateDesc()"></td>
+            <td><input type="number" id="po-unit" value="35.00" min="0" step="0.01" oninput="calcPO()"></td>
+            <td id="po-line">£350.00</td>
+            <td id="po-vat">£70.00</td>
+            <td id="po-comm">£17.50</td>
+            <td id="po-total" class="total-cell">£437.50</td>
+          </tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-header"><span class="pay-card-title">Electronic signatures</span></div>
+      <div class="sig-grid">
+        <div class="sig-box">
+          <div class="sig-label">Customer signature</div>
+          <input class="sig-input" type="text" value="Sarah Mitchell" readonly>
+          <div class="sig-date">Date: <span id="today-1"></span></div>
+        </div>
+        <div class="sig-box">
+          <div class="sig-label">Supplier signature</div>
+          <input class="sig-input" type="text" id="sup-sig" placeholder="Type supplier name to sign">
+          <div class="sig-date">Date: <span id="today-2"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn action-btn-outline" onclick="downloadPO()">↓ Download as PDF</button>
+      <button class="action-btn action-btn-primary" onclick="generatePO()">Generate &amp; Email PO →</button>
+    </div>
+    <div class="renewal-note">ℹ️ Generating this PO will log the transaction in the Agora FM system, email both the customer and supplier with the PO attached, and start the 8-month renewal cycle with a 4-month reminder email.</div>
+
+  </div><!-- /panel-po -->
+
+  <div class="page-rule"></div>
+  <div class="page-foot">This purchase order was generated through the Agora FM service marketplace.</div>
+
+  </div><!-- /payment-methods-section -->
+</div><!-- /page-content -->
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo" style="text-decoration:none;">
+        <span class="logo-text">AGORA<span class="logo-accent">FM</span></span>
+        <span class="logo-dot" style="animation:none;opacity:0.7;"></span>
+      </a>
+      <p>The UK's most advanced facilities management comparison and commissioning platform.</p>
+    </div>
+    <div class="footer-col"><h4>Platform</h4><ul><li><a href="service_providers.html">Find Providers</a></li><li><a href="#">Benchmarking</a></li><li><a href="#">Compliance</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About Agora FM</a></li><li><a href="#">Contact Us</a></li></ul></div>
+    <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Terms &amp; Conditions</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 Agora FM Ltd. All rights reserved. Registered in England &amp; Wales.</div>
+    <div class="footer-badge">Built for excellence in FM ◆</div>
+  </div>
+</footer>
+
+<script>
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('today-1').textContent = today;
+  document.getElementById('today-2').textContent = today;
+
+  function formatCard(input) {
+    let val = input.value.replace(/\D/g, '').substring(0, 16);
+    input.value = val.replace(/(.{4})/g, '$1 ').trim();
+  }
+  const fmt = n => '£' + n.toFixed(2);
+
+  function calcCC() {
+    const qty  = parseFloat(document.getElementById('cc-qty').value)  || 0;
+    const unit = parseFloat(document.getElementById('cc-unit').value) || 0;
+    const line = qty * unit, vat = line * 0.20, comm = line * 0.05;
+    document.getElementById('cc-line').textContent  = fmt(line);
+    document.getElementById('cc-vat').textContent   = fmt(vat);
+    document.getElementById('cc-comm').textContent  = fmt(comm);
+    document.getElementById('cc-total').textContent = fmt(line + vat + comm);
+  }
+  function calcPO() {
+    const qty  = parseFloat(document.getElementById('po-qty').value)  || 0;
+    const unit = parseFloat(document.getElementById('po-unit').value) || 0;
+    const line = qty * unit, vat = line * 0.20, comm = line * 0.05;
+    document.getElementById('po-line').textContent  = fmt(line);
+    document.getElementById('po-vat').textContent   = fmt(vat);
+    document.getElementById('po-comm').textContent  = fmt(comm);
+    document.getElementById('po-total').textContent = fmt(line + vat + comm);
+  }
+  function updateDesc() {
+    const qty  = document.getElementById('po-qty').value  || '0';
+    const name = document.getElementById('sup-name').value || 'the selected supplier';
+    document.getElementById('desc-qty').textContent      = qty;
+    document.getElementById('desc-supplier').textContent = name;
+  }
+  function switchMode(mode) {
+    document.getElementById('panel-card').classList.toggle('active', mode === 'card');
+    document.getElementById('panel-po').classList.toggle('active',   mode === 'po');
+    document.getElementById('btn-card').classList.toggle('active',   mode === 'card');
+    document.getElementById('btn-po').classList.toggle('active',     mode === 'po');
+    hideBanner();
+  }
+  function showBanner(title, sub) {
+    document.getElementById('success-title').textContent = title;
+    document.getElementById('success-sub').textContent   = sub;
+    const b = document.getElementById('success-banner');
+    b.classList.add('show');
+    b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function hideBanner() { document.getElementById('success-banner').classList.remove('show'); }
+  async function processCard() {
+    if (!window._handshakeDone) { alert('Please complete the Agora FM Handshake first.'); return; }
+    var nameEl = document.querySelector('#panel-card input[placeholder*="Cardholder"]');
+    var numEl  = document.querySelector('#panel-card input[placeholder*="0000"]') ||
+                 document.querySelector('#panel-card input[type="text"][placeholder*="••"]');
+    if (nameEl && !nameEl.value.trim()) { alert('Please enter the cardholder name.'); nameEl.focus(); return; }
+    var result = await AgoraDB.orders.create({
+      method: 'card',
+      handshakeAt: window._handshakeTs || new Date().toISOString()
+    });
+    if (result && result.ok) {
+      showBanner('Payment Successful — ' + result.order.id,
+        'Payment processed. Receipt sent to ' + result.order.customer_email + '. Transaction saved to Agora FM.');
+      var btn = document.querySelector('.action-btn-primary');
+      if (btn) { btn.disabled = true; btn.textContent = '✓ Payment Complete'; }
+      if (window.AgoraNavUpdate) AgoraNavUpdate();
+    } else {
+      showBanner('Payment Failed', (result && result.error) || 'Please try again.');
+    }
+  }
+  async function generatePO() {
+    if (!window._handshakeDone) { alert('Please complete the Agora FM Handshake first.'); return; }
+    var poNum     = document.getElementById('po-number');
+    var supSig    = document.getElementById('sup-sig');
+    var supName   = document.getElementById('sup-name');
+    if (poNum && !poNum.value.trim())  { alert('Please enter a PO number.'); poNum.focus(); return; }
+    if (supSig && !supSig.value.trim()){ alert('Please enter the supplier signature.'); supSig.focus(); return; }
+    var result = await AgoraDB.orders.create({
+      method: 'purchase_order',
+      handshakeAt: window._handshakeTs || new Date().toISOString(),
+      poNumber: poNum ? poNum.value.trim() : '',
+      supplierName: supName ? supName.value.trim() : ''
+    });
+    if (result && result.ok) {
+      var email = document.getElementById('sup-email') ? document.getElementById('sup-email').value || 'the supplier' : 'the supplier';
+      showBanner('Purchase Order Generated — ' + result.order.id,
+        'PO confirmed and logged. Download PDF below or view in your dashboard.');
+      var dlBtn = document.querySelector('.action-btn-outline');
+      if (dlBtn) {
+        dlBtn.onclick = function(){ AgoraDB.orders.getPdf(result.order.id); };
+      }
+      var genBtn = document.querySelector('.action-btn-primary');
+      if (genBtn) { genBtn.disabled = true; genBtn.textContent = '✓ PO Generated'; }
+      if (window.AgoraNavUpdate) AgoraNavUpdate();
+    } else {
+      showBanner('PO Failed', (result && result.error) || 'Please try again.');
+    }
+  }
+  function downloadPO() { showBanner('PDF Ready', 'Your purchase order PDF has been prepared for download.'); }
+
+  var _handshakeDone = false;
+  function doHandshake() {
+    _handshakeDone = true;
+    window._handshakeDone = true;
+    window._handshakeTs = new Date().toISOString();
+    var btn = document.getElementById('handshake-btn');
+    if (btn) { btn.disabled=true; btn.style.background='#5cb85c'; btn.style.borderColor='#5cb85c'; btn.style.color='#fff'; btn.textContent='✓ Handshake Accepted — '+new Date().toLocaleTimeString('en-GB'); }
+    var hs = document.getElementById('handshake-section');
+    if (hs) { var m=document.createElement('div'); m.style.cssText='margin-top:12px;padding:10px 14px;background:rgba(92,184,92,0.1);border:1px solid rgba(92,184,92,0.3);border-radius:2px;font-size:0.75rem;color:#5cb85c;line-height:1.7;'; m.innerHTML='<strong>Handshake recorded at '+new Date().toLocaleTimeString('en-GB')+'</strong><br>✓ Terms agreed &nbsp;·&nbsp; ✓ 5% commission accepted'; hs.appendChild(m); }
+    document.querySelectorAll('#payment-lock-overlay').forEach(function(o){ o.style.display='none'; });
+    var pm=document.getElementById('payment-methods-section'); if(pm) pm.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  // Show lock on load
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#payment-lock-overlay').forEach(function(o){ o.style.display='flex'; });
+  });
+
+  // Auto-fill customer fields and basket summary from session
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Pre-fill customer details
+    if (typeof AgoraDB !== 'undefined') {
+      var s = await AgoraDB.auth.getSession();
+      if (s && s.loggedIn) {
+        document.querySelectorAll('input[value="Sarah Mitchell"]').forEach(function(el){ el.value = s.name || ''; });
+        document.querySelectorAll('input[value="sarah.mitchell@company.co.uk"]').forEach(function(el){ el.value = s.email || ''; });
+        document.querySelectorAll('input[value="AGF-20841"]').forEach(function(el){
+          el.value = 'AGF-' + (s.userId||'').slice(-5).toUpperCase();
+        });
+        // Pre-fill billing address from session
+        var billingEl = document.getElementById('po-billing');
+        if (billingEl && !billingEl.value) billingEl.value = ''; // Customer fills this in
+
+        // Pre-fill supplier details from basket
+        var b = await AgoraDB.basket.get();
+        if (b && b.items && b.items.length > 0) {
+          var firstItem = b.items[0];
+          var supNameEl = document.getElementById('sup-name');
+          if (supNameEl && !supNameEl.value) supNameEl.value = firstItem.supplierName || '';
+
+          // Update desc-supplier and desc-qty if present
+          var descSup = document.getElementById('desc-supplier');
+          var descQty = document.getElementById('desc-qty');
+          if (descSup) descSup.textContent = firstItem.supplierName || 'the selected supplier';
+          if (descQty) descQty.textContent  = firstItem.qty || 1;
+
+          // Update cost table with real basket data
+          var poQtyEl  = document.getElementById('po-qty');
+          var poUnitEl = document.getElementById('po-unit');
+          if (poQtyEl && poUnitEl) {
+            poQtyEl.value  = firstItem.qty || 1;
+            poUnitEl.value = parseFloat(firstItem.price || 0).toFixed(2);
+            if (typeof calcPO === 'function') calcPO();
+          }
+          // Update card payment totals with real basket data
+          if (typeof calcCC === 'function') calcCC();
+          // Update all basket total displays
+          var totals = await AgoraDB.basket.getTotals();
+          var els = {
+            'cc-subtotal':  totals.subtotal,
+            'cc-vat':       totals.vat,
+            'cc-commission':totals.commission,
+            'cc-total':     totals.total,
+            'po-subtotal':  totals.subtotal,
+            'po-vat':       totals.vat,
+            'po-commission':totals.commission,
+            'po-total':     totals.total,
+          };
+          Object.keys(els).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = '£' + parseFloat(els[id]).toFixed(2);
+          });
+          // Update service description
+          var allNames = b.items.map(function(i){ return i.name; }).join(', ');
+          var descEl = document.getElementById('order-service-name');
+          if (descEl) descEl.textContent = allNames;
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

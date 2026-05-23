@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provider Profile — Agora FM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="agora_fm.css">
+  <script src="db.js" defer onerror="console.warn('db.js failed to load')"></script>
+  <script src="nav-auth.js" defer onerror="console.warn('nav-auth.js failed')"></script>
+  <script src="basket.js" defer onerror="console.warn('basket.js failed')"></script>
+  <style>
+    .page-content{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:32px 24px 80px;}
+    .back-link{display:inline-flex;align-items:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--steel-light);text-decoration:none;margin-bottom:24px;transition:color 0.2s;}
+    .back-link:hover{color:var(--orange);}
+    .profile-grid{display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start;}
+    .profile-hero{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+    .profile-hero-top{background:linear-gradient(135deg,rgba(10,26,47,0.9) 0%,rgba(17,34,64,0.7) 100%);border-bottom:1px solid rgba(62,107,137,0.2);padding:28px 28px 24px;display:flex;align-items:flex-start;gap:20px;}
+    .provider-logo{width:70px;height:70px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--orange);flex-shrink:0;}
+    .provider-name{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:1px;color:var(--grey);line-height:1;margin-bottom:6px;}
+    .provider-tagline{font-size:0.85rem;color:var(--grey-dim);font-weight:300;margin-bottom:12px;}
+    .provider-meta{display:flex;gap:16px;flex-wrap:wrap;}
+    .provider-meta-item{font-size:0.72rem;color:var(--grey-dim);display:flex;align-items:center;gap:5px;}
+    .verified-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(92,184,92,0.1);border:1px solid rgba(92,184,92,0.3);border-radius:var(--radius);padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#5cb85c;margin-top:8px;}
+    .profile-hero-body{padding:20px 28px;}
+    .rating-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+    .rating-stars{color:var(--orange);font-size:1.1rem;letter-spacing:3px;}
+    .rating-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--orange);letter-spacing:1px;line-height:1;}
+    .rating-count{font-size:0.75rem;color:var(--grey-dim);}
+    .accred-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+    .accred-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--radius);font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+    .accred-badge.gold{background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.35);color:var(--orange);}
+    .accred-badge.blue{background:rgba(85,137,168,0.12);border:1px solid rgba(85,137,168,0.3);color:var(--steel-light);}
+    .accred-badge.green{background:rgba(92,184,92,0.1);border:1px solid rgba(92,184,92,0.3);color:#5cb85c;}
+    .panel{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+    .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(62,107,137,0.15);background:rgba(10,26,47,0.4);}
+    .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grey);}
+    .panel-body{padding:20px;}
+    .panel-body.no-pad{padding:0;}
+    /* Service stepper */
+    .service-item{padding:18px 20px;border-bottom:1px solid rgba(62,107,137,0.1);}
+    .service-item:last-child{border-bottom:none;}
+    .service-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+    .service-name{font-size:0.9rem;font-weight:600;color:var(--grey);margin-bottom:4px;}
+    .service-desc{font-size:0.75rem;color:var(--grey-dim);font-weight:300;line-height:1.5;}
+    .service-price-block{text-align:right;flex-shrink:0;}
+    .service-price{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--orange);}
+    .service-unit{font-size:0.65rem;color:var(--grey-dim);margin-top:2px;}
+    .service-stepper{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+    .stepper-wrap{display:flex;align-items:center;gap:0;border:1px solid rgba(62,107,137,0.3);border-radius:var(--radius);overflow:hidden;}
+    .stepper-btn{width:32px;height:32px;background:rgba(62,107,137,0.15);border:none;color:var(--grey);font-size:1rem;cursor:pointer;transition:all 0.15s;font-family:'Barlow Condensed',sans-serif;font-weight:700;}
+    .stepper-btn:hover{background:rgba(241,143,1,0.2);color:var(--orange);}
+    .stepper-val{width:48px;text-align:center;background:transparent;border:none;border-left:1px solid rgba(62,107,137,0.3);border-right:1px solid rgba(62,107,137,0.3);color:var(--grey);font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:600;padding:4px 0;}
+    .stepper-total{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;color:var(--orange);min-width:70px;}
+    .stepper-unit-lbl{font-size:0.68rem;color:var(--grey-dim);}
+    .tc-section{margin-top:10px;padding:10px 12px;background:rgba(10,26,47,0.4);border:1px solid rgba(62,107,137,0.15);border-radius:var(--radius);}
+    .tc-check-label{display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;color:var(--grey-dim);cursor:pointer;line-height:1.5;}
+    .tc-check-label input{accent-color:var(--orange);margin-top:2px;flex-shrink:0;}
+    .tc-link{color:var(--orange);cursor:pointer;text-decoration:underline;}
+    .btn-add-basket{padding:9px 18px;background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.4);border-radius:var(--radius);color:var(--orange);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+    .btn-add-basket:hover:not(:disabled){background:var(--orange);color:var(--navy);}
+    .btn-add-basket:disabled{opacity:0.3;cursor:not-allowed;}
+    .btn-add-basket.added{background:rgba(92,184,92,0.15);border-color:rgba(92,184,92,0.4);color:#5cb85c;}
+    /* Reviews */
+    .review-card{padding:18px 20px;border-bottom:1px solid rgba(62,107,137,0.08);}
+    .review-card:last-child{border-bottom:none;}
+    .review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+    .review-stars{color:var(--orange);font-size:0.82rem;letter-spacing:2px;}
+    .review-date{font-size:0.68rem;color:rgba(227,229,232,0.3);}
+    .review-text{font-size:0.82rem;color:var(--grey-dim);line-height:1.65;font-style:italic;font-weight:300;margin-bottom:8px;}
+    .review-author{font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel-light);font-weight:600;}
+    .review-role{font-size:0.68rem;color:rgba(227,229,232,0.3);margin-top:2px;}
+    .enquiry-sidebar{position:sticky;top:90px;}
+    .enquiry-panel{background:rgba(17,34,64,0.6);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+    .enquiry-header{background:rgba(10,26,47,0.6);border-bottom:1px solid rgba(62,107,137,0.2);padding:18px 22px;}
+    .enquiry-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--grey);margin-bottom:2px;}
+    .enquiry-sub{font-size:0.75rem;color:var(--grey-dim);font-weight:300;}
+    .enquiry-body{padding:22px;}
+    .form-submit{width:100%;padding:14px;background:var(--orange);border:none;border-radius:var(--radius);color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+    .form-submit:hover{background:var(--orange-hover);}
+    .success-banner{display:none;background:rgba(2,122,72,0.12);border:1px solid rgba(108,233,166,0.3);border-radius:var(--radius);padding:12px 16px;align-items:center;gap:10px;margin-bottom:14px;}
+    .success-banner.show{display:flex;}
+    .success-icon-circle{width:24px;height:24px;border-radius:50%;background:#027A48;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .success-title{font-size:0.85rem;font-weight:600;color:#6CE9A6;}
+    .success-sub{font-size:0.75rem;color:rgba(108,233,166,0.7);margin-top:2px;}
+    .contact-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(62,107,137,0.1);}
+    .contact-row:last-child{border-bottom:none;}
+    .contact-icon{font-size:0.9rem;width:24px;flex-shrink:0;}
+    .contact-val{font-size:0.82rem;color:var(--grey-dim);}
+    .contact-val a{color:var(--steel-light);text-decoration:none;}
+    .contact-val a:hover{color:var(--orange);}
+    .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+    .stat-box{background:rgba(10,26,47,0.5);border:1px solid rgba(62,107,137,0.15);border-radius:var(--radius);padding:14px 12px;text-align:center;}
+    .stat-box-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--orange);letter-spacing:1px;line-height:1;}
+    .stat-box-label{font-size:0.62rem;color:var(--grey-dim);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+    .loading-state{padding:60px;text-align:center;color:var(--grey-dim);font-size:0.85rem;}
+    @media(max-width:900px){.profile-grid{grid-template-columns:1fr}.enquiry-sidebar{position:static}}
+    @media(max-width:600px){.provider-meta{flex-direction:column;gap:6px}}
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo"><span class="logo-text">AGORA<span class="logo-accent">FM</span></span><span class="logo-dot"></span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="service_providers.html">Services <span class="nav-chevron">▼</span></a>
+      <div class="nav-dropdown"><div class="dropdown-head">FM Categories</div><a href="service_providers.html">Fire Protection</a><a href="service_providers.html">Water Services</a><a href="service_providers.html">Electrical Services</a><a href="service_providers.html">Gas Services</a><a href="service_providers.html">HVAC</a><a href="service_providers.html">Lifts &amp; Lifting</a><a href="service_providers.html">Doors &amp; Access</a><a href="service_providers.html">Risk Assessments</a></div>
+    </li>
+    <li><a href="service_providers.html" class="active">Providers</a></li>
+    <li><a href="service_providers_catalogue.html">Catalogue</a></li>
+    <li><a href="#">Benchmarks</a></li>
+    <li><a href="#">Analytics</a></li>
+    <li><a href="#">Enterprise</a></li>
+  </ul>
+  <div class="nav-search"><div class="search-wrap"><input type="text" placeholder="Search services, providers…" id="navSearch"/><button onclick="handleSearch()">⌕</button></div></div>
+  <div class="nav-cta"><a href="registration.html" class="btn-nav-login">Sign In</a><a href="registration.html" class="btn-nav-reg">Register Free</a></div>
+  <span class="nav-badge">Platform v3.0</span>
+</nav>
+
+<div class="site-ticker"><div class="ticker-label">Live Market</div><div class="ticker-track">
+  <span class="ticker-item">Fire Alarm Maintenance — 312 providers available</span>
+  <span class="ticker-item">Legionella Testing — L8 compliant specialists</span>
+  <span class="ticker-item">Generator Servicing — avg contract value up 2.8%</span>
+  <span class="ticker-item">Lift Maintenance — 94 LOLER-certified contractors</span>
+  <span class="ticker-item">Fixed Wire Testing — from £0.45/circuit</span>
+  <span class="ticker-item">Fire Alarm Maintenance — 312 providers available</span>
+  <span class="ticker-item">Legionella Testing — L8 compliant specialists</span>
+  <span class="ticker-item">Generator Servicing — avg contract value up 2.8%</span>
+  <span class="ticker-item">Lift Maintenance — 94 LOLER-certified contractors</span>
+  <span class="ticker-item">Fixed Wire Testing — from £0.45/circuit</span>
+</div></div>
+
+<div class="page-content">
+  <a href="service_providers.html" class="back-link" id="backLink">← Back to Providers</a>
+  <div id="loadingState" class="loading-state">Loading provider profile…</div>
+  <div id="profileContent" style="display:none;">
+
+    <div class="profile-grid">
+      <!-- LEFT COLUMN -->
+      <div>
+        <div class="profile-hero">
+          <div class="profile-hero-top">
+            <div class="provider-logo" id="provLogo">…</div>
+            <div>
+              <div class="provider-name" id="provName">—</div>
+              <div class="provider-tagline" id="provTagline">—</div>
+              <div class="provider-meta">
+                <span class="provider-meta-item" id="provAddr">—</span>
+                <span class="provider-meta-item" id="provTel">—</span>
+                <span class="provider-meta-item" id="provWeb">—</span>
+              </div>
+              <span class="verified-badge">✓ Verified Provider</span>
+            </div>
+          </div>
+          <div class="profile-hero-body">
+            <div class="rating-row">
+              <div class="rating-num" id="provRating">4.8</div>
+              <div><div class="rating-stars">★★★★★</div><div class="rating-count" id="provReviews">— reviews</div></div>
+            </div>
+            <div class="accred-row" id="provAccreds"></div>
+            <p style="font-size:0.85rem;color:var(--grey-dim);line-height:1.7;font-weight:300;" id="provDesc">—</p>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-box-num" id="statClients">—</div><div class="stat-box-label">Active Clients</div></div>
+          <div class="stat-box"><div class="stat-box-num" id="statYears">—</div><div class="stat-box-label">Years Trading</div></div>
+          <div class="stat-box"><div class="stat-box-num" id="statReviews">—</div><div class="stat-box-label">Client Reviews</div></div>
+        </div>
+
+        <!-- Services with steppers -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Services &amp; Pricing</span>
+            <span style="font-size:0.68rem;color:var(--grey-dim);">All prices exc. VAT · Select qty and add to basket</span>
+          </div>
+          <div class="panel-body no-pad" id="servicesContainer">
+            <div class="loading-state" style="padding:30px;">Loading services…</div>
+          </div>
+        </div>
+
+        <!-- Coverage -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Coverage &amp; Response</span></div>
+          <div class="panel-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Coverage Area</div><div class="prov-coverage" style="font-size:0.85rem;color:var(--grey);">—</div></div>
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Emergency Response</div><div style="font-size:0.85rem;color:var(--orange);">24/7 Available</div><div style="font-size:0.75rem;color:var(--grey-dim);margin-top:4px;font-weight:300;">4-hour emergency response SLA</div></div>
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Insurance</div><div style="font-size:0.82rem;color:var(--grey-dim);line-height:1.6;font-weight:300;"><span class="prov-pl">—</span> PL · <span class="prov-el">—</span> EL</div></div>
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Registration</div><div style="font-size:0.85rem;color:var(--grey);" id="provReg">—</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Client Reviews</span><span style="font-size:0.68rem;color:var(--grey-dim);" id="reviewSummary">—</span></div>
+          <div class="panel-body no-pad" id="reviewsContainer">
+            <div class="review-card"><div class="review-header"><div class="review-stars">★★★★★</div><div class="review-date">March 2026</div></div><p class="review-text">"Excellent service delivery. Engineers are professional, paperwork is always on time, and the digital compliance portal saves our team hours each month."</p><div class="review-author">Head of Estates</div><div class="review-role">NHS Foundation Trust</div></div>
+            <div class="review-card"><div class="review-header"><div class="review-stars">★★★★★</div><div class="review-date">January 2026</div></div><p class="review-text">"Exceptional service. The team completed our risk assessment ahead of schedule and flagged several issues our previous contractor had missed."</p><div class="review-author">FM Director</div><div class="review-role">FTSE 250 Financial Services</div></div>
+            <div class="review-card"><div class="review-header"><div class="review-stars">★★★★☆</div><div class="review-date">November 2025</div></div><p class="review-text">"Very good service overall. Engineers are knowledgeable and the reporting portal is excellent. Took a few days to get initial paperwork sorted but smooth sailing since."</p><div class="review-author">Facilities Manager</div><div class="review-role">Retail Portfolio, Midlands</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="enquiry-sidebar">
+        <div class="enquiry-panel">
+          <div class="enquiry-header">
+            <div class="enquiry-title">Enquire / Commission</div>
+            <div class="enquiry-sub">Send an enquiry or raise a purchase order</div>
+          </div>
+          <div class="enquiry-body">
+            <div id="enqBanner" class="success-banner">
+              <div class="success-icon-circle"><span style="color:#fff;font-size:0.75rem;">✓</span></div>
+              <div><div class="success-title" id="enqTitle"></div><div class="success-sub" id="enqSub"></div></div>
+            </div>
+            <div class="form-group"><label class="form-label">Service Required *</label>
+              <select class="form-select" id="enqService"><option value="">Select service…</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Your Name *</label><input class="form-input" id="enqName" type="text" placeholder="Your full name"/></div>
+            <div class="form-group"><label class="form-label">Organisation *</label><input class="form-input" id="enqOrg" type="text" placeholder="Your organisation"/></div>
+            <div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="enqEmail" type="email" placeholder="your@organisation.co.uk"/></div>
+            <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="enqPhone" type="tel" placeholder="+44 20 0000 0000"/></div>
+            <div class="form-group"><label class="form-label">Requirements</label><textarea class="form-textarea" id="enqNotes" placeholder="Describe your site(s), number of assets, and any specific requirements…" style="min-height:70px;"></textarea></div>
+            <button class="form-submit" onclick="sendEnquiry()">Send Enquiry →</button>
+            <div style="text-align:center;margin-top:10px;">
+              <a href="payment.html" id="raisePOLink" class="btn-secondary" style="display:block;padding:11px;font-size:0.78rem;text-decoration:none;text-align:center;">Raise Purchase Order →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-header"><span class="panel-title">Contact Details</span></div>
+          <div class="panel-body">
+            <div class="contact-row"><span class="contact-icon">📞</span><div class="contact-val" id="ctTel">—</div></div>
+            <div class="contact-row"><span class="contact-icon">📧</span><div class="contact-val" id="ctEmail">—</div></div>
+            <div class="contact-row"><span class="contact-icon">🌐</span><div class="contact-val" id="ctWeb">—</div></div>
+            <div class="contact-row"><span class="contact-icon">📍</span><div class="contact-val" id="ctAddr">—</div></div>
+            <div class="contact-row"><span class="contact-icon">🕐</span><div class="contact-val">Mon–Fri 7:30am–6pm · 24/7 emergency</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Verified Credentials</span></div>
+          <div class="panel-body">
+            <div id="sidebarAccreds" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(62,107,137,0.12);display:flex;align-items:center;gap:8px;font-size:0.7rem;color:rgba(227,229,232,0.3);">
+              <span>✓</span> All credentials verified by Agora FM
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /profileContent -->
+</div>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand"><a href="index.html" class="nav-logo" style="text-decoration:none;"><span class="logo-text">AGORA<span class="logo-accent">FM</span></span><span class="logo-dot" style="animation:none;opacity:0.7;"></span></a><p>The UK's most advanced facilities management comparison and commissioning platform.</p></div>
+    <div class="footer-col"><h4>Platform</h4><ul><li><a href="service_providers.html">Find Providers</a></li><li><a href="#">Benchmarking</a></li></ul></div>
+    <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Terms &amp; Conditions</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
+  </div>
+  <div class="footer-bottom"><div class="footer-copy">© 2026 Agora FM Ltd. All rights reserved.</div><div class="footer-badge">Built for excellence in FM ◆</div></div>
+</footer>
+
+<script>
+function handleSearch(){var q=document.getElementById('navSearch').value;if(q)window.location.href='service_providers.html?search='+encodeURIComponent(q);}
+document.getElementById('navSearch').addEventListener('keydown',function(e){if(e.key==='Enter')handleSearch();});
+
+// ── Services loaded from DB ───────────────────────────────────────────────
+var _cachedServices = {};
+
+async function fetchServices(supplierId) {
+  if (_cachedServices[supplierId]) return _cachedServices[supplierId];
+  try {
+    var resp = await fetch('/api/suppliers/' + supplierId + '/services');
+    var data = await resp.json();
+    _cachedServices[supplierId] = data;
+    return data;
+  } catch(e) {
+    console.error('Could not fetch services:', e);
+    return [];
+  }
+}
+
+// ── Load provider ─────────────────────────────────────────────────────────
+var currentProvider = null;
+
+async function loadProvider() {
+  var params = new URLSearchParams(window.location.search);
+  var pid    = params.get('provider') || params.get('id') || 'sup_001';
+  console.log('Loading provider:', pid);
+  try {
+    var resp = await fetch('/api/suppliers/' + pid);
+    if (!resp.ok) {
+      document.getElementById('loadingState').textContent = 'Provider not found.';
+      return;
+    }
+    var prov = await resp.json();
+    if (!prov || prov.error) {
+      document.getElementById('loadingState').textContent = 'Provider not found.';
+      return;
+    }
+    console.log('Provider loaded:', prov.company_name);
+    currentProvider = prov;
+    renderProvider(prov);
+  } catch(e) {
+    console.error('loadProvider error:', e);
+    document.getElementById('loadingState').textContent = 'Could not load provider. Is app.py running?';
+  }
+}
+
+function initials(name) {
+  return name.split(' ').filter(function(w){ return w.length > 2; }).map(function(w){ return w[0]; }).join('').substring(0,3).toUpperCase();
+}
+
+function accrClass(a) {
+  if (['BAFE','NICEIC','Gas Safe','UKAS','REFCOM','ISO 9001','ISO 14001'].includes(a)) return 'gold';
+  if (['CHAS','SafeContractor','CHAS Premium','ECA Member','F-Gas Certified','LEIA Member'].includes(a)) return 'green';
+  return 'blue';
+}
+
+async function renderProvider(p) {
+  document.title = p.company_name + ' — Agora FM Provider Profile';
+
+  // Logo + header
+  document.getElementById('provLogo').textContent   = initials(p.company_name);
+  document.getElementById('provName').textContent   = p.company_name;
+  document.getElementById('provTagline').textContent = p.company_desc || 'Verified FM Service Provider';
+  document.getElementById('provAddr').textContent   = '📍 ' + (p.reg_address || '—');
+  document.getElementById('provTel').textContent    = '📞 ' + (p.main_tel || '—');
+  document.getElementById('provWeb').textContent    = '🌐 ' + (p.website || '—');
+
+  // Stats (demo values based on seed)
+  var statsMap = {'sup_001':[312,'20+',47],'sup_002':[148,'15+',63],'sup_003':[289,'12+',89],'sup_004':[94,'18+',38],'sup_005':[177,'10+',52]};
+  var stats = statsMap[p.id] || [Math.floor(50+Math.random()*200), '10+', Math.floor(10+Math.random()*60)];
+  document.getElementById('statClients').textContent = stats[0];
+  document.getElementById('statYears').textContent   = stats[1];
+  document.getElementById('statReviews').textContent = stats[2];
+  document.getElementById('provRating').textContent  = p.id === 'sup_001' ? '4.9' : p.id === 'sup_003' ? '4.6' : '4.8';
+  document.getElementById('provReviews').textContent = stats[2] + ' verified reviews';
+  document.getElementById('reviewSummary').textContent = stats[2] + ' verified reviews · ' + (p.id === 'sup_001' ? '4.9' : '4.8') + ' avg';
+
+  // Description
+  document.getElementById('provDesc').textContent = p.company_desc || '—';
+
+  // Accreditations
+  var accreds = p.accreditations || [];
+  var accredHtml = accreds.map(function(a){
+    return '<span class="accred-badge '+accrClass(a)+'">'+a+'</span>';
+  }).join('');
+  document.getElementById('provAccreds').innerHTML  = accredHtml || '<span class="accred-badge blue">Verified Provider</span>';
+  document.getElementById('sidebarAccreds').innerHTML = accredHtml;
+
+  // Coverage / insurance
+  document.querySelectorAll('.prov-coverage').forEach(function(el){ el.textContent = p.coverage || '—'; });
+  document.querySelectorAll('.prov-pl').forEach(function(el){ el.textContent = p.pl_insurance || '—'; });
+  document.querySelectorAll('.prov-el').forEach(function(el){ el.textContent = p.el_insurance || '—'; });
+  document.getElementById('provReg').textContent = 'Co. Reg. ' + (p.company_reg || '—');
+
+  // Contact sidebar
+  document.getElementById('ctTel').innerHTML  = '<a href="tel:'+p.main_tel+'">'+p.main_tel+'</a>';
+  document.getElementById('ctEmail').innerHTML = '<a href="mailto:'+p.email+'">'+p.email+'</a>';
+  document.getElementById('ctWeb').innerHTML  = '<a href="https://'+p.website+'" target="_blank" rel="noopener">'+p.website+'</a>';
+  document.getElementById('ctAddr').textContent = p.reg_address || '—';
+
+  // Services — fetch from DB
+  var services = await fetchServices(p.id);
+  if (!services || services.length === 0) {
+    // fallback placeholder while DB refreshes
+    services = [
+      {id:p.id+'-svc1', name:'Service 1', description:'Contact provider for details.', unit_label:'per visit', unit_price:0},
+      {id:p.id+'-svc2', name:'Service 2', description:'Contact provider for details.', unit_label:'per visit', unit_price:0}
+    ];
+  }
+  renderServices(services, p);
+
+  // Enquiry service dropdown
+  var sel = document.getElementById('enqService');
+  sel.innerHTML = '<option value="">Select service…</option>';
+  services.forEach(function(svc){
+    var opt = document.createElement('option');
+    opt.value = svc.name;
+    opt.textContent = svc.name + ' — £' + parseFloat(svc.unit_price || svc.price || 0).toFixed(2) + ' ' + (svc.unit_label || svc.unit || '');
+    sel.appendChild(opt);
+  });
+
+  // Show content
+  document.getElementById('loadingState').style.display  = 'none';
+  document.getElementById('profileContent').style.display = '';
+}
+
+function renderServices(services, provider) {
+  var container = document.getElementById('servicesContainer');
+  container.innerHTML = '';
+  services.forEach(function(svc, idx) {
+    var div = document.createElement('div');
+    div.className = 'service-item';
+    var svcPrice = parseFloat(svc.unit_price || svc.price || 0);
+    var svcUnit  = svc.unit_label || svc.unit || 'per visit';
+    var svcDesc  = svc.description || svc.desc || '';
+    div.innerHTML =
+      '<div class="service-item-top">'+
+        '<div style="flex:1;">'+
+          '<div class="service-name">'+svc.name+'</div>'+
+          '<div class="service-desc">'+svcDesc+'</div>'+
+        '</div>'+
+        '<div class="service-price-block">'+
+          '<div class="service-price">£'+svcPrice.toFixed(2)+'</div>'+
+          '<div class="service-unit">'+svcUnit+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="service-stepper">'+
+        '<div class="stepper-wrap">'+
+          '<button class="stepper-btn" onclick="stepQty(\'svc-qty-'+idx+'\',\'svc-total-'+idx+'\',-1,'+svcPrice+')">−</button>'+
+          '<input class="stepper-val" type="number" id="svc-qty-'+idx+'" value="1" min="1" max="1000" readonly>'+
+          '<button class="stepper-btn" onclick="stepQty(\'svc-qty-'+idx+'\',\'svc-total-'+idx+'\',1,'+svcPrice+')">+</button>'+
+        '</div>'+
+        '<span class="stepper-unit-lbl">'+svcUnit+'</span>'+
+        '<span class="stepper-total" id="svc-total-'+idx+'">£'+svcPrice.toFixed(2)+'</span>'+
+        '<button class="btn-add-basket" id="btn-add-'+idx+'" onclick="addServiceToBasket('+idx+')" disabled>🛒 Add to Basket</button>'+
+      '</div>'+
+      '<div class="tc-section">'+
+        '<label class="tc-check-label">'+
+          '<input type="checkbox" id="tc-'+idx+'" onchange="tcChanged('+idx+')">'+
+          'I accept this provider\'s <span class="tc-link" onclick="showTC(event,this)">Terms &amp; Conditions</span> and the Agora FM 5% commission structure'+
+        '</label>'+
+      '</div>';
+    container.appendChild(div);
+  });
+}
+
+function stepQty(qtyId, totalId, delta, unitPrice) {
+  var input = document.getElementById(qtyId);
+  var newQty = Math.min(1000, Math.max(1, parseInt(input.value||1) + delta));
+  input.value = newQty;
+  document.getElementById(totalId).textContent = '£' + (newQty * unitPrice).toFixed(2);
+}
+
+function tcChanged(idx) {
+  var checked = document.getElementById('tc-'+idx).checked;
+  var btn     = document.getElementById('btn-add-'+idx);
+  btn.disabled = !checked;
+}
+
+function showTC(e, el) {
+  if (e && e.preventDefault) e.preventDefault();
+  var companyName = (currentProvider && currentProvider.company_name) || 'this provider';
+  alert('Terms & Conditions — ' + companyName + '\n\n' +
+    '1. All services are subject to the Agora FM platform terms.\n' +
+    '2. A 5% commission is charged to the service provider on job completion.\n' +
+    '3. Payment terms as agreed at time of commission.\n' +
+    '4. All providers hold the accreditations and insurance stated on their profile.\n' +
+    '5. Cancellation before commencement: no charge.\n' +
+    '6. Disputes: contact disputes@agorafm.co.uk\n\n' +
+    'Full T&Cs: agorafm.co.uk/supplier-terms');
+}
+
+// getServicesList replaced by fetchServices + _cachedServices
+
+async function addServiceToBasket(idx) {
+  var services = _cachedServices[currentProvider.id] || [];
+  var svc      = services[idx];
+  if (!svc) return;
+  var qty      = parseInt(document.getElementById('svc-qty-'+idx).value) || 1;
+  var btn      = document.getElementById('btn-add-'+idx);
+  var price    = parseFloat(svc.unit_price || svc.price || 0);
+  var unitLbl  = svc.unit_label || svc.unit || 'per visit';
+  var itemId   = svc.id + '-q' + qty;
+
+  if (typeof AgoraBasket === 'undefined') {
+    alert('Please sign in at http://127.0.0.1:5000 to add to basket.');
+    return;
+  }
+  await AgoraBasket.add({
+    id:           itemId,
+    name:         svc.name,
+    supplierName: currentProvider.company_name,
+    supplierId:   currentProvider.id,
+    price:        price * qty,
+    unit:         unitLbl,
+    category:     (currentProvider.categories && currentProvider.categories[0]) || 'FM'
+  });
+
+  btn.textContent = '✓ Added';
+  btn.classList.add('added');
+  btn.disabled = true;
+  setTimeout(function(){
+    btn.textContent = '🛒 Add to Basket';
+    btn.classList.remove('added');
+    btn.disabled = false;
+  }, 2500);
+}
+
+async function sendEnquiry() {
+  if(typeof AgoraDB !== 'undefined') {
+    var s = await AgoraDB.auth.getSession();
+    if (!s || !s.loggedIn) {
+      if (confirm('Please sign in to send an enquiry. Go to sign in now?')) {
+        window.location.href = 'index.html'; return;
+      }
+      return;
+    }
+  }
+  var svc   = document.getElementById('enqService').value;
+  var name  = document.getElementById('enqName').value.trim();
+  var org   = document.getElementById('enqOrg').value.trim();
+  var email = document.getElementById('enqEmail').value.trim();
+  if (!svc)   { alert('Please select a service.'); return; }
+  if (!name)  { alert('Please enter your name.'); return; }
+  if (!org)   { alert('Please enter your organisation.'); return; }
+  if (!email) { alert('Please enter your email address.'); return; }
+  var pname = currentProvider ? currentProvider.company_name : 'the provider';
+  document.getElementById('enqTitle').textContent = 'Enquiry Sent!';
+  document.getElementById('enqSub').textContent   = pname + ' will respond within 24 hours.';
+  document.getElementById('enqBanner').classList.add('show');
+  ['enqService','enqName','enqOrg','enqEmail','enqPhone','enqNotes'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+}
+
+// Pre-fill enquiry form from session
+async function prefillFromSession() {
+  try {
+    if (typeof AgoraDB === 'undefined') return;
+    var s = await AgoraDB.auth.getSession();
+  if (s && s.loggedIn) {
+    var nameEl = document.getElementById('enqName');
+    var orgEl  = document.getElementById('enqOrg');
+    var emEl   = document.getElementById('enqEmail');
+    if (nameEl && !nameEl.value) nameEl.value = s.name  || '';
+    if (orgEl  && !orgEl.value)  orgEl.value  = s.org   || '';
+    if (emEl   && !emEl.value)   emEl.value   = s.email || '';
+  }
+  } catch(e) { /* session not available - ignore */ }
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+  try {
+    await loadProvider();
+  } catch(e) {
+    console.error('loadProvider failed:', e);
+    document.getElementById('loadingState').textContent = 'Error loading provider. Please ensure app.py is running.';
+  }
+  try {
+    await prefillFromSession();
+  } catch(e) {
+    // prefill is optional - ignore errors
+  }
+});
+</script>
+</body>
+</html>

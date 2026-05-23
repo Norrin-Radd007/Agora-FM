@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agora FM — FM Services Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="agora_fm.css">
+<style>
+  /* ── Layout fix: the page scrolls normally; sidebar/panel use calc height ── */
+  body { min-height: 100vh; }
+
+  .services-header {
+    position: relative; z-index: 1;
+    padding: 24px 40px 0;
+    border-bottom: 1px solid rgba(62,107,137,0.2);
+    background: rgba(10,26,47,0.9);
+    flex-shrink: 0;
+  }
+  .services-header-top { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent;
+    border: 1px solid rgba(62,107,137,0.3);
+    color: rgba(227,229,232,0.6);
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .75rem; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: all .2s; text-decoration: none;
+  }
+  .back-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; color: var(--grey); }
+  .page-title span { color: var(--orange); }
+
+  /* Category tabs */
+  .cat-tabs { display: flex; gap: 0; overflow-x: auto; padding-bottom: 0; }
+  .cat-tabs::-webkit-scrollbar { height: 3px; }
+  .cat-tabs::-webkit-scrollbar-thumb { background: var(--steel); border-radius: 2px; }
+  .cat-tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: transparent; border: none;
+    border-bottom: 3px solid transparent;
+    color: rgba(227,229,232,.5);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .8rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: all .2s;
+  }
+  .cat-tab:hover { color: var(--grey); border-bottom-color: rgba(62,107,137,.5); }
+  .cat-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .cat-count { background: rgba(241,143,1,.15); color: var(--orange); border-radius: 10px; padding: 1px 7px; font-size: .65rem; }
+
+  /* ── Three-panel body ── */
+  .services-body {
+    display: block;
+    position: relative; z-index: 1;
+    min-height: calc(100vh - var(--nav-height) - 120px);
+  }
+  /* When a category is active restore the three-panel flex layout */
+  .services-body.category-active {
+    display: flex;
+    height: calc(100vh - var(--nav-height) - 120px);
+    min-height: 500px;
+    overflow: hidden;
+  }
+  .services-body.category-active .statutory-sidebar,
+  .services-body.category-active .company-panel {
+    overflow-y: auto;
+  }
+
+  /* Sidebar */
+  .statutory-sidebar {
+    width: 260px; flex-shrink: 0;
+    border-right: 1px solid rgba(62,107,137,.2);
+    overflow-y: auto;
+    background: rgba(10,26,47,.6);
+    padding: 16px 0;
+    display: none;
+  }
+  .category-active .statutory-sidebar {
+    display: block;
+  }
+  .statutory-sidebar::-webkit-scrollbar { width: 4px; }
+  .statutory-sidebar::-webkit-scrollbar-thumb { background: rgba(62,107,137,.4); }
+  .stat-item-btn {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    padding: 11px 20px;
+    background: transparent; border: none;
+    border-left: 3px solid transparent;
+    color: rgba(227,229,232,.55);
+    font-family: 'Barlow', sans-serif; font-size: .82rem;
+    text-align: left; cursor: pointer; transition: all .2s; line-height: 1.3;
+  }
+  .stat-item-btn:hover { color: var(--grey); background: rgba(62,107,137,.08); border-left-color: rgba(62,107,137,.4); }
+  .stat-item-btn.active { color: var(--grey); background: rgba(241,143,1,.07); border-left-color: var(--orange); font-weight: 600; }
+  .stat-item-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--steel); flex-shrink: 0; }
+  .stat-item-btn.active .stat-item-dot { background: var(--orange); }
+
+  /* Company panel */
+  .company-panel {
+    width: 100%;
+    flex: 1; overflow-y: visible;
+    padding: 28px 32px;
+  }
+  .category-active .company-panel {
+    width: auto;
+    overflow-y: auto;
+  }
+  .company-panel::-webkit-scrollbar { width: 6px; }
+  .company-panel::-webkit-scrollbar-thumb { background: rgba(62,107,137,.4); border-radius: 3px; }
+
+  .panel-header { margin-bottom: 24px; }
+  .panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 1px; margin-bottom: 6px; color: var(--grey); }
+  .panel-subtitle { font-size: .82rem; color: rgba(227,229,232,.5); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .panel-badge { background: rgba(62,107,137,.2); border: 1px solid rgba(62,107,137,.3); padding: 2px 10px; border-radius: 10px; font-size: .65rem; letter-spacing: 1px; color: var(--steel-light); }
+
+  /* Company cards */
+  .company-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+  .company-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(62,107,137,.2);
+    border-radius: 4px; overflow: hidden;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    display: flex; flex-direction: column;
+  }
+  .company-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.4); border-color: rgba(241,143,1,.3); }
+  .card-header {
+    background: linear-gradient(135deg, rgba(62,107,137,.25) 0%, rgba(10,26,47,.8) 100%);
+    padding: 18px 20px 14px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    border-bottom: 1px solid rgba(62,107,137,.15);
+  }
+  .card-logo-box {
+    width: 52px; height: 52px;
+    background: rgba(62,107,137,.2); border: 1px solid rgba(62,107,137,.3); border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--orange); letter-spacing: 1px; flex-shrink: 0;
+  }
+  .card-company-info { flex: 1; min-width: 0; }
+  .card-company-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: .5px; color: var(--grey); margin-bottom: 4px; }
+  .card-stars { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
+  .stars { color: var(--orange); font-size: .85rem; letter-spacing: 1px; }
+  .review-count { font-size: .7rem; color: rgba(227,229,232,.4); }
+  .card-accred { display: flex; flex-wrap: wrap; gap: 4px; }
+  .accred-badge { font-size: .58rem; letter-spacing: .8px; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+  .accred-badge.gold { background: rgba(241,143,1,.15); color: #F18F01; border: 1px solid rgba(241,143,1,.3); }
+  .accred-badge.blue { background: rgba(62,107,137,.2); color: var(--steel-light); border: 1px solid rgba(62,107,137,.3); }
+  .accred-badge.green { background: rgba(34,139,34,.15); color: #5cb85c; border: 1px solid rgba(34,139,34,.25); }
+  .card-body { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .card-description { font-size: .82rem; line-height: 1.6; color: rgba(227,229,232,.7); }
+  .card-meta { display: flex; flex-direction: column; gap: 7px; }
+  .meta-row { display: flex; align-items: flex-start; gap: 10px; font-size: .78rem; color: rgba(227,229,232,.6); }
+  .meta-icon { width: 16px; text-align: center; color: var(--steel-light); flex-shrink: 0; margin-top: 1px; }
+  .meta-link { color: var(--steel-light); text-decoration: none; transition: color .2s; }
+  .meta-link:hover { color: var(--orange); }
+  .card-footer {
+    padding: 14px 20px;
+    border-top: 1px solid rgba(62,107,137,.15);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: rgba(10,26,47,.4);
+  }
+  .price-label { font-size: .6rem; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(227,229,232,.35); margin-bottom: 2px; }
+  .price-value { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--orange); }
+  .price-unit { font-size: .7rem; color: rgba(227,229,232,.4); margin-left: 3px; }
+  .btn-enquire { background: var(--orange); border: none; color: var(--navy); padding: 9px 18px; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: .8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+  .btn-enquire:hover { background: var(--orange-hover); box-shadow: 0 4px 16px rgba(241,143,1,.35); }
+  .btn-compare { background: transparent; border: 1px solid rgba(62,107,137,.4); color: rgba(227,229,232,.6); padding: 8px 14px; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: .78rem; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+  .btn-compare:hover { border-color: var(--orange); color: var(--orange); }
+  .btn-commission { background: rgba(241,143,1,0.12); border: 1px solid rgba(241,143,1,0.35); color: var(--orange); padding: 8px 14px; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: .78rem; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .2s; text-decoration: none; display: inline-block; }
+  .btn-commission:hover { background: var(--orange); color: var(--navy); }
+  .empty-state { text-align: center; padding: 80px 40px; color: rgba(227,229,232,.3); }
+  .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+  .empty-text { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 1px; }
+</style>
+  <script>
+/**
+ * AGORA FM — API Client (db.js)
+ * Talks to Flask backend instead of LocalStorage.
+ * All async methods return Promises.
+ */
+var AgoraDB = (function () {
+
+  async function api(method, path, body) {
+    try {
+      var opts = { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      var res = await fetch(path, opts);
+      return await res.json();
+    } catch(e) {
+      console.error('[AgoraDB]', path, e.message);
+      return { ok: false, error: 'Cannot reach server. Is app.py running?' };
+    }
+  }
+
+  var auth = {
+    login:      function(email, password) { return api('POST', '/api/auth/login', {email, password}); },
+    logout:     async function() { await api('POST', '/api/auth/logout'); window.location.href = 'index.html'; },
+    getSession: function() { return api('GET', '/api/auth/session'); },
+    isLoggedIn: async function() { var s = await api('GET', '/api/auth/session'); return !!(s && s.loggedIn); },
+    _session:   null,
+    getCachedSession: function() { return AgoraDB.auth._session || {}; }
+  };
+
+  var customers = {
+    create: function(d) { return api('POST', '/api/customers/register', d); }
+  };
+
+  var suppliers = {
+    create: function(d) { return api('POST', '/api/suppliers/register', d); },
+    getAll: function()  { return api('GET',  '/api/suppliers'); },
+    getById: function(id) { return api('GET', '/api/suppliers/' + id); }
+  };
+
+  var basket = {
+    get:        function()      { return api('GET',    '/api/basket'); },
+    addItem:    function(item)  { return api('POST',   '/api/basket/add', item); },
+    removeItem: function(id)    { return api('DELETE', '/api/basket/item/' + id); },
+    updateQty:  function(id, q) { return api('PUT',    '/api/basket/qty', {id, qty: q}); },
+    clear:      function()      { return api('POST',   '/api/basket/clear'); },
+    getCount:   async function() { var b = await basket.get(); return (b.items||[]).length; },
+    getTotals:  async function() { var b = await basket.get(); return {subtotal:b.subtotal||0, vat:b.vat||0, commission:b.commission||0, total:b.total||0}; }
+  };
+
+  var orders = {
+    create: function(d)   { return api('POST', '/api/orders', d); },
+    getAll: function()    { return api('GET',  '/api/orders'); },
+    getPdf: function(oid) { window.open('/api/orders/' + oid + '/pdf', '_blank'); }
+  };
+
+  var admin = {
+    dump:  function() { return api('GET',  '/api/admin/dump'); },
+    reset: function() { return api('POST', '/api/admin/reset'); }
+  };
+
+  // Pre-cache session on load
+  api('GET', '/api/auth/session').then(function(s) {
+    AgoraDB.auth._session = s;
+  }).catch(function() {
+    AgoraDB.auth._session = { loggedIn: false };
+  });
+
+  return { auth, customers, suppliers, basket, orders, admin,
+           COMMISSION_RATE: 0.05, VAT_RATE: 0.20 };
+})();
+window.AgoraDB = AgoraDB;
+
+</script>
+  <script>
+/**
+ * AGORA FM — Nav Auth + Basket Badge (nav-auth.js)
+ * Async-aware version for Flask backend.
+ */
+(function () {
+
+  async function updateNav() {
+    var s = await AgoraDB.auth.getSession();
+    AgoraDB.auth._session = s;
+    var loginBtn = document.querySelector('.btn-nav-login');
+    var regBtn   = document.querySelector('.btn-nav-reg');
+    if (s && s.loggedIn) {
+      if (loginBtn) {
+        loginBtn.textContent = 'Sign Out';
+        loginBtn.href = '#';
+        loginBtn.onclick = function(e) { e.preventDefault(); AgoraDB.auth.logout(); };
+      }
+      if (regBtn) {
+        regBtn.textContent = s.type === 'supplier' ? 'My Dashboard' : 'My Dashboard';
+        regBtn.href = s.type === 'supplier' ? 'supplier_dashboard.html' : 'dashboard.html';
+        regBtn.onclick = null;
+      }
+    }
+  }
+
+  async function updateBasketBadge() {
+    // Badge is now managed by basket.js — just trigger a refresh if available
+    if (window.AgoraBasket && typeof AgoraBasket.refresh === 'function') {
+      AgoraBasket.refresh();
+    }
+  }
+
+  function injectAdminLink() {
+    var footer = document.querySelector('.footer-bottom');
+    if (!footer || document.getElementById('admin-db-link')) return;
+    var link = document.createElement('a');
+    link.id = 'admin-db-link';
+    link.href = '#';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.textContent = '⚙ View DB';
+    link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
+    footer.appendChild(link);
+  }
+
+  async function showAdminPanel() {
+    var existing = document.getElementById('admin-panel-overlay');
+    if (existing) { existing.remove(); return; }
+    var data = await AgoraDB.admin.dump();
+    var overlay = document.createElement('div');
+    overlay.id = 'admin-panel-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    var fmt = function(n){ return '£' + (n||0).toFixed(2); };
+    var html = '<div style="max-width:1000px;margin:0 auto;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;gap:12px;">';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '</div></div>';
+
+    if (data.stats) {
+      html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;">';
+      [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
+       ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
+       ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
+        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    function section(title, obj) {
+      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+             JSON.stringify(obj, null, 2) + '</pre>';
+    }
+    html += section('Session', data.session);
+    html += section('Basket', data.basket);
+    html += section('Customers (' + (data.customers||[]).length + ')', data.customers);
+    html += section('Suppliers (' + (data.suppliers||[]).length + ')', data.suppliers);
+    html += section('Orders (' + (data.orders||[]).length + ')', data.orders);
+    html += '</div>';
+    overlay.innerHTML = html;
+    document.body.appendChild(overlay);
+  }
+
+  async function init() {
+    await updateNav();
+    await updateBasketBadge();
+    injectAdminLink();
+  }
+
+  window.AgoraNavUpdate = async function() { await updateBasketBadge(); };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+  <script>
+/**
+ * AGORA FM — Basket Nav Dropdown (basket.js)
+ * Basket icon sits in the nav bar. Clicking it opens a compact
+ * dropdown panel anchored below the nav. Does not cover page content.
+ */
+(function () {
+  var fmt = function(n){ return '£' + (parseFloat(n)||0).toFixed(2); };
+  var isOpen = false;
+
+  // ── Build the nav basket button + dropdown ──────────────────────────────
+  function buildBasket() {
+    if (document.getElementById('agora-basket-wrap')) return;
+
+    // Wrapper injected into .nav-cta
+    var navCta = document.querySelector('.nav-cta');
+    if (!navCta) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'agora-basket-wrap';
+    wrap.style.cssText = 'position:relative;display:inline-flex;align-items:center;';
+
+    // Nav button
+    wrap.innerHTML = [
+      '<button id="agora-basket-btn" onclick="AgoraBasket.toggle()" style="',
+        'position:relative;display:inline-flex;align-items:center;gap:6px;',
+        'padding:7px 14px;background:transparent;',
+        'border:1px solid rgba(62,107,137,0.4);border-radius:2px;',
+        'color:rgba(227,229,232,0.6);font-family:\'Barlow Condensed\',sans-serif;',
+        'font-size:0.78rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;',
+        'cursor:pointer;transition:all 0.2s;white-space:nowrap;',
+      '">',
+        '🛒 Basket',
+        '<span id="agora-basket-badge" style="',
+          'display:none;background:#F18F01;color:#0A1A2F;',
+          'font-size:0.6rem;font-weight:700;padding:1px 5px;',
+          'border-radius:8px;min-width:16px;text-align:center;',
+          'font-family:\'Barlow Condensed\',sans-serif;',
+        '">0</span>',
+      '</button>',
+
+      // Dropdown panel
+      '<div id="agora-basket-panel" style="',
+        'display:none;position:absolute;top:calc(100% + 10px);right:0;',
+        'width:360px;background:rgba(10,26,47,0.99);',
+        'border:1px solid rgba(62,107,137,0.35);border-radius:2px;',
+        'box-shadow:0 16px 48px rgba(0,0,0,0.6);z-index:600;',
+        'backdrop-filter:blur(16px);',
+        'animation:fadeDown 0.18s ease both;',
+      '">',
+
+        // Arrow pointer
+        '<div style="position:absolute;top:-6px;right:20px;width:12px;height:12px;',
+          'background:rgba(10,26,47,0.99);border-left:1px solid rgba(62,107,137,0.35);',
+          'border-top:1px solid rgba(62,107,137,0.35);transform:rotate(45deg);"></div>',
+
+        // Header
+        '<div style="padding:14px 18px;border-bottom:1px solid rgba(62,107,137,0.2);',
+          'display:flex;align-items:center;justify-content:space-between;">',
+          '<div>',
+            '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;',
+              'letter-spacing:2px;color:#E3E5E8;">Service Basket</div>',
+            '<div id="agora-basket-count-lbl" style="font-size:0.65rem;',
+              'color:rgba(227,229,232,0.4);letter-spacing:1.5px;text-transform:uppercase;',
+              'margin-top:2px;">0 services</div>',
+          '</div>',
+          '<button onclick="AgoraBasket.close()" style="background:none;border:none;',
+            'color:rgba(227,229,232,0.3);font-size:1rem;cursor:pointer;padding:4px 6px;',
+            'transition:color 0.15s;" ',
+            'onmouseover="this.style.color=\'#F18F01\'" ',
+            'onmouseout="this.style.color=\'rgba(227,229,232,0.3)\'">✕</button>',
+        '</div>',
+
+        // Items
+        '<div id="agora-basket-items" style="max-height:240px;overflow-y:auto;padding:6px 0;">',
+          '<div id="agora-basket-empty" style="padding:28px 18px;text-align:center;',
+            'color:rgba(227,229,232,0.3);font-size:0.78rem;">',
+            '<div style="font-size:1.6rem;margin-bottom:8px;">🛒</div>',
+            'No services added yet<br>',
+            '<span style="font-size:0.7rem;font-weight:300;">Browse services and click Commission to add them</span>',
+          '</div>',
+        '</div>',
+
+        // Footer
+        '<div id="agora-basket-footer" style="display:none;border-top:1px solid rgba(62,107,137,0.2);padding:14px 18px;">',
+          '<div style="margin-bottom:12px;">',
+            '<div style="display:flex;justify-content:space-between;font-size:0.75rem;',
+              'color:rgba(227,229,232,0.5);margin-bottom:5px;">',
+              '<span>Subtotal</span><span id="bkt-sub">£0.00</span>',
+            '</div>',
+            '<div style="display:flex;justify-content:space-between;font-size:0.75rem;',
+              'color:rgba(227,229,232,0.5);margin-bottom:5px;">',
+              '<span>VAT (20%)</span><span id="bkt-vat">£0.00</span>',
+            '</div>',
+            '<div style="display:flex;justify-content:space-between;font-size:0.7rem;',
+              'color:rgba(241,143,1,0.6);margin-bottom:10px;">',
+              '<span>Commission (5%)</span><span id="bkt-comm">£0.00</span>',
+            '</div>',
+            '<div style="display:flex;justify-content:space-between;',
+              'font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:1px;',
+              'border-top:1px solid rgba(62,107,137,0.2);padding-top:10px;">',
+              '<span style="color:#E3E5E8;">Total inc. VAT</span>',
+              '<span id="bkt-total" style="color:#F18F01;">£0.00</span>',
+            '</div>',
+          '</div>',
+          '<button onclick="AgoraBasket.checkout()" style="width:100%;padding:12px;',
+            'background:#F18F01;border:none;border-radius:2px;color:#0A1A2F;',
+            'font-family:\'Barlow Condensed\',sans-serif;font-size:0.85rem;font-weight:700;',
+            'letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;" ',
+            'onmouseover="this.style.background=\'#FF9F0A\'" ',
+            'onmouseout="this.style.background=\'#F18F01\'">',
+            'Proceed to Payment →',
+          '</button>',
+          '<button onclick="AgoraBasket.clearAll()" style="width:100%;padding:8px;',
+            'background:transparent;border:1px solid rgba(62,107,137,0.25);border-radius:2px;',
+            'color:rgba(227,229,232,0.35);font-family:\'Barlow Condensed\',sans-serif;',
+            'font-size:0.68rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;',
+            'cursor:pointer;margin-top:6px;transition:all 0.2s;" ',
+            'onmouseover="this.style.borderColor=\'rgba(231,76,60,0.4)\';this.style.color=\'#e74c3c\'" ',
+            'onmouseout="this.style.borderColor=\'rgba(62,107,137,0.25)\';this.style.color=\'rgba(227,229,232,0.35)\'">',
+            'Clear Basket',
+          '</button>',
+        '</div>',
+
+      '</div>' // end panel
+    ].join('');
+
+    // Insert before the first child of nav-cta
+    navCta.insertBefore(wrap, navCta.firstChild);
+
+    // Add fadeDown keyframe if not already present
+    if (!document.getElementById('basket-keyframes')) {
+      var style = document.createElement('style');
+      style.id = 'basket-keyframes';
+      style.textContent = '@keyframes fadeDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}';
+      document.head.appendChild(style);
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      var wrap = document.getElementById('agora-basket-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        AgoraBasket.close();
+      }
+    });
+
+    // Hover styles on nav button
+    var btn = document.getElementById('agora-basket-btn');
+    if (btn) {
+      btn.addEventListener('mouseover', function(){ this.style.borderColor='#F18F01'; this.style.color='#F18F01'; });
+      btn.addEventListener('mouseout',  function(){
+        if (!isOpen) { this.style.borderColor='rgba(62,107,137,0.4)'; this.style.color='rgba(227,229,232,0.6)'; }
+      });
+    }
+  }
+
+  // ── Render basket contents ──────────────────────────────────────────────
+  async function render() {
+    var b       = await AgoraDB.basket.get();
+    var items   = b.items || [];
+    var container = document.getElementById('agora-basket-items');
+    var footer    = document.getElementById('agora-basket-footer');
+    var empty     = document.getElementById('agora-basket-empty');
+    var countLbl  = document.getElementById('agora-basket-count-lbl');
+    var badge     = document.getElementById('agora-basket-badge');
+    if (!container) return;
+
+    var count = items.length;
+    if (countLbl) countLbl.textContent = count + (count === 1 ? ' service' : ' services');
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    if (count === 0) {
+      if (empty)  empty.style.display  = 'block';
+      if (footer) footer.style.display = 'none';
+      container.querySelectorAll('.bkt-item').forEach(function(r){ r.remove(); });
+      return;
+    }
+
+    if (empty)  empty.style.display  = 'none';
+    if (footer) footer.style.display = 'block';
+    container.querySelectorAll('.bkt-item').forEach(function(r){ r.remove(); });
+
+    items.forEach(function(item) {
+      var lineTotal = parseFloat(item.price) * (item.qty || 1);
+      var row = document.createElement('div');
+      row.className = 'bkt-item';
+      row.style.cssText = 'padding:9px 18px;border-bottom:1px solid rgba(62,107,137,0.08);display:flex;align-items:center;gap:8px;';
+      row.innerHTML = [
+        '<div style="flex:1;min-width:0;">',
+          '<div style="font-size:0.78rem;font-weight:500;color:#E3E5E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + item.name + '</div>',
+          '<div style="font-size:0.67rem;color:#5589A8;margin-top:1px;">' + (item.supplierName||'') + '</div>',
+        '</div>',
+        '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">',
+          '<input type="number" min="1" max="99" value="' + (item.qty||1) + '" ',
+            'onchange="AgoraBasket.updateQty(\'' + item.id + '\',this.value)" ',
+            'style="width:40px;padding:3px 5px;background:rgba(10,26,47,0.8);border:1px solid rgba(62,107,137,0.3);',
+            'border-radius:2px;color:#E3E5E8;font-size:0.72rem;text-align:center;">',
+          '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:0.85rem;font-weight:700;color:#F18F01;min-width:52px;text-align:right;">' + fmt(lineTotal) + '</div>',
+          '<button onclick="AgoraBasket.remove(\'' + item.id + '\')" ',
+            'style="background:none;border:none;color:rgba(227,229,232,0.2);cursor:pointer;font-size:0.8rem;padding:2px 4px;transition:color 0.15s;" ',
+            'onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'rgba(227,229,232,0.2)\'">✕</button>',
+        '</div>'
+      ].join('');
+      container.appendChild(row);
+    });
+
+    if (document.getElementById('bkt-sub'))   document.getElementById('bkt-sub').textContent   = fmt(b.subtotal);
+    if (document.getElementById('bkt-vat'))   document.getElementById('bkt-vat').textContent   = fmt(b.vat);
+    if (document.getElementById('bkt-comm'))  document.getElementById('bkt-comm').textContent  = fmt(b.commission);
+    if (document.getElementById('bkt-total')) document.getElementById('bkt-total').textContent = fmt(b.total);
+  }
+
+  // ── Public API ──────────────────────────────────────────────────────────
+  window.AgoraBasket = {
+    open: function() {
+      var panel = document.getElementById('agora-basket-panel');
+      var btn   = document.getElementById('agora-basket-btn');
+      if (!panel) return;
+      panel.style.display = 'block';
+      if (btn) { btn.style.borderColor='#F18F01'; btn.style.color='#F18F01'; }
+      isOpen = true;
+      render();
+    },
+    close: function() {
+      var panel = document.getElementById('agora-basket-panel');
+      var btn   = document.getElementById('agora-basket-btn');
+      if (panel) panel.style.display = 'none';
+      if (btn) { btn.style.borderColor='rgba(62,107,137,0.4)'; btn.style.color='rgba(227,229,232,0.6)'; }
+      isOpen = false;
+    },
+    toggle: function() {
+      if (isOpen) { AgoraBasket.close(); } else { AgoraBasket.open(); }
+    },
+    add: async function(item) {
+      var s = await AgoraDB.auth.getSession();
+      if (!s || !s.loggedIn) {
+        if (confirm('Please sign in to add services to your basket. Go to sign in now?')) {
+          window.location.href = 'index.html';
+        }
+        return;
+      }
+      var result = await AgoraDB.basket.addItem(item);
+      await render();
+      AgoraBasket.open();
+      if (result && result.added === false) {
+        // Already in basket — flash the badge
+        var badge = document.getElementById('agora-basket-badge');
+        if (badge) {
+          var orig = badge.style.background;
+          badge.style.background = '#5cb85c';
+          setTimeout(function(){ badge.style.background = orig; }, 800);
+        }
+      }
+    },
+    remove: async function(id) {
+      await AgoraDB.basket.removeItem(id);
+      render();
+    },
+    updateQty: async function(id, qty) {
+      await AgoraDB.basket.updateQty(id, qty);
+      render();
+    },
+    clearAll: async function() {
+      if (confirm('Clear all items from your basket?')) {
+        await AgoraDB.basket.clear();
+        render();
+      }
+    },
+    checkout: async function() {
+      var s = await AgoraDB.auth.getSession();
+      if (!s || !s.loggedIn) { window.location.href = 'index.html'; return; }
+      var count = await AgoraDB.basket.getCount();
+      if (count === 0) { alert('Your basket is empty.'); return; }
+      AgoraBasket.close();
+      window.location.href = 'payment.html';
+    },
+    refresh: function() { render(); }
+  };
+
+  // ── Init ────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    buildBasket();
+    render();
+  });
+
+})();
+
+</script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-text">AGORA<span class="logo-accent">FM</span></span>
+    <span class="logo-dot"></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li>
+      <a href="service_providers.html">Services <span class="nav-chevron">▼</span></a>
+      <div class="nav-dropdown">
+        <div class="dropdown-head">FM Categories</div>
+        <a href="service_providers.html">Fire Protection</a>
+        <a href="service_providers.html">Water Services</a>
+        <a href="service_providers.html">Electrical Services</a>
+        <a href="service_providers.html">Gas Services</a>
+        <a href="service_providers.html">HVAC</a>
+        <a href="service_providers.html">Lifts &amp; Lifting</a>
+        <a href="service_providers.html">Doors &amp; Access</a>
+        <a href="service_providers.html">Risk Assessments</a>
+      </div>
+    </li>
+    <li><a href="service_providers.html" class="active">Providers</a></li>
+    <li><a href="service_providers_catalogue.html">Catalogue</a></li>
+    <li><a href="#">Benchmarks</a></li>
+    <li><a href="#">Analytics</a></li>
+    <li><a href="registration.html">Register</a></li>
+  </ul>
+  <div class="nav-search">
+    <div class="search-wrap">
+      <input type="text" placeholder="Search services, providers…" id="navSearch" />
+      <button onclick="handleSearch()">⌕</button>
+    </div>
+  </div>
+  <div class="nav-cta">
+    <a href="index.html" class="btn-nav-login">Sign In</a>
+    <a href="registration.html" class="btn-nav-reg">Register Free</a>
+  </div>
+  <span class="nav-badge">Platform v3.0</span>
+</nav>
+
+<!-- SERVICES HEADER -->
+<div class="services-header">
+  <div class="services-header-top">
+    <a href="index.html" class="back-btn">← Home</a>
+    <div class="page-title">FM <span>Services</span> Marketplace</div>
+  </div>
+  <div class="cat-tabs" id="cat-tabs"></div>
+</div>
+
+<!-- THREE-PANEL BODY -->
+<div class="services-body">
+  <div class="statutory-sidebar" id="statutory-sidebar"></div>
+  <div class="company-panel" id="company-panel">
+    <div id="verified-providers-default">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="display:inline-block;width:3px;height:18px;background:var(--orange);border-radius:1px;"></span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);">Agora FM Verified Providers</span>
+      </div>
+      <p style="font-size:0.82rem;color:var(--grey-dim);font-weight:300;margin-bottom:20px;margin-left:13px;">Click any provider card to view their full storefront, services and pricing.</p>
+      <div id="verified-providers-section" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="site-ticker">
+  <div class="ticker-label">Live Market</div>
+  <div class="ticker-track">
+    <span class="ticker-item">Fire Safety — 312 active tenders</span>
+    <span class="ticker-item">Water Treatment — Legionella compliance checks up 18%</span>
+    <span class="ticker-item">Electrical — 495 verified contractors available</span>
+    <span class="ticker-item">Lift Maintenance — LOLER inspections — 88 providers</span>
+    <span class="ticker-item">Gas — Boiler service contracts — avg £1,200/yr</span>
+    <span class="ticker-item">Asbestos — New HSE guidance framework updated</span>
+    <span class="ticker-item">Fire Safety — 312 active tenders</span>
+    <span class="ticker-item">Water Treatment — Legionella compliance checks up 18%</span>
+    <span class="ticker-item">Electrical — 495 verified contractors available</span>
+    <span class="ticker-item">Lift Maintenance — LOLER inspections — 88 providers</span>
+    <span class="ticker-item">Gas — Boiler service contracts — avg £1,200/yr</span>
+    <span class="ticker-item">Asbestos — New HSE guidance framework updated</span>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo" style="text-decoration:none;">
+        <span class="logo-text">AGORA<span class="logo-accent">FM</span></span>
+        <span class="logo-dot" style="animation:none;opacity:0.7;"></span>
+      </a>
+      <p>The UK's most advanced facilities management comparison and commissioning platform.</p>
+    </div>
+    <div class="footer-col"><h4>Platform</h4><ul>
+      <li><a href="service_providers.html">Find Providers</a></li>
+      <li><a href="#">Benchmarking</a></li>
+      <li><a href="#">Compliance Tracking</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Company</h4><ul>
+      <li><a href="#">About Agora FM</a></li>
+      <li><a href="#">Contact Us</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Legal</h4><ul>
+      <li><a href="#">Terms &amp; Conditions</a></li>
+      <li><a href="#">Privacy Policy</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 Agora FM Ltd. All rights reserved. Registered in England &amp; Wales.</div>
+    <div class="footer-badge">Built for excellence in FM ◆</div>
+  </div>
+</footer>
+
+<script>
+let inited = false;
+
+var VERIFIED_PROVIDERS = [
+  {id:'sup_001',name:'Apollo Fire Technicians Ltd',abbr:'AFT',cat:'Fire',rating:4.9,reviews:312,tel:'020 7123 4567',web:'apollofire.co.uk',addr:'12 Barbican Centre, London EC2Y 8NB',accreds:['BAFE','CHAS Premium','ISO 9001','SafeContractor'],price:'From £8',unit:'/extinguisher',desc:'BAFE-certified fire protection specialists with 20+ years of commercial experience. Fire alarm maintenance, extinguisher servicing and emergency lighting.'},
+  {id:'sup_002',name:'AquaSafe Testing Ltd',abbr:'AQS',cat:'Water',rating:4.8,reviews:198,tel:'0333 123 9876',web:'aquasafe-testing.co.uk',addr:'4 Waterside Court, Leeds LS1 4GL',accreds:['UKAS Accredited','Legionella Control','ISO 9001','CHAS'],price:'From £95',unit:'/sample',desc:'UKAS-accredited Legionella and water hygiene specialists. L8 sampling, monthly sentinel outlet monitoring and full compliance reporting.'},
+  {id:'sup_003',name:'Volt Electrical Compliance Ltd',abbr:'VEC',cat:'Electricity',rating:4.7,reviews:289,tel:'0121 456 7890',web:'voltcompliance.co.uk',addr:'Unit 7 Aston Cross Business Village, Birmingham B6 5RQ',accreds:['NICEIC','ECA Member','CHAS','ISO 9001'],price:'From £195',unit:'/visit',desc:'NICEIC-approved electrical testing and compliance specialists. EICR inspections, emergency lighting tests and fixed wire testing nationwide.'},
+  {id:'sup_004',name:'BritHeat Gas Services Ltd',abbr:'BGS',cat:'Gas',rating:4.8,reviews:167,tel:'0113 345 6789',web:'britheat.co.uk',addr:'88 Wellington Street, Leeds LS1 2EQ',accreds:['Gas Safe','OFTEC','CHAS','ISO 9001'],price:'From £150',unit:'/inspection',desc:'Gas Safe registered commercial boiler and gas compliance specialists. Annual boiler servicing, gas safety inspections and CP12 certification.'},
+  {id:'sup_005',name:'PureAir HVAC Solutions Ltd',abbr:'PAH',cat:'HVAC',rating:4.8,reviews:224,tel:'020 3456 7890',web:'pureairhvac.co.uk',addr:'22 Kings Road, Reading RG1 3AR',accreds:['REFCOM','F-Gas Certified','CHAS','SafeContractor'],price:'From £85',unit:'/filter bank',desc:'F-Gas certified HVAC and air conditioning specialists. AHU filter changes, quarterly PPM visits and full ventilation compliance programmes.'},
+  {id:'sup_006',name:'ClearLift Services Ltd',abbr:'CLS',cat:'Lifts & Lifting',rating:4.7,reviews:143,tel:'0115 987 3456',web:'clearlift.co.uk',addr:'Unit 4 Lenton Business Centre, Nottingham NG7 2BY',accreds:['LEIA Member','LOLER Certified','ISO 9001','CHAS'],price:'From £518',unit:'/inspection',desc:'LEIA-member lift maintenance and LOLER inspection specialists. Monthly passenger lift maintenance contracts and 6-monthly LOLER examinations.'},
+  {id:'sup_007',name:'SafeAir Asbestos Consultancy Ltd',abbr:'SAC',cat:'Asbestos',rating:4.9,reviews:98,tel:'0121 233 4567',web:'safeair-asbestos.co.uk',addr:'15 Temple Row, Birmingham B2 5LG',accreds:['UKAS Accredited','BOHS P402','ISO 17025','CHAS'],price:'From £730',unit:'/survey',desc:'UKAS-accredited asbestos management survey and consultancy specialists. Management surveys, R&D surveys and digital asbestos register management.'},
+  {id:'sup_008',name:'CoolEdge Climate Ltd',abbr:'CEC',cat:'Air Conditioning',rating:4.7,reviews:186,tel:'01242 512 890',web:'cooledgeclimate.co.uk',addr:'7 Rutherford Way, Cheltenham GL51 9TU',accreds:['REFCOM','F-Gas Certified','SafeContractor','CHAS'],price:'From £280',unit:'/unit/yr',desc:'F-Gas certified air conditioning maintenance specialists. Split and VRF system service packages with 24/7 emergency cover.'},
+  {id:'sup_009',name:'PressureSafe Engineering Ltd',abbr:'PSE',cat:'Pressure Vessels',rating:4.8,reviews:112,tel:'01732 360 450',web:'pressuresafe.co.uk',addr:'33 Sovereign Way, Tonbridge TN9 1RH',accreds:['PSSR Certified','ISO 9001','CHAS','SafeContractor'],price:'From £195',unit:'/vessel',desc:'PSSR-competent pressure vessel inspection and chiller maintenance specialists. Written scheme of examination and quarterly chiller PPM visits.'},
+  {id:'sup_010',name:'RiskFirst Consultancy Ltd',abbr:'RFC',cat:'Risk Assessments',rating:4.9,reviews:201,tel:'020 7930 1234',web:'riskfirst.co.uk',addr:'20 St James Street, London SW1A 1ES',accreds:['NEBOSH','IOSH Member','ISO 45001','SafeContractor'],price:'From £35',unit:'/workstation',desc:'NEBOSH and IOSH-qualified risk assessment consultancy. PAS 79 fire risk assessments, DSE workstation assessments and workplace safety audits.'},
+];
+
+function viewProviderProfile(supplierId, supplierName) {
+  if (supplierId && /^sup_\d+$/.test(supplierId)) {
+    window.location.href = 'provider_profile.html?provider=' + supplierId;
+  } else {
+    var map = {
+      'apollo fire technicians ltd':'sup_001','aquasafe testing ltd':'sup_002',
+      'volt electrical compliance ltd':'sup_003','britheat gas services ltd':'sup_004',
+      'pureair hvac solutions ltd':'sup_005','clearlift services ltd':'sup_006',
+      'safeair asbestos consultancy ltd':'sup_007','cooledge climate ltd':'sup_008',
+      'pressuresafe engineering ltd':'sup_009','riskfirst consultancy ltd':'sup_010'
+    };
+    var sid = map[(supplierName||'').toLowerCase()];
+    window.location.href = 'provider_profile.html?provider=' + (sid || 'sup_001');
+  }
+}
+
+
+function handleSearch() {
+  const q = document.getElementById('navSearch').value.trim().toLowerCase();
+  if (!q) return;
+  // Search across all providers
+  let results = [];
+  Object.entries(CATEGORIES).forEach(([cat, catData]) => {
+    Object.entries(catData.items).forEach(([item, itemData]) => {
+      itemData.companies.forEach(c => {
+        if (c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || item.toLowerCase().includes(q) || cat.toLowerCase().includes(q)) {
+          results.push({ cat, item, company: c });
+        }
+      });
+    });
+  });
+  const panel = document.getElementById('company-panel');
+  if (results.length === 0) {
+    panel.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No results for "${q}"</div></div>`;
+    return;
+  }
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div class="panel-title">Search results</div>
+      <div class="panel-subtitle"><span>${results.length} providers found for "${q}"</span></div>
+    </div>
+    <div class="company-grid">${results.map(r => renderCard(r.company)).join('')}</div>
+  `;
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('navSearch').addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
+});
+
+const CATEGORIES = {
+  "Air Conditioning": {
+    icon: "❄️",
+    items: {
+      "AHU Maintenance": {
+        freq: "Annual", price: "£739 per unit",
+        desc: "Annual service of Air Handling Units (AHUs). Cost is per AHU; numbers vary by building. Covers filter changes, belt inspection, coil cleaning, and full functional checks.",
+        companies: [
+          { name:"Dailair UK", abbr:"DA", rating:4.8, reviews:312, tel:"0800 123 4567", web:"www.dalair.co.uk", addr:"Unit 12, Meridian Business Park, Leicester, LE19 1WZ", accreds:["F-Gas Cert","REFCOM","CHAS"], price:"£695", unit:"/unit/yr", desc:"Leading AHU service provider with over 25 years of commercial HVAC experience. Specialist in AHU servicing, filter replacement and thermal wheel maintenance across London and the South East." },
+          { name:"ACS Southeast", abbr:"ACS", rating:4.7, reviews:198, tel:"01293 771 800", web:"www.acs-southeast.com", addr:"Gatwick Road, Crawley, West Sussex, RH10 9RD", accreds:["REFCOM","SafeContractor","ISO 9001"], price:"£720", unit:"/unit/yr", desc:"Commercial air conditioning specialists covering Sussex, Surrey and Greater London. Full AHU service packages including duct hygiene surveys and ventilation compliance reports." },
+          { name:"Mitie Technical FM", abbr:"MT", rating:4.6, reviews:521, tel:"0800 169 6600", web:"www.mitie.com", addr:"Level 12, The Shard, 32 London Bridge St, London SE1 9SG", accreds:["ISO 9001","ISO 14001","CHAS","REFCOM"], price:"£749", unit:"/unit/yr", desc:"National FM provider offering comprehensive AHU maintenance programmes backed by 24/7 helpdesk support and real-time asset management platforms." },
+          { name:"Nortek Air Solutions", abbr:"NAS", rating:4.5, reviews:143, tel:"01384 490 520", web:"www.nortekairsolutions.co.uk", addr:"Popes Lane, Oldbury, West Midlands, B69 4PJ", accreds:["REFCOM","CHAS","Gas Safe"], price:"£710", unit:"/unit/yr", desc:"Specialist AHU manufacturer and service company. Factory-trained engineers carry out full OEM-standard servicing including coil re-tubing and motor replacement." },
+          { name:"Integral UK", abbr:"IUK", rating:4.7, reviews:289, tel:"020 7702 4600", web:"www.integral.co.uk", addr:"4th Floor, King's Place, 90 York Way, London, N1 9AG", accreds:["ISO 9001","ISO 45001","CHAS","REFCOM"], price:"£730", unit:"/unit/yr", desc:"Part of the JLL group, Integral provides blue-chip HVAC maintenance across the UK. Expert AHU teams with full CAFM-integrated service reporting." },
+          { name:"Servest Group", abbr:"SG", rating:4.4, reviews:176, tel:"01284 760 777", web:"www.servest.co.uk", addr:"Servest House, 1 Founders Court, Bury St Edmunds, IP33 3TA", accreds:["SafeContractor","CHAS","REFCOM"], price:"£680", unit:"/unit/yr", desc:"Multi-service FM provider with dedicated M&E division. Competitive AHU service pricing with national reach and transparent compliance reporting." },
+          { name:"Dalkia Facilities", abbr:"DF", rating:4.5, reviews:201, tel:"020 3772 4000", web:"www.dalkia.co.uk", addr:"10 Triton Street, Regent's Place, London, NW1 3BF", accreds:["ISO 9001","REFCOM","CHAS","ISO 14001"], price:"£760", unit:"/unit/yr", desc:"French-owned engineering services group with a strong UK FM presence. Full lifecycle AHU management from asset surveys through to planned replacement programmes." },
+          { name:"Imtech Technical Services", abbr:"ITS", rating:4.6, reviews:167, tel:"0131 337 6666", web:"www.imtech.co.uk", addr:"24 Westerlea, Edinburgh, EH12 6AF", accreds:["REFCOM","ISO 9001","CHAS"], price:"£705", unit:"/unit/yr", desc:"Engineering specialist with deep expertise in complex HVAC plant. Dedicated commercial AHU teams covering all major UK cities with rapid-response callout." },
+          { name:"Colt International", abbr:"CI", rating:4.8, reviews:254, tel:"01252 719 922", web:"www.coltinfo.co.uk", addr:"New Lane, Havant, Hampshire, PO9 2LY", accreds:["CHAS","ISO 9001","REFCOM","SafeContractor"], price:"£775", unit:"/unit/yr", desc:"Pioneering smoke control and ventilation group offering premium AHU maintenance backed by advanced sensor diagnostics and remote monitoring." },
+          { name:"Apleona UK", abbr:"AUK", rating:4.5, reviews:132, tel:"020 7952 4000", web:"www.apleona.com/en", addr:"5 Fleet Place, London, EC4M 7RD", accreds:["ISO 9001","ISO 14001","CHAS","REFCOM"], price:"£725", unit:"/unit/yr", desc:"European FM powerhouse with UK operations providing high-quality AHU servicing to financial, legal and property sector clients across Central London." }
+        ]
+      },
+      "Fan Coil Maintenance": {
+        freq: "6 Monthly", price: "£180–£320/unit/yr",
+        desc: "Bi-annual service of fan coil units covering filter cleaning/replacement, fan motor inspection, drain pan cleaning, and controls calibration.",
+        companies: [
+          { name:"Cool Air UK", abbr:"CA", rating:4.7, reviews:224, tel:"020 8597 2991", web:"www.coolairuk.com", addr:"Unit 4, Barking Industrial Park, Barking, Essex, IG11 0TY", accreds:["REFCOM","CHAS","F-Gas Cert"], price:"£290", unit:"/unit/yr", desc:"London-based specialist in fan coil and chilled water system maintenance. Rapid mobilisation across Greater London with fully stocked service vans." },
+          { name:"Crown Climate Control", abbr:"CCC", rating:4.6, reviews:178, tel:"01753 689 000", web:"www.crowncc.co.uk", addr:"Crown House, Slough Trading Estate, Slough, SL1 4DJ", accreds:["REFCOM","SafeContractor","ISO 9001"], price:"£265", unit:"/unit/yr", desc:"Specialist commercial HVAC provider with focus on fan coil and VRF systems. Offers transparent asset-by-asset reporting via customer portal." },
+          { name:"Thorn Baker FM", abbr:"TB", rating:4.4, reviews:156, tel:"0345 600 1111", web:"www.thornbaker.co.uk", addr:"Elizabeth House, 28–30 King Street, Nottingham, NG1 2AS", accreds:["CHAS","REFCOM"], price:"£245", unit:"/unit/yr", desc:"Nationwide FM staffing and services group with dedicated HVAC maintenance teams. Competitive rates and fast deployment for FCU service programmes." },
+          { name:"Engie UK", abbr:"EN", rating:4.6, reviews:312, tel:"0333 000 0000", web:"www.engie.co.uk", addr:"55 Victoria Street, London, SW1H 0EU", accreds:["ISO 9001","ISO 14001","CHAS","REFCOM"], price:"£310", unit:"/unit/yr", desc:"Global energy and facilities group with extensive UK HVAC maintenance operations. FCU programmes fully integrated with digital twin asset management." },
+          { name:"Veolia Energy UK", abbr:"VE", rating:4.5, reviews:199, tel:"01270 754 754", web:"www.veolia.co.uk", addr:"Kings Place, 90 York Way, London, N1 9AG", accreds:["ISO 9001","CHAS","ISO 14001"], price:"£295", unit:"/unit/yr", desc:"Environmental services leader with strong M&E division. Energy-efficient FCU maintenance packages with carbon reporting included." },
+          { name:"NG Bailey", abbr:"NGB", rating:4.7, reviews:267, tel:"0113 270 6000", web:"www.ngbailey.co.uk", addr:"Redvers House, Union Street, Bradford, BD1 1HD", accreds:["ISO 9001","ISO 45001","CHAS","REFCOM"], price:"£320", unit:"/unit/yr", desc:"Leading UK engineering services business. Renowned for quality and reliability across complex commercial HVAC maintenance including fan coil programmes." },
+          { name:"OCS Group UK", abbr:"OCS", rating:4.4, reviews:143, tel:"01293 730 200", web:"www.ocs.co.uk", addr:"OCS House, Kenley Lane, Kenley, Surrey, CR8 5EQ", accreds:["SafeContractor","CHAS"], price:"£250", unit:"/unit/yr", desc:"International FM provider with UK HVAC division offering cost-effective FCU maintenance to commercial landlords and managing agents." },
+          { name:"Stannah Service Centres", abbr:"SSC", rating:4.5, reviews:187, tel:"01264 339 090", web:"www.stannah.co.uk", addr:"Watt Close, East Portway, Andover, Hampshire, SP10 3SD", accreds:["CHAS","ISO 9001"], price:"£270", unit:"/unit/yr", desc:"Diversified engineering group with HVAC service arm. Fan coil maintenance provided alongside lift and access solutions for multi-service contracts." },
+          { name:"Vinci Facilities", abbr:"VF", rating:4.6, reviews:234, tel:"020 8571 3939", web:"www.vincifacilities.com", addr:"The Vista, Mercury Park, Wycombe Lane, Wooburn Green, HP10 0HH", accreds:["ISO 9001","ISO 14001","CHAS","REFCOM"], price:"£300", unit:"/unit/yr", desc:"FM arm of the VINCI Group. Comprehensive HVAC planned maintenance programmes with guaranteed SLA response and dedicated account management." },
+          { name:"Kier Facilities Services", abbr:"KFS", rating:4.5, reviews:198, tel:"01767 355 000", web:"www.kier.co.uk", addr:"Tempsford Hall, Sandy, Bedfordshire, SG19 2BD", accreds:["ISO 9001","CHAS","SafeContractor"], price:"£285", unit:"/unit/yr", desc:"Large FM contractor with national HVAC capability. Fan coil programmes backed by 24/7 helpdesk and mobile engineer tracking via customer app." }
+        ]
+      }
+    }
+  },
+  "Asbestos": {
+    icon: "⚠️",
+    items: {
+      "Asbestos Register": {
+        freq: "Every 2 Years / Post Works", price: "£730 one-off",
+        desc: "Mandatory asbestos register for buildings constructed before 2000. Updated whenever intrusive works are carried out. HSE statutory requirement under CAR 2012.",
+        companies: [
+          { name:"Lucion Environmental", abbr:"LU", rating:4.9, reviews:412, tel:"0333 567 5656", web:"www.lucion.co.uk", addr:"Kingfisher House, Newburn Riverside, Newcastle upon Tyne, NE15 8NZ", accreds:["UKAS Accredited","P402","BOHS"], price:"£695", unit:"/survey", desc:"UKAS-accredited asbestos consultancy and surveying business. Fully digital asbestos registers via secure client portal with real-time update capability." },
+          { name:"Environtec", abbr:"EN", rating:4.8, reviews:287, tel:"020 7403 7600", web:"www.environtec.co.uk", addr:"37 Bermondsey Street, London, SE1 3XF", accreds:["UKAS","P402","BOHS","ISO 9001"], price:"£720", unit:"/survey", desc:"Independent asbestos management consultancy serving London and the South East. Specialises in complex multi-floor commercial building registers." },
+          { name:"Acorn Analytical Services", abbr:"AAS", rating:4.7, reviews:198, tel:"01604 717 220", web:"www.acornanalytical.co.uk", addr:"Units 23–25 Moulton Park Business Centre, Northampton, NN3 6AQ", accreds:["UKAS","BOHS","ISO 9001"], price:"£680", unit:"/survey", desc:"National asbestos surveying and testing lab. Rapid turnaround management surveys with same-week reporting for urgent compliance requirements." },
+          { name:"Socotec UK", abbr:"SC", rating:4.6, reviews:341, tel:"01276 697 400", web:"www.socotec.co.uk", addr:"Workingham House, Elmwood Drive, Chertsey, Surrey, KT16 0PX", accreds:["UKAS","ISO 9001","ISO 17025"], price:"£750", unit:"/survey", desc:"International testing and inspection group. UKAS-accredited asbestos surveys with integrated laboratory analysis and digital register management." },
+          { name:"Bureau Veritas UK", abbr:"BV", rating:4.7, reviews:289, tel:"0345 600 1828", web:"www.bureauveritas.co.uk", addr:"67–68 Newman Street, London, W1T 3EQ", accreds:["UKAS","ISO 17025","ISO 9001","BOHS"], price:"£790", unit:"/survey", desc:"Global TIC group with specialist asbestos division. Premium survey service for complex commercial estates with full legal defensibility documentation." },
+          { name:"Ridge & Partners", abbr:"RP", rating:4.5, reviews:176, tel:"01865 810 874", web:"www.ridge.co.uk", addr:"Seacourt Tower, West Way, Oxford, OX2 0JJ", accreds:["UKAS","BOHS","ISO 9001"], price:"£730", unit:"/survey", desc:"Multi-disciplinary consultancy with asbestos management division. Integrated approach linking asbestos data with wider building compliance systems." },
+          { name:"Hays Specialist Recruitment FM", abbr:"HSR", rating:4.4, reviews:154, tel:"020 3465 0018", web:"www.hays.co.uk/fm", addr:"250 Euston Road, London, NW1 2AF", accreds:["CHAS","SafeContractor"], price:"£660", unit:"/survey", desc:"Provides vetted asbestos survey contractors on a project basis. Useful for one-off surveys with competitive market pricing." },
+          { name:"Armac Group", abbr:"AG", rating:4.6, reviews:201, tel:"0121 773 5595", web:"www.armacgroup.co.uk", addr:"Armac House, Tyseley, Birmingham, B11 2AA", accreds:["UKAS","P402","BOHS"], price:"£700", unit:"/survey", desc:"Midlands and national asbestos specialists. Asbestos management surveys, reinspections and register updates with licensed removal capability." },
+          { name:"STATS Group", abbr:"STG", rating:4.5, reviews:167, tel:"01467 629 001", web:"www.statsgroup.com", addr:"Inverurie, Aberdeenshire, AB51 0GH", accreds:["UKAS","ISO 9001","CHAS"], price:"£715", unit:"/survey", desc:"Engineering and environmental services group with asbestos management division. Strong compliance track record across commercial and industrial sectors." },
+          { name:"Exova (Element Materials)", abbr:"EX", rating:4.7, reviews:223, tel:"0161 875 2000", web:"www.element.com", addr:"Trafford Park, Manchester, M17 1DU", accreds:["UKAS","ISO 17025","BOHS"], price:"£745", unit:"/survey", desc:"World-class testing and inspection group. Accredited asbestos analysis laboratory paired with management survey services for full compliance delivery." }
+        ]
+      }
+    }
+  },
+  "Automatic Gates": {
+    icon: "🚧",
+    items: {
+      "Loading Bay Door": {
+        freq: "6 Monthly", price: "£1,124/door/yr",
+        desc: "Bi-annual service and maintenance of automated loading bay doors. Cost is per door. Gate must be serviced twice per year to maintain manufacturer warranty and statutory compliance.",
+        companies: [
+          { name:"GLS Door Systems", abbr:"GLS", rating:4.8, reviews:312, tel:"0116 276 8966", web:"www.glsdoorsystems.co.uk", addr:"Units 6-8 Meridian Business Village, Lubbesthorpe Way, Leicester, LE19 1WZ", accreds:["DHEF","SafeContractor","CHAS"], price:"£1,050", unit:"/door/yr", desc:"Specialist loading bay door manufacturer and service company. Factory-trained engineers service all makes. 4-hour emergency response SLA available." },
+          { name:"MGS UK", abbr:"MGS", rating:4.7, reviews:267, tel:"01924 472 400", web:"www.mgsuk.com", addr:"Ossett, West Yorkshire, WF5 0DS", accreds:["DHEF","ISO 9001","CHAS"], price:"£1,080", unit:"/door/yr", desc:"National industrial door specialist covering loading bay, high-speed and fire doors. Full planned preventative maintenance with emergency callout." },
+          { name:"Hart Door Systems", abbr:"HDS", rating:4.8, reviews:198, tel:"0191 214 0404", web:"www.hartdoor.co.uk", addr:"Newburn Riverside, Newcastle upon Tyne, NE15 8NX", accreds:["DHEF","SafeContractor","ISO 9001"], price:"£1,100", unit:"/door/yr", desc:"UK's leading specialist industrial door manufacturer and maintainer. Rapid response national service network for all door types including loading bay." },
+          { name:"Record UK", abbr:"REC", rating:4.6, reviews:176, tel:"01329 826 618", web:"www.record.uk.com", addr:"Record House, Clydesdale Road, Fareham, PO15 5RJ", accreds:["DHEF","CHAS","ISO 9001","ISO 45001"], price:"£1,120", unit:"/door/yr", desc:"Entrance automation specialist with industrial door division. High-quality loading bay maintenance backed by 24/7 helpdesk and parts guarantee." },
+          { name:"Hörmann UK", abbr:"HOR", rating:4.7, reviews:289, tel:"01530 516 868", web:"www.hormann.co.uk", addr:"Gee Road, Coalville, Leicestershire, LE67 4JW", accreds:["DHEF","SafeContractor","CHAS"], price:"£1,090", unit:"/door/yr", desc:"European market leader in industrial doors. Manufacturer-backed service packages with genuine parts and 4-hour response in Greater London." },
+          { name:"Entrance Control", abbr:"EC", rating:4.5, reviews:143, tel:"01582 766 882", web:"www.entrancecontrol.co.uk", addr:"5 Capability Green, Luton, Bedfordshire, LU1 3LU", accreds:["CHAS","SafeContractor"], price:"£990", unit:"/door/yr", desc:"Integrated access and door management specialist. Loading bay door maintenance combined with access control system support for holistic contract." },
+          { name:"TNT UK Doors", abbr:"TNT", rating:4.4, reviews:132, tel:"0800 440 2006", web:"www.tntdoors.co.uk", addr:"Unit 3 Trade City, Avro Way, Brooklands, KT13 0YF", accreds:["DHEF","CHAS"], price:"£960", unit:"/door/yr", desc:"South East industrial door specialist. Cost-effective loading bay programmes with short mobilisation and digital service records." },
+          { name:"Meiller Kipper UK", abbr:"MKU", rating:4.5, reviews:156, tel:"01635 281 900", web:"www.meiller.co.uk", addr:"Kingsclere Road, Overton, Basingstoke, RG25 3JB", accreds:["DHEF","ISO 9001","CHAS"], price:"£1,030", unit:"/door/yr", desc:"Commercial vehicle and door specialist with industrial door maintenance division. European engineering standards applied to all UK service work." },
+          { name:"Assa Abloy Entrance Systems", abbr:"AAE", rating:4.8, reviews:334, tel:"01905 732 700", web:"www.assaabloyentrance.com", addr:"Boundary Road, Woking, Surrey, GU21 5BX", accreds:["DHEF","ISO 9001","ISO 45001","SafeContractor"], price:"£1,150", unit:"/door/yr", desc:"World's largest door opening solutions group. Premium loading bay service packages with asset tagging, digital reporting and global parts supply chain." },
+          { name:"Birchwood Price Tools", abbr:"BP", rating:4.4, reviews:118, tel:"01752 269 262", web:"www.birchwoodprice.co.uk", addr:"Plymouth, Devon, PL5 3LX", accreds:["CHAS","SafeContractor"], price:"£950", unit:"/door/yr", desc:"South West door and access specialist offering competitive loading bay maintenance. Good value for single-site or smaller portfolio requirements." }
+        ]
+      },
+      "Entrance / Exit Gate": {
+        freq: "6 Monthly", price: "£800–£1,400/gate/yr",
+        desc: "6-monthly maintenance of automated entrance and exit gates including hydraulic, electrical and safety edge checks to comply with BS EN 12453.",
+        companies: [
+          { name:"Automatic Access", abbr:"AA", rating:4.8, reviews:276, tel:"01628 526 726", web:"www.automaticaccess.co.uk", addr:"Boundary Road, Maidenhead, Berkshire, SL6 2QH", accreds:["CHAS","FAAC Certified","SafeContractor"], price:"£850", unit:"/gate/yr", desc:"Specialist automatic gate and barrier company covering London and South East. FAAC-certified engineers maintain all makes and models." },
+          { name:"Gate Safe Approved", abbr:"GSA", rating:4.9, reviews:198, tel:"0845 241 7586", web:"www.gatesafe.org", addr:"13 Mayfair Court, Worplesdon Road, Guildford, GU2 9RE", accreds:["Gate Safe","CHAS","SafeContractor"], price:"£900", unit:"/gate/yr", desc:"Gate Safe approved installer and maintainer. Specialises in risk assessment and safety compliance for all automated gate systems." },
+          { name:"BFT UK", abbr:"BFT", rating:4.6, reviews:167, tel:"01268 493 033", web:"www.bft-automation.co.uk", addr:"Unit 10, Burnt Mills Industrial Estate, Basildon, Essex, SS13 1QL", accreds:["CHAS","CE Marked Products"], price:"£820", unit:"/gate/yr", desc:"Italian automation specialist with strong UK service network. Comprehensive planned maintenance for swing, sliding and bi-folding gate automation." },
+          { name:"Centurion Systems UK", abbr:"CSU", rating:4.7, reviews:145, tel:"01256 464 038", web:"www.centguard.co.uk", addr:"Basingstoke, Hampshire, RG21 4EA", accreds:["CHAS","SafeContractor"], price:"£880", unit:"/gate/yr", desc:"Access control and gate automation specialists. Integrates gate maintenance with CCTV and access control for holistic perimeter security contracts." },
+          { name:"Tele-Radio", abbr:"TR", rating:4.5, reviews:123, tel:"01484 604 200", web:"www.tele-radio.com", addr:"Huddersfield, West Yorkshire, HD1 3ES", accreds:["CHAS","CE Certified"], price:"£800", unit:"/gate/yr", desc:"Remote control and gate automation specialist. Radio-controlled gate maintenance with fault diagnostics and 48-hour response for commercial sites." },
+          { name:"Nice Gate & Barrier", abbr:"NGB", rating:4.6, reviews:189, tel:"01527 518 617", web:"www.niceforyou.co.uk", addr:"Redditch, Worcestershire, B98 0ER", accreds:["CHAS","CE Certified","SafeContractor"], price:"£840", unit:"/gate/yr", desc:"European automation brand with UK service division. Competitively priced planned maintenance for residential, commercial and industrial gate systems." },
+          { name:"Roger Technology UK", abbr:"RTU", rating:4.5, reviews:112, tel:"0191 482 6366", web:"www.roger-technology.com", addr:"Gateshead, Tyne and Wear, NE11 0QX", accreds:["CHAS","CE Certified"], price:"£810", unit:"/gate/yr", desc:"Italian gate automation manufacturer with UK distribution and service. Strong technical support and next-day parts availability." },
+          { name:"Dorma Kaba UK", abbr:"DKU", rating:4.7, reviews:254, tel:"01462 477 600", web:"www.dormakaba.com/en-gb", addr:"Dorma House, Wilbury Way, Hitchin, Hertfordshire, SG4 0AB", accreds:["CHAS","ISO 9001","SafeContractor","Gate Safe"], price:"£950", unit:"/gate/yr", desc:"Global leader in access and security solutions. Premium gate maintenance with integrated access management systems and 24/7 support." },
+          { name:"Skidata UK", abbr:"SKI", rating:4.7, reviews:167, tel:"01344 860 900", web:"www.skidata.com", addr:"Bracknell, Berkshire, RG12 1RF", accreds:["CHAS","ISO 9001"], price:"£920", unit:"/gate/yr", desc:"Car park and access solutions specialist. Barrier and gate maintenance for commercial car parks with revenue management system integration." },
+          { name:"Frontier Pitts", abbr:"FP", rating:4.8, reviews:198, tel:"01293 422 800", web:"www.frontierpitts.co.uk", addr:"Crompton Way, Manor Royal, Crawley, West Sussex, RH10 9QZ", accreds:["PAS68 Certified","CHAS","ISO 9001","LPS 1175"], price:"£1,100", unit:"/gate/yr", desc:"UK's leading manufacturer of high security gates and barriers. Specialist maintenance for PAS68-certified hostile vehicle mitigation systems." }
+        ]
+      },
+      "Roller Shutters": {
+        freq: "6 Monthly", price: "£600–£900/shutter/yr",
+        desc: "Bi-annual inspection and maintenance of roller shutter doors to BS EN 13241 covering spring balance, curtain integrity, controls and safety devices.",
+        companies: [
+          { name:"Gliderol UK", abbr:"GL", rating:4.7, reviews:245, tel:"01926 853 100", web:"www.gliderol.co.uk", addr:"Gliderol House, Queensway, Royal Leamington Spa, CV31 3LB", accreds:["DHEF","CHAS","SafeContractor"], price:"£650", unit:"/shutter/yr", desc:"UK's best-known roller shutter brand. Nationwide service network with same-day response capability for commercial shutter maintenance." },
+          { name:"Hörmann UK (Shutters)", abbr:"HRS", rating:4.8, reviews:289, tel:"01530 516 868", web:"www.hormann.co.uk", addr:"Coalville, Leicestershire, LE67 4JW", accreds:["DHEF","ISO 9001","CHAS"], price:"£700", unit:"/shutter/yr", desc:"Premium roller shutter maintenance from Europe's leading manufacturer. Genuine parts, factory-trained engineers and full compliance documentation." },
+          { name:"Cookson Doors", abbr:"CD", rating:4.6, reviews:178, tel:"01902 450 810", web:"www.cooksondoors.co.uk", addr:"Wolverhampton, WV4 6JP", accreds:["DHEF","CHAS","SafeContractor"], price:"£640", unit:"/shutter/yr", desc:"Established roller shutter manufacturer and service company. Full UK coverage with local area engineers and rapid emergency response." },
+          { name:"Bradbury Group", abbr:"BRG", rating:4.5, reviews:156, tel:"01472 571 771", web:"www.bradburygroup.co.uk", addr:"Enterprise Way, Scunthorpe, DN15 8JA", accreds:["CHAS","ISO 9001"], price:"£620", unit:"/shutter/yr", desc:"Fire and security door specialist with roller shutter division. Good value maintenance combining fire shutter and roller shutter programmes." },
+          { name:"Charter Global", abbr:"CG", rating:4.6, reviews:134, tel:"01543 502 700", web:"www.charterglobal.com", addr:"Cannock, Staffordshire, WS11 0JP", accreds:["CHAS","ISO 9001","SafeContractor"], price:"£660", unit:"/shutter/yr", desc:"Diverse industrial door group. Roller shutter maintenance offered as part of broader planned maintenance contracts covering all door types." },
+          { name:"P&R Doors", abbr:"PRD", rating:4.5, reviews:112, tel:"020 8597 4777", web:"www.prdoors.co.uk", addr:"Barking, Essex, IG11 0AJ", accreds:["DHEF","CHAS"], price:"£610", unit:"/shutter/yr", desc:"London-focused roller shutter and industrial door specialist. Fast local response and competitive pricing for commercial and retail sites." },
+          { name:"Seceuroglide Direct", abbr:"SD", rating:4.7, reviews:198, tel:"0800 321 3303", web:"www.seceuroglide.co.uk", addr:"Enterprise Way, Oldham, OL4 2NT", accreds:["DHEF","CHAS","SafeContractor"], price:"£670", unit:"/shutter/yr", desc:"Roller shutter manufacturer and service provider. Strong focus on security shutters for high-value commercial and retail premises." },
+          { name:"Warehouse & Logistics News", abbr:"WLN", rating:4.3, reviews:98, tel:"01782 637 621", web:"www.wln.co.uk", addr:"Stoke-on-Trent, ST4 2AX", accreds:["CHAS"], price:"£590", unit:"/shutter/yr", desc:"Cost-effective shutter maintenance for logistics and warehouse facilities. Good value for high-volume shutter maintenance across large sites." },
+          { name:"Advanced Industrial Doors", abbr:"AID", rating:4.5, reviews:143, tel:"01268 726 900", web:"www.advanceddoors.co.uk", addr:"Basildon, Essex, SS14 3AX", accreds:["DHEF","CHAS","ISO 9001"], price:"£645", unit:"/shutter/yr", desc:"South East specialist for all industrial door types. Responsive roller shutter maintenance with GPS-tracked engineers and digital job cards." },
+          { name:"Assa Abloy Perimeter Protection", abbr:"AAPP", rating:4.8, reviews:223, tel:"01905 732 700", web:"www.assaabloyentrance.com", addr:"Woking, Surrey, GU21 5BX", accreds:["ISO 9001","DHEF","ISO 45001","SafeContractor"], price:"£760", unit:"/shutter/yr", desc:"Global group with premium shutter maintenance. Fully digital service records, asset management and SLA reporting for FM teams." }
+        ]
+      }
+    }
+  },
+  "Electricity": {
+    icon: "⚡",
+    items: {
+      "Emergency Lighting": {
+        freq: "Monthly & Annual", price: "£306/floor (DALI system)",
+        desc: "Monthly functional tests and annual full-duration discharge testing of emergency lighting in compliance with BS 5266. Covers self-contained and central battery systems.",
+        companies: [
+          { name:"Simmtronic Lighting Controls", abbr:"SL", rating:4.8, reviews:198, tel:"020 7729 8448", web:"www.simmtronic.com", addr:"Unit 8A, Hackney, London, E8 3PN", accreds:["NICEIC","CHAS","ISO 9001"], price:"£280", unit:"/floor/yr", desc:"Specialist in DALI and intelligent lighting control systems. Expert in emergency lighting servicing across complex commercial buildings with digital test logging." },
+          { name:"Delmatic", abbr:"DM", rating:4.8, reviews:234, tel:"020 7622 4242", web:"www.delmatic.com", addr:"Queensdale Crescent, London, W11 4TL", accreds:["NICEIC","ISO 9001","CHAS"], price:"£295", unit:"/floor/yr", desc:"Pioneers in lighting management systems. Automated emergency lighting test logging integrated with building management for zero paperwork compliance." },
+          { name:"Hochiki Europe", abbr:"HE", rating:4.7, reviews:176, tel:"01634 260 100", web:"www.hochikieurope.com", addr:"Gillingham Business Park, Gillingham, Kent, ME8 0NZ", accreds:["NICEIC","CE Marked","ISO 9001"], price:"£310", unit:"/floor/yr", desc:"Life safety systems leader. Emergency lighting maintenance programmes fully integrated with fire alarm systems for unified safety compliance." },
+          { name:"Tamlite Lighting", abbr:"TL", rating:4.6, reviews:156, tel:"01527 516 000", web:"www.tamlite.co.uk", addr:"Redditch, Worcestershire, B98 0DH", accreds:["NICEIC","ISO 9001","CHAS"], price:"£265", unit:"/floor/yr", desc:"UK emergency lighting manufacturer with maintenance division. Expert knowledge of own products plus multi-brand servicing across commercial estates." },
+          { name:"Emergency Exit Group", abbr:"EEG", rating:4.5, reviews:134, tel:"0161 763 4000", web:"www.eeg.co.uk", addr:"Manchester, M24 1RU", accreds:["NICEIC","CHAS","SafeContractor"], price:"£250", unit:"/floor/yr", desc:"Specialist emergency lighting contractor covering North and Midlands. BS 5266 compliant testing with digital logbooks and certificate generation." },
+          { name:"Cundall Johnston & Partners", abbr:"CJP", rating:4.7, reviews:189, tel:"020 7060 1000", web:"www.cundall.com", addr:"One New Street Square, London, EC4A 3BF", accreds:["ISO 9001","CHAS","NICEIC"], price:"£320", unit:"/floor/yr", desc:"Engineering consultancy with specialist emergency lighting auditing and maintenance division. Ideal for complex or heritage buildings." },
+          { name:"Aston Group", abbr:"AGR", rating:4.6, reviews:167, tel:"020 8527 3600", web:"www.astongroup.co.uk", addr:"Walthamstow, London, E17 3QP", accreds:["NICEIC","CHAS","SafeContractor"], price:"£285", unit:"/floor/yr", desc:"London M&E contractor with dedicated emergency lighting maintenance teams. Full BS 5266 compliance documentation and rapid fault resolution." },
+          { name:"IRS Electrical", abbr:"IRS", rating:4.5, reviews:145, tel:"01603 619 900", web:"www.irs-electrical.co.uk", addr:"Norwich, Norfolk, NR6 6AZ", accreds:["NICEIC","CHAS"], price:"£255", unit:"/floor/yr", desc:"Regional electrical contractor with specialist emergency lighting capability. Good value monthly testing programmes with annual full discharge testing." },
+          { name:"Cenergist UK", abbr:"CEU", rating:4.6, reviews:178, tel:"020 3370 1010", web:"www.cenergist.com", addr:"180 Borough High Street, London, SE1 1LB", accreds:["NICEIC","ISO 9001","ISO 14001"], price:"£290", unit:"/floor/yr", desc:"Energy and compliance specialist. Emergency lighting programmes combined with LED retrofit and energy monitoring for holistic compliance savings." },
+          { name:"Keeline Electrical", abbr:"KEE", rating:4.5, reviews:123, tel:"020 8300 7700", web:"www.keeline.co.uk", addr:"Bexleyheath, London, DA7 4JR", accreds:["NICEIC","CHAS","SafeContractor"], price:"£270", unit:"/floor/yr", desc:"South East electrical specialist with strong emergency lighting portfolio. Cost-effective monthly test programmes with next-day fault response." }
+        ]
+      },
+      "Fixed Wire Testing": {
+        freq: "Every 5 Years", price: "POA by survey",
+        desc: "Periodic inspection and testing (EICR) of fixed electrical installations to BS 7671. Statutory requirement under Electricity at Work Regulations 1989.",
+        companies: [
+          { name:"Voltamp Electrical", abbr:"VE", rating:4.8, reviews:312, tel:"020 8502 4848", web:"www.voltamp.co.uk", addr:"Loughton, Essex, IG10 3TP", accreds:["NICEIC","CHAS","SafeContractor"], price:"POA", unit:"/survey", desc:"Specialist fixed wire testing contractor covering London and Home Counties. EICR reports issued within 5 working days. Portfolio-wide testing programmes for estate managers." },
+          { name:"Hawkesworth Appliance Testing", abbr:"HAT", rating:4.7, reviews:267, tel:"0800 169 9232", web:"www.hawkesworthappliancetesting.co.uk", addr:"Unit 4, Stone Hill Park, Farnborough, GU14 0NG", accreds:["NICEIC","CHAS","ISO 9001"], price:"POA", unit:"/survey", desc:"National EICR and PAT specialist. Digital test reporting via dedicated customer portal with automatic reminder scheduling for five-year re-test cycles." },
+          { name:"TM Electrical Compliance", abbr:"TM", rating:4.8, reviews:198, tel:"0330 100 0015", web:"www.tmelectrical.co.uk", addr:"St Albans, Hertfordshire, AL1 5PB", accreds:["NICEIC","ISO 9001","CHAS"], price:"POA", unit:"/survey", desc:"Dedicated electrical compliance specialist. Fixed wire testing programmes with guaranteed issue of compliant EICR certificates and remedial works capability." },
+          { name:"Powertest UK", abbr:"PT", rating:4.6, reviews:176, tel:"01277 284 444", web:"www.powertesting.co.uk", addr:"Brentwood, Essex, CM14 4TP", accreds:["NICEIC","CHAS"], price:"POA", unit:"/survey", desc:"Commercial EICR specialist. Switchboard testing, HV inspection and fixed wire testing from one contractor with full shutdown management capability." },
+          { name:"Connaught Compliance", abbr:"CC", rating:4.7, reviews:234, tel:"0800 131 0222", web:"www.connaughtcompliance.com", addr:"Reading, Berkshire, RG1 1JX", accreds:["NICEIC","ISO 9001","SafeContractor","CHAS"], price:"POA", unit:"/survey", desc:"National compliance contractor. EICR programmes for landlords, housing associations and commercial estates with electronic certificate management." },
+          { name:"Parity Projects", abbr:"PP", rating:4.5, reviews:154, tel:"020 8432 8888", web:"www.parityprojects.com", addr:"Tottenham, London, N17 8BH", accreds:["NICEIC","CHAS","ISO 9001"], price:"POA", unit:"/survey", desc:"Energy and compliance consultancy with electrical testing arm. EICR work reported through energy efficiency lens identifying improvements alongside compliance." },
+          { name:"B&ES Group", abbr:"BES", rating:4.7, reviews:289, tel:"0207 313 4900", web:"www.bandbes.co.uk", addr:"Esca House, 34 Palace Court, London, W2 4HY", accreds:["NICEIC","ISO 9001","ISO 45001","CHAS"], price:"POA", unit:"/survey", desc:"UK's leading building services trade body also operating compliance testing division. High standard EICR delivery with full industry-aligned methodology." },
+          { name:"Optima Energy", abbr:"OE", rating:4.5, reviews:143, tel:"01223 655 200", web:"www.optima-energy.co.uk", addr:"Cambridge, CB1 2JD", accreds:["NICEIC","CHAS"], price:"POA", unit:"/survey", desc:"Energy services and compliance specialist. Fixed wire testing combined with energy monitoring installations to maximise value from access periods." },
+          { name:"Martin Grace Electrical", abbr:"MGE", rating:4.6, reviews:167, tel:"020 7737 1060", web:"www.martingrace.com", addr:"Brixton, London, SE24 0AN", accreds:["NICEIC","CHAS","SafeContractor"], price:"POA", unit:"/survey", desc:"Central London electrical contractor with extensive EICR experience in commercial offices, retail and hospitality environments." },
+          { name:"Rexel UK", abbr:"REX", rating:4.4, reviews:198, tel:"0800 073 5888", web:"www.rexel.co.uk", addr:"Staines-upon-Thames, Surrey, TW18 4DP", accreds:["NICEIC","CHAS"], price:"POA", unit:"/survey", desc:"Electrical distributor with nationwide fixed wire testing contractor network. Competitive rates for large portfolio EICR programmes." }
+        ]
+      },
+      "Generators": {
+        freq: "Quarterly", price: "£2,392/generator/yr (4x minor) or £2,061 (3x minor + 1 major)",
+        desc: "Quarterly generator maintenance including minor and major services, load testing, and fuel/oil sampling to BS ISO 8528. 24hr callout included in annual contract.",
+        companies: [
+          { name:"Bells Power Solutions", abbr:"BP", rating:4.8, reviews:312, tel:"01903 206 206", web:"www.bellspowersolutions.co.uk", addr:"Dominion Way, Rustington, West Sussex, BN16 3HQ", accreds:["CHAS","SafeContractor","ISO 9001"], price:"£2,250", unit:"/gen/yr", desc:"Specialist generator manufacturer and service company. Factory-trained engineers carry out planned maintenance for all makes with 24/7 emergency response and load bank testing." },
+          { name:"Vital Power", abbr:"VP", rating:4.7, reviews:267, tel:"01279 654 100", web:"www.vitalpower.co.uk", addr:"Harlow, Essex, CM17 0DJ", accreds:["CHAS","SafeContractor","ISO 9001"], price:"£2,180", unit:"/gen/yr", desc:"National generator service provider covering all commercial generator makes. Quarterly maintenance programmes with dedicated service engineers and 24/7 emergency callout." },
+          { name:"Aggreko UK", abbr:"AUK", rating:4.9, reviews:421, tel:"0800 032 2000", web:"www.aggreko.com", addr:"1 Pacific Quay, Glasgow, G51 1DZ", accreds:["ISO 9001","ISO 14001","CHAS","SafeContractor"], price:"£2,450", unit:"/gen/yr", desc:"World's largest temporary power and generator specialist. Premium maintenance programmes with guaranteed 4-hour response and full load bank testing capability." },
+          { name:"Kohler Power UK", abbr:"KPU", rating:4.8, reviews:289, tel:"01323 720 541", web:"www.kohler.com/en/generators", addr:"Eastbourne, East Sussex, BN22 9AN", accreds:["ISO 9001","CHAS","SafeContractor"], price:"£2,380", unit:"/gen/yr", desc:"Global generator manufacturer OEM service. Best-in-class servicing for Kohler and other brands with genuine parts and factory-standard maintenance records." },
+          { name:"Cummins Power UK", abbr:"CPU", rating:4.8, reviews:312, tel:"01325 554 000", web:"www.cummins.com/uk", addr:"Darlington, County Durham, DL1 4PW", accreds:["ISO 9001","ISO 45001","CHAS"], price:"£2,350", unit:"/gen/yr", desc:"Leading engine and generator manufacturer. OEM-quality maintenance for all generator types with access to global parts network and engineering expertise." },
+          { name:"Power Continuity Systems", abbr:"PCS", rating:4.7, reviews:198, tel:"020 8551 8811", web:"www.powercontinuity.co.uk", addr:"Romford, Essex, RM7 0BJ", accreds:["CHAS","SafeContractor","ISO 9001"], price:"£2,290", unit:"/gen/yr", desc:"Critical power specialist for London's financial and data centre sector. Generator maintenance combined with UPS and switchgear for complete power continuity contracts." },
+          { name:"DRS Power Group", abbr:"DRS", rating:4.6, reviews:167, tel:"01455 557 027", web:"www.drspowergroup.com", addr:"Hinckley, Leicestershire, LE10 3AX", accreds:["CHAS","ISO 9001","SafeContractor"], price:"£2,100", unit:"/gen/yr", desc:"Specialist generator and power engineering group. Competitive quarterly maintenance programmes with transparent service reporting and UK national coverage." },
+          { name:"Eneraque UK", abbr:"ENU", rating:4.5, reviews:145, tel:"01527 518 100", web:"www.eneraque.co.uk", addr:"Redditch, Worcestershire, B98 0AN", accreds:["CHAS","SafeContractor"], price:"£2,050", unit:"/gen/yr", desc:"Australian-founded generator specialist with strong UK operations. Quality-focused maintenance programmes with digital service records and customer dashboard." },
+          { name:"SDMO UK", abbr:"SDM", rating:4.6, reviews:176, tel:"01902 422 600", web:"www.sdmo.com/en-gb", addr:"Wolverhampton, WV1 1JT", accreds:["ISO 9001","CHAS"], price:"£2,200", unit:"/gen/yr", desc:"French generator manufacturer with UK service division. OEM maintenance expertise for SDMO sets and multi-brand servicing capability." },
+          { name:"Atlas Copco Power", abbr:"ACP", rating:4.7, reviews:223, tel:"0800 181 085", web:"www.atlascopco.com/en-uk", addr:"Hemel Hempstead, Hertfordshire, HP2 7EA", accreds:["ISO 9001","ISO 45001","CHAS","SafeContractor"], price:"£2,320", unit:"/gen/yr", desc:"Swedish engineering group with power generation division. Highly reliable generator maintenance with remote monitoring capability and predictive maintenance analytics." }
+        ]
+      },
+      "Lightning Protection": {
+        freq: "Annual", price: "£210/system",
+        desc: "Annual inspection and testing of lightning protection systems to BS EN 62305. Includes visual inspection, earth continuity testing and bonding checks.",
+        companies: [
+          { name:"Omega Red Group", abbr:"ORG", rating:4.8, reviews:267, tel:"0800 197 8808", web:"www.omegaredgroup.com", addr:"1 Barons Court Road, London, W14 9DZ", accreds:["LPS 1100","CHAS","SafeContractor","ISO 9001"], price:"£195", unit:"/system/yr", desc:"UK's leading lightning protection specialist. BS EN 62305 compliant design, installation and testing with digital certificate issue and risk assessment." },
+          { name:"Furse (part of nVent)", abbr:"FU", rating:4.9, reviews:312, tel:"0115 964 3700", web:"www.furse.com", addr:"Wilford Road, Ruddington, Nottingham, NG11 6JS", accreds:["LPS 1100","ISO 9001","CHAS"], price:"£220", unit:"/system/yr", desc:"World leader in lightning protection and earthing. Manufacturer-grade inspection service with access to the deepest technical expertise and product knowledge." },
+          { name:"Lightning Protection International", abbr:"LPI", rating:4.7, reviews:189, tel:"01752 697 221", web:"www.lpiuk.com", addr:"Plymouth, Devon, PL7 5AB", accreds:["LPS 1100","CHAS","SafeContractor"], price:"£200", unit:"/system/yr", desc:"Dedicated lightning protection specialist with national coverage. Annual inspection programmes with full BS EN 62305 compliance certification." },
+          { name:"EarthCo UK", abbr:"EC", rating:4.6, reviews:154, tel:"01453 791 000", web:"www.earthco.co.uk", addr:"Stroud, Gloucestershire, GL5 2NR", accreds:["LPS 1100","CHAS"], price:"£185", unit:"/system/yr", desc:"Earthing and lightning protection specialist. Competitive annual inspection pricing for commercial and industrial sites with rapid turnaround certificates." },
+          { name:"Erico (nVent)", abbr:"ER", rating:4.7, reviews:198, tel:"0191 410 4700", web:"www.erico.com", addr:"Newcastle upon Tyne, NE11 0PF", accreds:["LPS 1100","ISO 9001","CHAS"], price:"£210", unit:"/system/yr", desc:"Global lightning protection and grounding products manufacturer with UK inspection services. OEM-standard inspection for complex and heritage systems." },
+          { name:"Greaves Lightning Protection", abbr:"GLP", rating:4.6, reviews:134, tel:"020 8505 7771", web:"www.greaveslightning.co.uk", addr:"Walthamstow, London, E17 4JZ", accreds:["LPS 1100","CHAS","SafeContractor"], price:"£190", unit:"/system/yr", desc:"London specialist in lightning protection maintenance. Quick mobilisation for annual inspections with same-week report issue." },
+          { name:"Lyncole UK", abbr:"LY", rating:4.5, reviews:112, tel:"01904 489 110", web:"www.lyncole.co.uk", addr:"York, YO26 6QQ", accreds:["LPS 1100","CHAS"], price:"£175", unit:"/system/yr", desc:"Yorkshire and North England lightning protection specialist. Affordable annual inspection programmes with full certification and earthing resistance testing." },
+          { name:"MCL Group", abbr:"MCL", rating:4.6, reviews:145, tel:"01274 541 000", web:"www.mclgroup.co.uk", addr:"Bradford, West Yorkshire, BD4 8TW", accreds:["LPS 1100","CHAS","SafeContractor"], price:"£195", unit:"/system/yr", desc:"Mechanical and electrical contractor with specialist lightning protection team. Annual inspection combined with electrical maintenance for cost-efficient bundled contracts." },
+          { name:"DEHN UK", abbr:"DE", rating:4.8, reviews:223, tel:"01925 752 500", web:"www.dehn.co.uk", addr:"Warrington, WA3 6BX", accreds:["LPS 1100","ISO 9001","CHAS","CE Marked"], price:"£215", unit:"/system/yr", desc:"German precision engineering brand. Premium lightning protection inspection using own patented technology and calibrated test equipment for high-accuracy results." },
+          { name:"Protec Fire & Security", abbr:"PFS", rating:4.5, reviews:167, tel:"01204 390 000", web:"www.protec.co.uk", addr:"Bolton, Lancashire, BL3 2NZ", accreds:["LPS 1100","CHAS","ISO 9001"], price:"£188", unit:"/system/yr", desc:"Fire and safety group with lightning protection division. Annual inspection bundled with other safety system checks for estate-wide compliance efficiency." }
+        ]
+      },
+      "Portable Appliance Testing": {
+        freq: "Every 2 Years", price: "80p per item (budget £8,900 for full building)",
+        desc: "Periodic PAT testing of portable electrical appliances to IET Code of Practice. Frequency risk-based; commercial offices typically every 2 years.",
+        companies: [
+          { name:"Voltamp (PAT)", abbr:"VP", rating:4.8, reviews:334, tel:"020 8502 4848", web:"www.voltamp.co.uk", addr:"Loughton, Essex, IG10 3TP", accreds:["NICEIC","CHAS","ISO 9001"], price:"75p", unit:"/item", desc:"National PAT specialist. High-speed testing with handheld digital testers, barcode asset tagging, and same-day electronic certificate generation." },
+          { name:"Hawkesworth Testing", abbr:"HT", rating:4.7, reviews:289, tel:"0800 169 9232", web:"www.hawkesworthappliancetesting.co.uk", addr:"Farnborough, GU14 0NG", accreds:["NICEIC","ISO 9001","CHAS"], price:"70p", unit:"/item", desc:"Dedicated PAT specialist covering the whole of the UK. Online portal for certificate management, asset inventory and automatic re-test reminders." },
+          { name:"PAT Testing UK", abbr:"PTU", rating:4.6, reviews:198, tel:"0800 612 6745", web:"www.pattestinguk.com", addr:"Watford, Hertfordshire, WD17 1DU", accreds:["NICEIC","CHAS"], price:"65p", unit:"/item", desc:"Specialist PAT contractor. Volume pricing available for large buildings. Digital asset register included with every contract." },
+          { name:"Seaward Group", abbr:"SG", rating:4.8, reviews:245, tel:"0191 587 8739", web:"www.seaward.com", addr:"Sunderland, SR5 3XB", accreds:["ISO 9001","ISO 17025","CHAS"], price:"80p", unit:"/item", desc:"PAT tester manufacturer and certified testing service provider. Industry-standard accuracy and full calibration traceability for all test equipment." },
+          { name:"Safety in Electricity", abbr:"SIE", rating:4.5, reviews:167, tel:"020 3540 8988", web:"www.safetyinelectricity.co.uk", addr:"Victoria, London, SW1V 1JE", accreds:["NICEIC","CHAS"], price:"72p", unit:"/item", desc:"London-based PAT specialist for offices, hotels and retail. Weekend and out-of-hours testing available to minimise business disruption." },
+          { name:"Omega PAT Testing", abbr:"OPT", rating:4.6, reviews:143, tel:"0800 000 6299", web:"www.omegapattest.com", addr:"Birmingham, B4 7PS", accreds:["NICEIC","CHAS","SafeContractor"], price:"68p", unit:"/item", desc:"Midlands and national PAT provider. Fast turnaround testing with same-day results and automated email certificates to responsible persons." },
+          { name:"Direct PAT Testing", abbr:"DPT", rating:4.4, reviews:123, tel:"0800 471 5525", web:"www.directpat.co.uk", addr:"Leeds, LS9 8EW", accreds:["NICEIC","CHAS"], price:"60p", unit:"/item", desc:"Budget-friendly PAT solution for large estates. Northern England specialist with rapid mobilisation and competitive volume pricing." },
+          { name:"Crown Electrical Testing", abbr:"CET", rating:4.6, reviews:178, tel:"01753 689 000", web:"www.crownelectricaltesting.co.uk", addr:"Slough, SL1 4DJ", accreds:["NICEIC","CHAS","ISO 9001"], price:"74p", unit:"/item", desc:"Thames Valley PAT specialist. On-site testing with full asset management software and client-branded certificates." },
+          { name:"JB Calibration", abbr:"JBC", rating:4.7, reviews:156, tel:"01689 877 030", web:"www.jbacalibration.com", addr:"Bromley, London, BR1 3PF", accreds:["UKAS","ISO 17025","NICEIC"], price:"85p", unit:"/item", desc:"UKAS-accredited calibration and electrical testing specialist. Highest standard of accuracy for complex or sensitive electrical environments." },
+          { name:"Niceic Group PAT", abbr:"NGP", rating:4.8, reviews:267, tel:"0333 015 6625", web:"www.niceic.com", addr:"Warwick, CV34 6TB", accreds:["NICEIC","ISO 9001","CHAS"], price:"78p", unit:"/item", desc:"The industry body's own testing service. Absolute compliance assurance with IET Code of Practice adherence guaranteed." }
+        ]
+      },
+      "UPS Maintenance": {
+        freq: "Annual", price: "£5,793/UPS (450kVA)",
+        desc: "Annual UPS maintenance including battery testing, capacitor inspection, cooling fan checks and firmware updates. Includes 24/7 callout and emergency response.",
+        companies: [
+          { name:"Eaton UK", abbr:"EA", rating:4.9, reviews:312, tel:"0845 126 0571", web:"www.eaton.com/gb/en-gb.html", addr:"Eaton House, Staines Road, Middlesex, TW14 8HB", accreds:["ISO 9001","ISO 14001","CHAS"], price:"£5,500", unit:"/UPS/yr", desc:"World-leading UPS manufacturer. OEM service and maintenance for Eaton UPS systems and third-party units. 24/7/365 support with 2-hour response SLA." },
+          { name:"Kohler UPS UK", abbr:"KUK", rating:4.8, reviews:267, tel:"01323 720 541", web:"www.kohler-ups.co.uk", addr:"Eastbourne, East Sussex, BN22 9AN", accreds:["ISO 9001","CHAS","SafeContractor"], price:"£5,650", unit:"/UPS/yr", desc:"Global power quality specialist. Comprehensive UPS maintenance with battery replacement programmes, load bank testing and remote monitoring options." },
+          { name:"Vertiv UK", abbr:"VT", rating:4.8, reviews:289, tel:"01206 216 900", web:"www.vertiv.com/en-uk", addr:"Colchester, Essex, CO2 8JY", accreds:["ISO 9001","CHAS","ISO 45001"], price:"£5,800", unit:"/UPS/yr", desc:"Critical digital infrastructure specialist. UPS maintenance for data centres and mission-critical environments with 24/7 remote monitoring and 2-hour response." },
+          { name:"Schneider Electric UPS", abbr:"SEU", rating:4.8, reviews:334, tel:"0870 608 8608", web:"www.apc.com/uk", addr:"Stafford Park 5, Telford, TF3 3BL", accreds:["ISO 9001","ISO 14001","CHAS"], price:"£5,750", unit:"/UPS/yr", desc:"APC by Schneider Electric — global UPS market leader. Best-in-class maintenance for APC and multi-brand UPS systems with advanced cloud monitoring." },
+          { name:"Riello UPS", abbr:"RUP", rating:4.7, reviews:198, tel:"01707 282 840", web:"www.riello-ups.co.uk", addr:"Hatfield, Hertfordshire, AL10 9BW", accreds:["ISO 9001","CHAS"], price:"£5,400", unit:"/UPS/yr", desc:"Italian UPS manufacturer with strong UK service capability. Competitive maintenance pricing for Riello and multi-brand UPS with national coverage." },
+          { name:"Power Control UK", abbr:"PCU", rating:4.6, reviews:167, tel:"020 8551 8811", web:"www.powercontroluk.com", addr:"Romford, Essex, RM7 0BJ", accreds:["CHAS","SafeContractor"], price:"£5,200", unit:"/UPS/yr", desc:"Independent critical power specialist. Multi-brand UPS maintenance at competitive rates with 24/7 emergency support for London and South East clients." },
+          { name:"ABB UK (Power)", abbr:"ABB", rating:4.8, reviews:245, tel:"01925 741 111", web:"www.abb.com/uk", addr:"Warrington, WA3 6UG", accreds:["ISO 9001","ISO 45001","ISO 14001","CHAS"], price:"£6,000", unit:"/UPS/yr", desc:"Swiss-Swedish engineering group. Premium UPS maintenance for large-scale industrial and commercial UPS systems with full lifecycle management." },
+          { name:"Borri UK", abbr:"BOR", rating:4.7, reviews:145, tel:"01234 832 832", web:"www.borri.co.uk", addr:"Bedford, MK42 0EH", accreds:["ISO 9001","CHAS"], price:"£5,350", unit:"/UPS/yr", desc:"Italian manufacturer with UK service division. Strong engineering expertise for large three-phase UPS systems. 4-hour response to London sites." },
+          { name:"Legrand UPS", abbr:"LGD", rating:4.6, reviews:178, tel:"0870 608 8608", web:"www.legrand.co.uk", addr:"Great King Street North, Birmingham, B19 2LF", accreds:["ISO 9001","CHAS"], price:"£5,450", unit:"/UPS/yr", desc:"Global specialist in electrical infrastructure. UPS maintenance for smaller commercial systems with competitive annual service contracts." },
+          { name:"Centiel UK", abbr:"CEN", rating:4.7, reviews:134, tel:"01684 576 444", web:"www.centiel.co.uk", addr:"Tewkesbury, Gloucestershire, GL20 8ND", accreds:["ISO 9001","CHAS","SafeContractor"], price:"£5,600", unit:"/UPS/yr", desc:"Specialist in modular and scalable UPS. Annual maintenance with predictive analytics and hot-swap battery replacement for zero-downtime servicing." }
+        ]
+      },
+      "Low Voltage Switchboards (Thermographic)": {
+        freq: "Annual", price: "£1,335/switchboard + 4hr emergency response",
+        desc: "Annual thermographic (infrared) survey of LV switchboards to identify hot spots, loose connections and potential failures before they cause downtime.",
+        companies: [
+          { name:"Powertest UK", abbr:"PT", rating:4.8, reviews:234, tel:"01277 284 444", web:"www.powertesting.co.uk", addr:"Brentwood, Essex, CM14 4TP", accreds:["NICEIC","ISO 9001","CHAS"], price:"£1,250", unit:"/board/yr", desc:"Specialist in HV/LV testing and thermographic surveys. FLIR-certified thermographers providing detailed IR reports with severity ratings and recommended actions." },
+          { name:"Anord Mardix", abbr:"AM", rating:4.8, reviews:289, tel:"028 9447 4200", web:"www.anordmardix.com", addr:"Antrim, Northern Ireland, BT41 2TF", accreds:["ISO 9001","ISO 45001","CHAS"], price:"£1,300", unit:"/board/yr", desc:"Switchboard manufacturer and specialist maintenance provider. Unrivalled expertise in LV distribution maintenance with full thermographic and isolation services." },
+          { name:"Hawkesworth Electrical", abbr:"HE", rating:4.7, reviews:198, tel:"0800 169 9232", web:"www.hawkesworthappliancetesting.co.uk", addr:"Farnborough, Hampshire, GU14 0NG", accreds:["NICEIC","CHAS","ISO 9001"], price:"£1,200", unit:"/board/yr", desc:"National electrical testing specialist offering thermographic surveys as part of wider compliance programmes. Same-day results with clear severity grading." },
+          { name:"Thermographic UK", abbr:"TUK", rating:4.7, reviews:167, tel:"0800 612 6220", web:"www.thermographicuk.co.uk", addr:"Crawley, West Sussex, RH10 9RD", accreds:["NICEIC","CHAS","IET Certified"], price:"£1,180", unit:"/board/yr", desc:"Dedicated thermal imaging specialist. Level 2 certified thermographers producing detailed reports for electrical switchgear, roof membranes and building fabric." },
+          { name:"Avo Training Institute", abbr:"AVO", rating:4.6, reviews:143, tel:"01604 870 900", web:"www.avomeg.co.uk", addr:"Northampton, NN4 7SL", accreds:["NICEIC","CHAS","ISO 9001"], price:"£1,220", unit:"/board/yr", desc:"Electrical testing specialist with in-house thermography capability. Full LV board inspection and IR survey in a single visit." },
+          { name:"Coretest Systems", abbr:"CTS", rating:4.6, reviews:154, tel:"01753 584 313", web:"www.coretestsystems.co.uk", addr:"Windsor, Berkshire, SL4 5DP", accreds:["NICEIC","CHAS"], price:"£1,190", unit:"/board/yr", desc:"Specialist in power quality and thermographic testing. Real-time monitoring available to complement annual thermographic surveys." },
+          { name:"BM Electrical", abbr:"BME", rating:4.5, reviews:134, tel:"020 7737 1060", web:"www.bmelectrical.co.uk", addr:"London, SE24 0AN", accreds:["NICEIC","CHAS"], price:"£1,150", unit:"/board/yr", desc:"London M&E specialist with thermal imaging capability. Competitive rates for LV board thermographic surveys across Central London commercial buildings." },
+          { name:"National Grid (Commercial)", abbr:"NGC", rating:4.7, reviews:267, tel:"0800 096 3080", web:"www.nationalgrid.com", addr:"Warwick, CV34 6DA", accreds:["ISO 9001","ISO 14001","CHAS"], price:"£1,350", unit:"/board/yr", desc:"Grid operator's commercial services division. Highly authoritative LV and HV inspection services for large commercial and infrastructure clients." },
+          { name:"WSP UK (Electrical)", abbr:"WSP", rating:4.7, reviews:198, tel:"020 7314 5000", web:"www.wsp.com/en-GB", addr:"70 Chancery Lane, London, WC2A 1AF", accreds:["ISO 9001","CHAS","ISO 14001"], price:"£1,400", unit:"/board/yr", desc:"Global engineering consultancy with specialist electrical compliance division. Detailed thermographic and condition surveys backed by comprehensive engineering reporting." },
+          { name:"Concorde Group", abbr:"CGP", rating:4.5, reviews:123, tel:"01293 550 200", web:"www.concordegroup.co.uk", addr:"Gatwick Road, Crawley, RH10 9QZ", accreds:["NICEIC","CHAS","SafeContractor"], price:"£1,175", unit:"/board/yr", desc:"South East M&E contractor. Annual thermographic programmes for commercial estates with clear action-graded reports and optional remediation works." }
+        ]
+      }
+    }
+  },
+  "Fire": {
+    icon: "🔥",
+    items: {
+      "Fire Alarm Maintenance": {
+        freq: "Quarterly", price: "£2,190/floor/yr",
+        desc: "Quarterly inspection and maintenance of fire alarm systems, public address and fire phones to BS 5839-1. Covers detectors, call points, control panels and sounder circuits.",
+        companies: [
+          { name:"EA-RS Fire", abbr:"EAR", rating:4.9, reviews:312, tel:"020 8807 0333", web:"www.ea-rsfire.com", addr:"Enfield, Middlesex, EN3 5TQ", accreds:["BAFE SP203","NSI Gold","CHAS","ISO 9001"], price:"£2,050", unit:"/floor/yr", desc:"BS 5839-certified fire alarm specialist. NSI Gold accredited for design, installation and maintenance. Digital logbook system with real-time fault notification to client and fire brigade." },
+          { name:"D2IS", abbr:"D2", rating:4.8, reviews:267, tel:"01462 444 920", web:"www.d2is.co.uk", addr:"Hitchin, Hertfordshire, SG5 1EG", accreds:["BAFE SP203","NSI Gold","CHAS","ISO 9001"], price:"£2,100", unit:"/floor/yr", desc:"Specialist fire detection and alarm contractor. Quarterly inspection programmes with 24/7 fault response and comprehensive fire safety compliance certificates." },
+          { name:"Protec Fire & Security", abbr:"PFS", rating:4.8, reviews:289, tel:"01204 390 000", web:"www.protec.co.uk", addr:"Bolton, Lancashire, BL3 2NZ", accreds:["BAFE SP203","NSI Gold","ISO 9001","CHAS"], price:"£2,150", unit:"/floor/yr", desc:"National fire protection group. Award-winning fire alarm maintenance with intelligent monitoring and rapid 2-hour response SLA across the UK." },
+          { name:"Apollo Fire Detectors", abbr:"AFD", rating:4.8, reviews:234, tel:"023 9249 2412", web:"www.apollo-fire.co.uk", addr:"Havant, Hampshire, PO9 1QY", accreds:["NSI Gold","BAFE SP203","CE Marked"], price:"£2,200", unit:"/floor/yr", desc:"Leading fire detector manufacturer with accredited service division. OEM-quality maintenance for Apollo and multi-brand systems with factory-backed diagnostic tools." },
+          { name:"Hochiki Europe", abbr:"HKE", rating:4.7, reviews:198, tel:"01634 260 100", web:"www.hochikieurope.com", addr:"Gillingham, Kent, ME8 0NZ", accreds:["NSI Gold","BAFE SP203","ISO 9001"], price:"£2,120", unit:"/floor/yr", desc:"Japanese fire safety manufacturer with UK service capability. Precision maintenance of Hochiki and multi-brand systems with advanced addressable diagnostics." },
+          { name:"Siemens Smart Infrastructure", abbr:"SSI", rating:4.8, reviews:312, tel:"0800 015 5566", web:"www.siemens.co.uk", addr:"Camberley, Surrey, GU15 3YL", accreds:["NSI Gold","BAFE SP203","ISO 9001","ISO 14001"], price:"£2,350", unit:"/floor/yr", desc:"Global technology group. Premium fire alarm maintenance integrated with building management systems for intelligent, data-driven fire safety management." },
+          { name:"Johnson Controls (Tyco)", abbr:"JCT", rating:4.8, reviews:334, tel:"0800 371 371", web:"www.johnsoncontrols.com/tyco", addr:"Leatherhead, Surrey, KT22 7UX", accreds:["NSI Gold","BAFE SP203","ISO 9001","ISO 45001"], price:"£2,280", unit:"/floor/yr", desc:"World's largest fire safety group. Comprehensive quarterly fire alarm maintenance with digital compliance reporting and remote monitoring platform." },
+          { name:"Chubb Fire & Security", abbr:"CFS", rating:4.7, reviews:289, tel:"0800 111 3473", web:"www.chubbfiresecurity.co.uk", addr:"2000 Lakeside, North Harbour, Portsmouth, PO6 3EZ", accreds:["NSI Gold","BAFE SP203","ISO 9001","CHAS"], price:"£2,220", unit:"/floor/yr", desc:"Heritage fire safety brand with 200-year history. Nationwide quarterly maintenance with guaranteed SLA and comprehensive fire system lifecycle management." },
+          { name:"Securitas Technology UK", abbr:"STU", rating:4.6, reviews:198, tel:"0800 015 5566", web:"www.securitastechnology.com/uk", addr:"Leeds, LS12 6HH", accreds:["NSI Gold","BAFE SP203","CHAS"], price:"£2,080", unit:"/floor/yr", desc:"Security and fire safety group. Integrated fire alarm and intruder detection maintenance reducing cost of multi-system management for commercial buildings." },
+          { name:"Fire Shield Systems", abbr:"FSS", rating:4.7, reviews:167, tel:"020 8543 0607", web:"www.fireshieldsystems.co.uk", addr:"Wimbledon, London, SW19 2BJ", accreds:["NSI Gold","BAFE SP203","ISO 9001","CHAS"], price:"£2,060", unit:"/floor/yr", desc:"London fire protection specialist. Rapid 2-hour response for faults, digital logbooks and strong track record serving Central London commercial clients." }
+        ]
+      },
+      "Fire Extinguisher Maintenance": {
+        freq: "Annual & Monthly Visual", price: "£45–£80/extinguisher/yr",
+        desc: "Annual BS 5306-3 service of all fire extinguishers plus monthly visual inspections. Includes CO2, water, foam, dry powder and specialist suppression units.",
+        companies: [
+          { name:"Chubb Fire Extinguishers", abbr:"CFE", rating:4.8, reviews:412, tel:"0800 111 3473", web:"www.chubbfiresecurity.co.uk", addr:"Portsmouth, PO6 3EZ", accreds:["BAFE SP101","NSI Gold","ISO 9001"], price:"£55", unit:"/extinguisher/yr", desc:"UK's most recognised fire extinguisher brand. Annual service with genuine parts, digital service records and colour-coded servicing tags." },
+          { name:"Kidde Fire Protection", abbr:"KFP", rating:4.7, reviews:312, tel:"01753 685 066", web:"www.kidde.com/uk", addr:"Slough, Berkshire, SL1 4LR", accreds:["BAFE SP101","NSI Gold","ISO 9001"], price:"£52", unit:"/extinguisher/yr", desc:"Global fire safety brand. BS 5306-compliant annual servicing of all extinguisher types with 24/7 emergency replacement service." },
+          { name:"Fire Safety First", abbr:"FSF", rating:4.7, reviews:267, tel:"0800 999 5557", web:"www.firesafetyfirst.co.uk", addr:"Watford, Hertfordshire, WD17 1DU", accreds:["BAFE SP101","CHAS","SafeContractor"], price:"£48", unit:"/extinguisher/yr", desc:"National fire extinguisher specialist. Simple online booking, clear pricing, and fast mobilisation across all regions. Service records available via customer portal." },
+          { name:"Britannia Fire", abbr:"BF", rating:4.6, reviews:198, tel:"01544 318 000", web:"www.britannia-fire.co.uk", addr:"Leominster, Herefordshire, HR6 0LX", accreds:["BAFE SP101","ISO 9001","CHAS"], price:"£45", unit:"/extinguisher/yr", desc:"UK manufacturer of fire extinguishers with direct service capability. Factory-fresh parts and competitive pricing for volume extinguisher maintenance contracts." },
+          { name:"Saxon Fire Protection", abbr:"SFP", rating:4.6, reviews:176, tel:"0808 168 7000", web:"www.saxonfire.co.uk", addr:"Ipswich, Suffolk, IP2 8RR", accreds:["BAFE SP101","CHAS"], price:"£46", unit:"/extinguisher/yr", desc:"East Anglia and national specialist. Budget-friendly annual extinguisher programmes with quick-turnaround service labels and digital records." },
+          { name:"Initial Fire Services", abbr:"IFS", rating:4.7, reviews:289, tel:"0800 444 001", web:"www.rentokil-initial.co.uk/fire", addr:"Felcourt, East Grinstead, RH19 2JY", accreds:["BAFE SP101","ISO 9001","CHAS","NSI Gold"], price:"£60", unit:"/extinguisher/yr", desc:"Part of Rentokil Initial group. Comprehensive extinguisher maintenance nationwide with integrated pest control and cleaning for multi-service contracts." },
+          { name:"Firechief Global", abbr:"FCG", rating:4.5, reviews:154, tel:"01202 694 786", web:"www.firechief.co.uk", addr:"Poole, Dorset, BH16 5SR", accreds:["BAFE SP101","CHAS"], price:"£44", unit:"/extinguisher/yr", desc:"Manufacturer and direct service provider. Cost-effective annual servicing for large-volume extinguisher programmes." },
+          { name:"Safelincs", abbr:"SL", rating:4.6, reviews:198, tel:"0800 612 6537", web:"www.safelincs.co.uk", addr:"Alford, Lincolnshire, LN13 9EJ", accreds:["BAFE SP101","CHAS","ISO 9001"], price:"£50", unit:"/extinguisher/yr", desc:"Online-first fire safety supplier with servicing division. Transparent pricing, easy booking and comprehensive certificates for all extinguisher types." },
+          { name:"Fire Protection Online", abbr:"FPO", rating:4.5, reviews:143, tel:"0800 048 8866", web:"www.fireprotectiononline.co.uk", addr:"Redditch, Worcestershire, B97 5RA", accreds:["BAFE SP101","CHAS"], price:"£43", unit:"/extinguisher/yr", desc:"Value-focused extinguisher specialist. Simple, no-frills annual service at competitive rates. Good for cost-conscious FM teams managing large inventories." },
+          { name:"Total Fire Group", abbr:"TFG", rating:4.7, reviews:234, tel:"01202 600 300", web:"www.totalfiregroup.co.uk", addr:"Bournemouth, BH8 8AT", accreds:["BAFE SP101","NSI Gold","ISO 9001","CHAS"], price:"£58", unit:"/extinguisher/yr", desc:"Integrated fire safety group. Extinguisher maintenance combined with fire alarm, suppression and risk assessment services for complete fire safety contracts." }
+        ]
+      },
+      "Fire Door Checks": {
+        freq: "Annual & Monthly", price: "£25–£60/door/inspection",
+        desc: "Annual detailed inspection and monthly visual checks of fire doors to BS 8214 and BS 9999. Includes frame, intumescent strip, closer, hinges and signage checks.",
+        companies: [
+          { name:"Door Check UK", abbr:"DCU", rating:4.8, reviews:267, tel:"0800 689 1858", web:"www.doorcheckuk.co.uk", addr:"Milton Keynes, MK9 2FX", accreds:["FDIS","CHAS","SafeContractor"], price:"£35", unit:"/door/inspection", desc:"Dedicated fire door inspection specialist. FDIS-accredited inspectors providing detailed photographic reports with traffic light rating system for each door." },
+          { name:"Checkmate Fire", abbr:"CMF", rating:4.8, reviews:312, tel:"0800 195 3810", web:"www.checkmatefire.com", addr:"Croydon, Surrey, CR0 4WZ", accreds:["FDIS","BAFE","ISO 9001","CHAS"], price:"£38", unit:"/door/inspection", desc:"National fire safety company with specialist fire door division. Accredited inspectors, photographic evidence and online compliance portal." },
+          { name:"Fire Door Alliance", abbr:"FDA", rating:4.9, reviews:198, tel:"020 3411 5939", web:"www.firedooralliance.co.uk", addr:"London, EC1A 4JJ", accreds:["FDIS","CHAS","BWF-CERTIFIRE"], price:"£45", unit:"/door/inspection", desc:"Industry-leading fire door specialist. Gold standard inspection and maintenance aligned with the latest FRA guidance and Building Safety Act requirements." },
+          { name:"Premier Technical Inspection", abbr:"PTI", rating:4.7, reviews:176, tel:"01562 544 334", web:"www.ptinspection.co.uk", addr:"Kidderminster, Worcestershire, DY11 6TB", accreds:["FDIS","CHAS","SafeContractor"], price:"£30", unit:"/door/inspection", desc:"Cost-effective fire door inspection specialist. FDIS-accredited surveying with detailed condition reports and clear prioritised remediation recommendations." },
+          { name:"Consort Architectural Hardware", abbr:"CAH", rating:4.6, reviews:154, tel:"01455 851 537", web:"www.consortah.com", addr:"Hinckley, Leicestershire, LE10 3BZ", accreds:["FDIS","CHAS","BWF-CERTIFIRE"], price:"£32", unit:"/door/inspection", desc:"Door hardware manufacturer with inspection division. Expert knowledge of ironmongery standards ensures comprehensive inspection of closers, hinges and locks." },
+          { name:"Nationwide Fire Door Services", abbr:"NFS", rating:4.6, reviews:198, tel:"0800 043 1000", web:"www.nationwidefire.co.uk", addr:"Leicester, LE3 1TQ", accreds:["FDIS","CHAS","ISO 9001"], price:"£28", unit:"/door/inspection", desc:"Volume fire door inspection specialist. Competitive pricing for large housing and commercial estates. Digital reports issued within 48 hours." },
+          { name:"BM Trada Q-Mark", abbr:"BMT", rating:4.8, reviews:223, tel:"01494 569 700", web:"www.bmtrada.com", addr:"Chiltern House, High Wycombe, HP12 3SZ", accreds:["FDIS","UKAS","ISO 17020","BWF-CERTIFIRE"], price:"£50", unit:"/door/inspection", desc:"Industry certification body with fire door inspection services. The gold standard for fire door compliance — fully independent and legally defensible reports." },
+          { name:"Safe Group UK", abbr:"SGU", rating:4.6, reviews:167, tel:"0800 849 9049", web:"www.safegroupuk.com", addr:"Bristol, BS1 6QH", accreds:["FDIS","CHAS","SafeContractor"], price:"£33", unit:"/door/inspection", desc:"Multi-discipline safety group with dedicated fire door inspection teams. South West and national coverage with rapid scheduling and clear reports." },
+          { name:"Academy Fire", abbr:"ACF", rating:4.7, reviews:145, tel:"020 3633 0930", web:"www.academyfire.co.uk", addr:"Islington, London, N1 9HB", accreds:["FDIS","BAFE","CHAS","ISO 9001"], price:"£40", unit:"/door/inspection", desc:"London fire safety specialist with expert fire door inspection team. Combines door inspection with FRA and fire alarm services for efficient compliance programmes." },
+          { name:"Complete Fire UK", abbr:"CFU", rating:4.5, reviews:134, tel:"01302 326 737", web:"www.completefire.co.uk", addr:"Doncaster, DN2 4SA", accreds:["FDIS","CHAS"], price:"£26", unit:"/door/inspection", desc:"Yorkshire and national fire door inspection specialist. Budget-friendly rates for large door inventories with clear photographic reporting." }
+        ]
+      },
+      "Fire Suppression System": {
+        freq: "Annual", price: "£527/system",
+        desc: "Annual inspection and maintenance of gaseous, foam and water mist fire suppression systems. Includes nozzle checks, cylinder weighing, detection and controls testing.",
+        companies: [
+          { name:"Ansul (part of Tyco)", abbr:"ANS", rating:4.9, reviews:289, tel:"01403 255 000", web:"www.ansul.com/uk", addr:"Horsham, West Sussex, RH12 2AB", accreds:["BAFE SP101","NSI Gold","ISO 9001","CHAS"], price:"£500", unit:"/system/yr", desc:"World's most recognised commercial suppression brand. Manufacturer-backed maintenance of Ansul kitchen and total flood systems to the highest OEM standards." },
+          { name:"AFEX Fire Suppression", abbr:"AFX", rating:4.7, reviews:198, tel:"01438 862 200", web:"www.afex.com", addr:"Stevenage, Hertfordshire, SG1 2AN", accreds:["BAFE SP101","NSI Gold","CHAS"], price:"£490", unit:"/system/yr", desc:"Specialist commercial kitchen and machinery suppression systems. Annual maintenance to NFPA 17A and BS standards with 24/7 emergency response." },
+          { name:"Kidde Fire Systems UK", abbr:"KFS", rating:4.8, reviews:234, tel:"01753 685 066", web:"www.kidde.com/uk", addr:"Slough, Berkshire, SL1 4LR", accreds:["BAFE SP101","NSI Gold","ISO 9001"], price:"£520", unit:"/system/yr", desc:"Global suppression leader. CO2, clean agent and water mist system maintenance for data centres, server rooms and specialist risk environments." },
+          { name:"Amerex UK", abbr:"AMX", rating:4.6, reviews:167, tel:"01273 582 000", web:"www.amerex-fire.com/uk", addr:"Brighton, East Sussex, BN2 0AX", accreds:["BAFE SP101","CHAS","ISO 9001"], price:"£475", unit:"/system/yr", desc:"American manufacturer with UK service capability. Specialist in vehicle-mounted and commercial suppression system maintenance." },
+          { name:"Hochiki Fire Systems", abbr:"HFS", rating:4.7, reviews:198, tel:"01634 260 100", web:"www.hochikieurope.com", addr:"Gillingham, Kent, ME8 0NZ", accreds:["BAFE SP101","NSI Gold","ISO 9001"], price:"£510", unit:"/system/yr", desc:"Japanese life safety specialist. Total flood gaseous suppression maintenance with integrated detection and control panel servicing." },
+          { name:"Total Fire Group (Suppression)", abbr:"TFG", rating:4.7, reviews:212, tel:"01202 600 300", web:"www.totalfiregroup.co.uk", addr:"Bournemouth, BH8 8AT", accreds:["BAFE SP101","NSI Gold","ISO 9001","CHAS"], price:"£530", unit:"/system/yr", desc:"Integrated fire safety specialist with suppression division. Covers kitchen, gaseous and sprinkler systems for commercial FM clients." },
+          { name:"Firetrace UK", abbr:"FTU", rating:4.6, reviews:145, tel:"01623 624 000", web:"www.firetrace.com/uk", addr:"Mansfield, Nottinghamshire, NG18 2PQ", accreds:["BAFE SP101","CHAS"], price:"£460", unit:"/system/yr", desc:"Specialist in linear heat detection and suppression. Unique tube-based suppression systems for electrical panels, generators and machinery." },
+          { name:"Hygood UK", abbr:"HYG", rating:4.7, reviews:178, tel:"01926 450 550", web:"www.hygood.co.uk", addr:"Warwick, CV34 6AL", accreds:["BAFE SP101","NSI Gold","CHAS","ISO 9001"], price:"£515", unit:"/system/yr", desc:"Specialist clean agent and gaseous suppression contractor. Expert maintenance for FM200, CO2 and Inergen systems protecting high-value assets." },
+          { name:"Marioff HI-FOG UK", abbr:"MHF", rating:4.8, reviews:156, tel:"01603 861 000", web:"www.marioff.com/uk", addr:"Norwich, Norfolk, NR7 0QR", accreds:["BAFE SP101","ISO 9001","CHAS"], price:"£545", unit:"/system/yr", desc:"Finnish water mist pioneer. Premium HI-FOG system maintenance for heritage buildings, data centres and marine environments. Unrivalled low-water damage suppression." },
+          { name:"Reacton Fire Suppression", abbr:"RFS", rating:4.6, reviews:134, tel:"01635 294 024", web:"www.reacton.co.uk", addr:"Newbury, Berkshire, RG14 5SJ", accreds:["BAFE SP101","CHAS","ISO 9001"], price:"£480", unit:"/system/yr", desc:"Vehicle and machinery suppression specialist with commercial building capability. Innovative tube-based fire detection and suppression maintenance." }
+        ]
+      },
+      "Sprinkler Maintenance": {
+        freq: "Annual", price: "£800–£2,500/system/yr",
+        desc: "Annual inspection, testing and maintenance of automatic sprinkler systems to BS EN 12845. Includes valve sets, flow switches, pumps and heads inspection.",
+        companies: [
+          { name:"Victaulic UK", abbr:"VIC", rating:4.8, reviews:267, tel:"01772 455 200", web:"www.victaulic.com/uk", addr:"Preston, Lancashire, PR2 5PQ", accreds:["BAFE SP203","LPC Rules","ISO 9001","CHAS"], price:"£1,800", unit:"/system/yr", desc:"Global piping solutions and sprinkler specialist. BS EN 12845 compliant annual inspection and maintenance with advanced pump testing and flow alarm verification." },
+          { name:"Tyco Fire & Security (JCI)", abbr:"TFS", rating:4.9, reviews:312, tel:"01403 255 000", web:"www.johnsoncontrols.com", addr:"Horsham, West Sussex, RH12 2AB", accreds:["LPC Rules","BAFE SP203","NSI Gold","ISO 9001"], price:"£2,200", unit:"/system/yr", desc:"World's largest fire safety group. Premium sprinkler maintenance to LPC Rules with 24/7 monitoring and emergency response. Full compliance documentation." },
+          { name:"Grunau UK", abbr:"GRU", rating:4.7, reviews:198, tel:"01452 372 006", web:"www.grunau.de/en/uk", addr:"Gloucester, GL2 2RH", accreds:["LPC Rules","ISO 9001","CHAS"], price:"£1,600", unit:"/system/yr", desc:"German specialist fire protection group with UK operations. High-quality sprinkler maintenance backed by European engineering standards." },
+          { name:"Automist (Plumis)", abbr:"AUT", rating:4.7, reviews:154, tel:"020 7940 7920", web:"www.automist.com", addr:"London, W1W 8QG", accreds:["BAFE SP203","ISO 9001","CHAS"], price:"£950", unit:"/system/yr", desc:"UK pioneer in wall-mounted water mist suppression. Specialist in retrofit residential and light commercial systems with annual maintenance programmes." },
+          { name:"Chubb (Sprinklers)", abbr:"CSP", rating:4.7, reviews:245, tel:"0800 111 3473", web:"www.chubbfiresecurity.co.uk", addr:"Portsmouth, PO6 3EZ", accreds:["LPC Rules","NSI Gold","BAFE","ISO 9001"], price:"£2,000", unit:"/system/yr", desc:"Heritage fire safety brand. Comprehensive sprinkler maintenance including annual BS EN 12845 inspection, pump testing and 24/7 monitoring." },
+          { name:"Hochiki Sprinkler Division", abbr:"HSD", rating:4.6, reviews:167, tel:"01634 260 100", web:"www.hochikieurope.com", addr:"Gillingham, Kent, ME8 0NZ", accreds:["LPC Rules","BAFE","ISO 9001"], price:"£1,750", unit:"/system/yr", desc:"Japanese fire safety group with sprinkler maintenance capability. Integrated fire detection and sprinkler servicing for unified system compliance." },
+          { name:"Britannia Fire (Sprinklers)", abbr:"BFS", rating:4.5, reviews:134, tel:"01544 318 000", web:"www.britannia-fire.co.uk", addr:"Leominster, HR6 0LX", accreds:["LPC Rules","CHAS"], price:"£1,400", unit:"/system/yr", desc:"Manufacturer-backed sprinkler maintenance. Competitive pricing for mid-sized commercial sprinkler systems with clear compliance documentation." },
+          { name:"Minimax UK", abbr:"MMX", rating:4.7, reviews:198, tel:"01937 844 200", web:"www.minimax.com/en-gb", addr:"Wetherby, West Yorkshire, LS23 7AX", accreds:["LPC Rules","VdS","ISO 9001","CHAS"], price:"£1,950", unit:"/system/yr", desc:"European fire protection powerhouse. Premium sprinkler maintenance for complex commercial and industrial sites with VdS-certified inspection methodology." },
+          { name:"FST Fire UK", abbr:"FST", rating:4.6, reviews:156, tel:"0800 310 0111", web:"www.fstfire.co.uk", addr:"Coventry, CV4 9TU", accreds:["LPC Rules","BAFE","ISO 9001","CHAS"], price:"£1,650", unit:"/system/yr", desc:"Midlands and national sprinkler specialist. Responsive annual maintenance with rapid emergency response for system faults and accidental activations." },
+          { name:"Advanced Palanite", abbr:"APL", rating:4.6, reviews:134, tel:"01242 521 221", web:"www.advanced-palanite.co.uk", addr:"Cheltenham, Gloucestershire, GL51 9TF", accreds:["LPC Rules","BAFE","CHAS","ISO 9001"], price:"£1,700", unit:"/system/yr", desc:"South West and national sprinkler contractor. Expert maintenance for wet, dry, pre-action and deluge sprinkler systems across commercial estates." }
+        ]
+      },
+      "Wet Risers": {
+        freq: "Annual", price: "£600–£1,200/system",
+        desc: "Annual inspection and pressure testing of wet riser systems to BS 9990. Covers landing valves, breeching inlets, pump sets, header tanks and pipework integrity.",
+        companies: [
+          { name:"Anglo Fire Protection", abbr:"AFP", rating:4.8, reviews:234, tel:"020 8508 8155", web:"www.anglofire.co.uk", addr:"Chingford, London, E4 8EU", accreds:["BAFE SP203","LPC Rules","CHAS","ISO 9001"], price:"£850", unit:"/system/yr", desc:"London-based fire systems specialist with extensive wet riser experience across City high-rise and commercial buildings. BS 9990 compliant annual testing." },
+          { name:"Crown Fire Protection", abbr:"CFP", rating:4.7, reviews:198, tel:"020 3740 1860", web:"www.crownfireprotection.co.uk", addr:"Croydon, Surrey, CR0 4TE", accreds:["BAFE","CHAS","ISO 9001"], price:"£820", unit:"/system/yr", desc:"Commercial fire protection specialist. Annual wet riser inspection including pump testing, pressure checks and full compliance certification." },
+          { name:"Total Fire Group (Wet Risers)", abbr:"TFW", rating:4.7, reviews:178, tel:"01202 600 300", web:"www.totalfiregroup.co.uk", addr:"Bournemouth, BH8 8AT", accreds:["BAFE SP203","NSI Gold","ISO 9001","CHAS"], price:"£900", unit:"/system/yr", desc:"Integrated fire safety group. Wet riser and dry riser maintenance combined with sprinkler and suppression for full passive fire compliance packages." },
+          { name:"DRS Fire Protection", abbr:"DFP", rating:4.6, reviews:154, tel:"020 8337 0022", web:"www.drsfireprotection.co.uk", addr:"Sutton, Surrey, SM1 4AQ", accreds:["BAFE","CHAS","SafeContractor"], price:"£780", unit:"/system/yr", desc:"South London fire protection specialist. Competitive wet riser maintenance with rapid mobilisation and clear BS 9990 compliance certificates." },
+          { name:"Fire Systems Solutions", abbr:"FSS", rating:4.6, reviews:143, tel:"01582 766 500", web:"www.firesystemssolutions.co.uk", addr:"Luton, Bedfordshire, LU4 0AS", accreds:["BAFE","CHAS","ISO 9001"], price:"£800", unit:"/system/yr", desc:"South East fire systems specialist. Annual wet and dry riser maintenance for commercial offices, shopping centres and residential high-rise." },
+          { name:"Chubb (Riser Division)", abbr:"CRD", rating:4.7, reviews:212, tel:"0800 111 3473", web:"www.chubbfiresecurity.co.uk", addr:"Portsmouth, PO6 3EZ", accreds:["LPC Rules","NSI Gold","ISO 9001","CHAS"], price:"£1,050", unit:"/system/yr", desc:"National fire safety leader. Premium wet riser maintenance with 24/7 monitoring, emergency response and full compliance management." },
+          { name:"Hamworthy Fire Systems", abbr:"HFS", rating:4.5, reviews:123, tel:"01202 662 555", web:"www.hamworthy.com", addr:"Poole, Dorset, BH17 0JB", accreds:["BAFE","CHAS","ISO 9001"], price:"£760", unit:"/system/yr", desc:"Marine and commercial fire systems specialist. Expert wet riser maintenance for high-rise buildings and complex multi-system installations." },
+          { name:"Kidde (Riser Service)", abbr:"KRS", rating:4.7, reviews:189, tel:"01753 685 066", web:"www.kidde.com/uk", addr:"Slough, Berkshire, SL1 4LR", accreds:["LPC Rules","BAFE","ISO 9001"], price:"£950", unit:"/system/yr", desc:"Global fire safety brand. Comprehensive wet riser inspection including pump house servicing and full pressure testing to BS 9990." },
+          { name:"Moreton Fire Protection", abbr:"MFP", rating:4.5, reviews:134, tel:"01727 848 500", web:"www.moretonfire.co.uk", addr:"St Albans, Hertfordshire, AL4 0JA", accreds:["BAFE","CHAS","SafeContractor"], price:"£770", unit:"/system/yr", desc:"Home Counties fire protection specialist. Annual wet riser programmes for commercial offices and multi-floor buildings with next-day response SLA." },
+          { name:"Premier Fire Solutions", abbr:"PFS", rating:4.6, reviews:156, tel:"0330 123 5050", web:"www.premierfiresolutions.co.uk", addr:"Manchester, M1 2JA", accreds:["BAFE","CHAS","ISO 9001"], price:"£830", unit:"/system/yr", desc:"Northern England fire systems specialist. Wet riser and dry riser maintenance across the North West with competitive pricing and quality reporting." }
+        ]
+      }
+    }
+  },
+  "Gas": {
+    icon: "🔵",
+    items: {
+      "Boiler Service": {
+        freq: "Annual", price: "£400–£1,200/boiler",
+        desc: "Annual gas boiler service by Gas Safe registered engineers. Includes combustion analysis, flue gas testing, heat exchanger inspection and controls calibration.",
+        companies: [
+          { name:"British Gas Business", abbr:"BGB", rating:4.7, reviews:1245, tel:"0800 316 2635", web:"www.britishgas.co.uk/business", addr:"Millstream, Maidenhead Road, Windsor, SL4 5GD", accreds:["Gas Safe","CHAS","ISO 9001","ISO 14001"], price:"£650", unit:"/boiler/yr", desc:"UK's largest boiler maintenance provider. Gas Safe registered engineers, 24/7 emergency cover and rapid response across the entire UK." },
+          { name:"Centrica Business Solutions", abbr:"CBS", rating:4.7, reviews:534, tel:"0808 501 5449", web:"www.centrica.com/business", addr:"Millstream, Windsor, SL4 5GD", accreds:["Gas Safe","ISO 9001","ISO 14001","CHAS"], price:"£700", unit:"/boiler/yr", desc:"Energy and engineering services group. Commercial boiler maintenance with energy efficiency optimisation and carbon reporting." },
+          { name:"NG Bailey (Gas)", abbr:"NGB", rating:4.8, reviews:289, tel:"0113 270 6000", web:"www.ngbailey.co.uk", addr:"Bradford, BD1 1HD", accreds:["Gas Safe","CHAS","ISO 9001","ISO 45001"], price:"£750", unit:"/boiler/yr", desc:"Major UK engineering services group. Gas Safe boiler maintenance for complex commercial plant including plant rooms and large-capacity boilers." },
+          { name:"Vaillant Group UK", abbr:"VGU", rating:4.8, reviews:312, tel:"0330 100 3461", web:"www.vaillant.co.uk", addr:"Vaillant House, Warwick, CV34 5AW", accreds:["Gas Safe","ISO 9001","CHAS"], price:"£680", unit:"/boiler/yr", desc:"European boiler manufacturer with UK service division. OEM-quality servicing for Vaillant and multi-brand commercial boilers." },
+          { name:"Ideal Commercial Boilers", abbr:"ICB", rating:4.7, reviews:267, tel:"01482 498 660", web:"www.idealcommercialboilers.com", addr:"Kingston upon Hull, HU7 0AA", accreds:["Gas Safe","ISO 9001","CHAS"], price:"£660", unit:"/boiler/yr", desc:"UK's largest boiler manufacturer. Factory-trained engineers provide manufacturer-backed annual servicing for Ideal commercial boilers." },
+          { name:"Andrews Water Heaters", abbr:"AWH", rating:4.7, reviews:234, tel:"0845 070 1055", web:"www.andrewswaterheaters.co.uk", addr:"Wednesbury, West Midlands, WS10 7JN", accreds:["Gas Safe","CHAS","ISO 9001"], price:"£580", unit:"/boiler/yr", desc:"Specialist commercial hot water and boiler manufacturer. Expert annual servicing for commercial water heaters and high-output boiler systems." },
+          { name:"Viessmann UK", abbr:"VUK", rating:4.8, reviews:198, tel:"01952 675 000", web:"www.viessmann.co.uk", addr:"Telford, Shropshire, TF1 5RZ", accreds:["Gas Safe","ISO 9001","CHAS"], price:"£720", unit:"/boiler/yr", desc:"German boiler engineering leader. Premium OEM annual servicing for Viessmann commercial boilers with remote monitoring and predictive maintenance." },
+          { name:"Baxi Commercial", abbr:"BAX", rating:4.7, reviews:245, tel:"01772 695 558", web:"www.baxicommercial.co.uk", addr:"Preston, Lancashire, PR2 5AZ", accreds:["Gas Safe","ISO 9001","CHAS"], price:"£640", unit:"/boiler/yr", desc:"Leading UK boiler manufacturer. Nationwide Gas Safe servicing for Baxi, Potterton and Andrews commercial boiler ranges." },
+          { name:"Dalkia Facilities (Gas)", abbr:"DFG", rating:4.6, reviews:198, tel:"020 3772 4000", web:"www.dalkia.co.uk", addr:"London, NW1 3BF", accreds:["Gas Safe","ISO 9001","CHAS","ISO 14001"], price:"£770", unit:"/boiler/yr", desc:"Energy and FM services group. Gas boiler maintenance as part of holistic M&E planned maintenance programmes for multi-floor commercial buildings." },
+          { name:"Kier FM (Gas)", abbr:"KFG", rating:4.6, reviews:167, tel:"01767 355 000", web:"www.kier.co.uk", addr:"Sandy, Bedfordshire, SG19 2BD", accreds:["Gas Safe","CHAS","SafeContractor","ISO 9001"], price:"£710", unit:"/boiler/yr", desc:"National FM contractor. Gas boiler servicing incorporated into broader hard FM planned maintenance programmes with dedicated account management." }
+        ]
+      },
+      "Gas Pipe Work Pressure Test": {
+        freq: "As Required / After Works", price: "£350–£800",
+        desc: "Pressure testing of gas installation pipework to IGE/UP/1 and IGEM standards. Required after any gas works, modification or to verify installation integrity.",
+        companies: [
+          { name:"Corgi HomePlan Commercial", abbr:"CHP", rating:4.7, reviews:234, tel:"0333 003 3000", web:"www.corgihomeplan.co.uk/commercial", addr:"Wimborne, Dorset, BH21 1QJ", accreds:["Gas Safe","CHAS","ISO 9001"], price:"£450", unit:"/test", desc:"National Gas Safe registered contractor. Professional gas pressure testing with detailed pressure loss certificates and same-day reporting." },
+          { name:"Transco (National Grid Gas)", abbr:"TNG", rating:4.8, reviews:312, tel:"0800 111 999", web:"www.cadentgas.com", addr:"Solihull, West Midlands, B91 3FB", accreds:["Gas Safe","ISO 9001","CHAS"], price:"£500", unit:"/test", desc:"The gas network operator's commercial service division. Authoritative gas pressure testing by network engineers for major commercial and industrial installations." },
+          { name:"Gas Services UK", abbr:"GSU", rating:4.6, reviews:167, tel:"020 8579 0222", web:"www.gasservicesuk.com", addr:"Ealing, London, W5 3BY", accreds:["Gas Safe","CHAS"], price:"£380", unit:"/test", desc:"London commercial gas specialist. Rapid mobilisation for gas pressure testing following installation or repair works. Same-day certificate issue." },
+          { name:"Benchmark Gas", abbr:"BMG", rating:4.7, reviews:145, tel:"0161 864 4444", web:"www.benchmarkgas.co.uk", addr:"Manchester, M16 9FD", accreds:["Gas Safe","CHAS","SafeContractor"], price:"£400", unit:"/test", desc:"North West gas contractor specialising in commercial installations. Pressure testing to IGEM standards with comprehensive certification." },
+          { name:"Apex Gas", abbr:"APG", rating:4.5, reviews:134, tel:"01932 567 000", web:"www.apexgas.co.uk", addr:"Weybridge, Surrey, KT13 8TS", accreds:["Gas Safe","CHAS"], price:"£370", unit:"/test", desc:"Surrey and South East gas specialist. Commercial gas pressure testing with quick turnaround reports for FM and compliance managers." },
+          { name:"Nationwide Gas Services", abbr:"NGS", rating:4.6, reviews:178, tel:"0800 840 4234", web:"www.nationwidegasservices.co.uk", addr:"Bristol, BS1 4PZ", accreds:["Gas Safe","CHAS","SafeContractor"], price:"£420", unit:"/test", desc:"National commercial gas contractor. Pressure testing as part of comprehensive gas maintenance contracts or on a one-off basis." },
+          { name:"Calor Gas Services", abbr:"CGS", rating:4.6, reviews:198, tel:"0800 626 626", web:"www.calor.co.uk", addr:"Warwick, CV34 6DA", accreds:["Gas Safe","ISO 9001","CHAS"], price:"£460", unit:"/test", desc:"LPG and natural gas specialist. Pressure testing for commercial gas installations including LPG systems where mains gas is unavailable." },
+          { name:"P&R Gas Services", abbr:"PRG", rating:4.5, reviews:123, tel:"020 8590 5678", web:"www.prgasservices.co.uk", addr:"Romford, Essex, RM6 4AB", accreds:["Gas Safe","CHAS"], price:"£360", unit:"/test", desc:"East London gas specialist. Cost-effective pressure testing for commercial kitchens, plant rooms and general gas installations." },
+          { name:"Commercial Gas Team", abbr:"CGT", rating:4.6, reviews:156, tel:"0330 555 2020", web:"www.commercialgasteam.co.uk", addr:"Leeds, LS11 5PS", accreds:["Gas Safe","CHAS","ISO 9001"], price:"£390", unit:"/test", desc:"Yorkshire and national commercial gas contractor. IGEM-standard pressure testing with fast turnaround for FM and property management clients." },
+          { name:"Gas Safe International", abbr:"GSI", rating:4.7, reviews:167, tel:"01256 405 500", web:"www.gassaferegister.co.uk", addr:"Basingstoke, Hampshire, RG21 4HS", accreds:["Gas Safe","CHAS"], price:"£480", unit:"/test", desc:"Associated testing service from the Gas Safe Register body. Highest assurance gas pressure testing delivered by audited engineers." }
+        ]
+      }
+    }
+  },
+  "Heating & Ventilation": {
+    icon: "🌡️",
+    items: {
+      "Ductwork Clean": {
+        freq: "As Required", price: "£3–£8/m² duct area",
+        desc: "HVCA TR19 compliant ductwork cleaning to remove accumulated grease, dust and microbial contamination. Required for fire safety and ventilation hygiene compliance.",
+        companies: [
+          { name:"Swiftclean UK", abbr:"SW", rating:4.9, reviews:312, tel:"0800 243 471", web:"www.swiftclean.co.uk", addr:"3 Riverside Court, Brigstock Road, Thornton Heath, CR7 7JG", accreds:["BESA TR19","CHAS","SafeContractor","ISO 9001"], price:"£5", unit:"/m²", desc:"UK's leading ductwork cleaning specialist. TR19 compliant cleaning with video pre and post inspection, laboratory analysis and full photographic reporting." },
+          { name:"Envirodyne UK", abbr:"EN", rating:4.8, reviews:267, tel:"0800 169 4300", web:"www.envirodyne.co.uk", addr:"Reading, Berkshire, RG7 4QB", accreds:["BESA TR19","ISO 9001","CHAS"], price:"£5.50", unit:"/m²", desc:"Specialist ventilation hygiene contractor. BESA-accredited TR19 ductwork cleaning with post-clean certification accepted by environmental health." },
+          { name:"Indepth Hygienic Cleaning", abbr:"IHC", rating:4.8, reviews:198, tel:"020 8397 9996", web:"www.indepth.co.uk", addr:"Surbiton, Surrey, KT6 5PZ", accreds:["BESA TR19","CHAS","ISO 9001"], price:"£5.20", unit:"/m²", desc:"Commercial ventilation cleaning specialist. Expert kitchen extract duct cleaning and HVAC hygiene services for London and South East commercial properties." },
+          { name:"Advanced Ventilation", abbr:"AV", rating:4.6, reviews:154, tel:"01403 784 900", web:"www.advancedventilation.co.uk", addr:"Horsham, West Sussex, RH13 0HF", accreds:["BESA TR19","CHAS"], price:"£4.80", unit:"/m²", desc:"South East ductwork cleaning contractor. Competitive TR19 cleaning for commercial kitchens, offices and plant rooms with post-clean certificate." },
+          { name:"Colt Ductwork Services", abbr:"CDS", rating:4.7, reviews:176, tel:"01252 719 922", web:"www.coltinfo.co.uk", addr:"Havant, Hampshire, PO9 2LY", accreds:["BESA TR19","ISO 9001","CHAS"], price:"£5.30", unit:"/m²", desc:"Ventilation pioneer with specialist cleaning division. Expert smoke control duct cleaning alongside standard HVAC duct hygiene services." },
+          { name:"Daikin UK (Duct Cleaning)", abbr:"DAK", rating:4.7, reviews:198, tel:"01737 218 000", web:"www.daikin.co.uk", addr:"Leatherhead, Surrey, KT22 8JQ", accreds:["BESA TR19","REFCOM","CHAS","ISO 9001"], price:"£5.70", unit:"/m²", desc:"HVAC manufacturer's service division. TR19 cleaning as part of annual AC maintenance contracts for a cost-effective combined approach." },
+          { name:"Grease Guard UK", abbr:"GGU", rating:4.6, reviews:143, tel:"0800 772 3320", web:"www.greaseguard.co.uk", addr:"Salisbury, Wiltshire, SP1 3ST", accreds:["BESA TR19","CHAS"], price:"£4.50", unit:"/m²", desc:"Kitchen extraction cleaning specialist. TR19 compliant grease extract duct cleaning with fire safety certification for catering environments." },
+          { name:"Ductbusters", abbr:"DB", rating:4.7, reviews:189, tel:"0800 085 4413", web:"www.ductbusters.co.uk", addr:"Kingswood, Surrey, KT20 6QB", accreds:["BESA TR19","CHAS","SafeContractor"], price:"£5.10", unit:"/m²", desc:"Dedicated ductwork cleaning specialist. Full TR19 inspection, cleaning and certification service for commercial and industrial HVAC systems." },
+          { name:"Clean Air Systems UK", abbr:"CAS", rating:4.5, reviews:123, tel:"01344 628 850", web:"www.cleanairsystems.co.uk", addr:"Bracknell, Berkshire, RG12 1NB", accreds:["BESA TR19","CHAS"], price:"£4.70", unit:"/m²", desc:"Thames Valley and national ductwork cleaning. Competitive pricing for large estate programmes with consolidated TR19 reporting." },
+          { name:"Mechanical Services UK", abbr:"MSU", rating:4.5, reviews:134, tel:"0121 503 2080", web:"www.mechanicalservicesuk.co.uk", addr:"Birmingham, B6 4RT", accreds:["BESA TR19","CHAS","SafeContractor"], price:"£4.60", unit:"/m²", desc:"Midlands HVAC and ductwork specialist. TR19 cleaning programmes for commercial offices, schools and healthcare facilities." }
+        ]
+      }
+    }
+  },
+  "Lifts & Lifting Equipment": {
+    icon: "🔄",
+    items: {
+      "Monthly Lift Maintenance": {
+        freq: "Monthly", price: "£180–£350/lift/month",
+        desc: "Monthly planned maintenance of passenger lifts to BS EN 13015. Includes car interior, door gear, controller, motor room equipment and safety device checks.",
+        companies: [
+          { name:"Otis Elevator UK", abbr:"OT", rating:4.8, reviews:534, tel:"01564 789 900", web:"www.otis.com/en/gb", addr:"Otis House, Guildford Road, Leatherhead, KT22 9DF", accreds:["CHAS","ISO 9001","ISO 45001","LEEA"], price:"£280", unit:"/lift/month", desc:"World's largest lift manufacturer and service company. Monthly maintenance for all lift types with 24/7 engineer response and remote diagnostic monitoring." },
+          { name:"Kone UK", abbr:"KN", rating:4.8, reviews:423, tel:"01908 202 700", web:"www.kone.com/en-gb", addr:"KONE House, Fletchamstead Highway, Coventry, CV4 9TU", accreds:["CHAS","ISO 9001","ISO 45001","LEEA"], price:"£265", unit:"/lift/month", desc:"Finnish lift engineering leader. Digitally connected lift maintenance with 24/7 remote monitoring and guaranteed response times." },
+          { name:"Schindler UK", abbr:"SCH", rating:4.8, reviews:412, tel:"01908 780 700", web:"www.schindler.com/gb", addr:"Grove End, 550 Chiswick High Road, London, W4 5RG", accreds:["CHAS","ISO 9001","LEEA","SafeContractor"], price:"£275", unit:"/lift/month", desc:"Swiss engineering group. Premium lift maintenance with the Schindler Ahead IoT platform providing real-time performance data and predictive maintenance." },
+          { name:"Thyssen Krupp Elevator", abbr:"TKE", rating:4.7, reviews:367, tel:"0161 261 5500", web:"www.thyssenkrupp-elevator.com/en-gb", addr:"Manchester, M17 1JN", accreds:["CHAS","ISO 9001","ISO 45001","LEEA"], price:"£258", unit:"/lift/month", desc:"Global engineering group. Comprehensive monthly lift maintenance with MAX predictive maintenance technology and 24/7 response." },
+          { name:"Stannah Lift Services", abbr:"STA", rating:4.7, reviews:312, tel:"01264 339 090", web:"www.stannah.co.uk", addr:"Andover, Hampshire, SP10 3SD", accreds:["CHAS","ISO 9001","LEEA","SafeContractor"], price:"£240", unit:"/lift/month", desc:"Britain's most trusted lift company. Monthly maintenance for passenger, platform and goods lifts with manufacturer-backed parts and engineering." },
+          { name:"Electra UK", abbr:"EL", rating:4.6, reviews:198, tel:"020 7228 7733", web:"www.electrauk.com", addr:"Battersea, London, SW11 2PN", accreds:["CHAS","LEEA","ISO 9001"], price:"£220", unit:"/lift/month", desc:"Independent London lift maintenance specialist. Flexible monthly contracts with no lock-in, covering all major lift manufacturers at competitive rates." },
+          { name:"Orona UK", abbr:"ORO", rating:4.7, reviews:234, tel:"01707 391 800", web:"www.orona.co.uk", addr:"Hatfield, Hertfordshire, AL10 9PD", accreds:["CHAS","ISO 9001","LEEA"], price:"£245", unit:"/lift/month", desc:"Spanish lift manufacturer with UK operations. Monthly maintenance programmes combining planned servicing with remote monitoring for proactive fault prevention." },
+          { name:"TK Access (Stairlifts & Lifts)", abbr:"TKA", rating:4.5, reviews:156, tel:"01384 428 500", web:"www.tkaccess.co.uk", addr:"Kingswinford, West Midlands, DY6 7JH", accreds:["CHAS","LEEA","SafeContractor"], price:"£195", unit:"/lift/month", desc:"Access solution specialist. Monthly maintenance for small to medium platform and passenger lifts. Good value for single-lift sites." },
+          { name:"Delta Elevators", abbr:"DE", rating:4.6, reviews:167, tel:"01268 534 020", web:"www.deltaelevators.co.uk", addr:"Basildon, Essex, SS13 1LG", accreds:["CHAS","LEEA","ISO 9001"], price:"£210", unit:"/lift/month", desc:"South East independent lift maintenance company. Competitive monthly contracts covering all manufacturers with rapid response engineering." },
+          { name:"Pickerings Lifts", abbr:"PK", rating:4.7, reviews:198, tel:"01642 604 200", web:"www.pickeringlifts.co.uk", addr:"Stockton-on-Tees, TS18 2DB", accreds:["CHAS","LEEA","ISO 9001","SafeContractor"], price:"£225", unit:"/lift/month", desc:"North East lift specialist with national operations. Independent lift maintenance at manufacturer-quality standard with genuine parts and certified engineers." }
+        ]
+      },
+      "LOLER Inspection": {
+        freq: "6 Monthly (Passenger Lifts)", price: "£120–£250/lift",
+        desc: "Thorough examination of lifts and lifting equipment by a competent person under the Lifting Operations and Lifting Equipment Regulations (LOLER) 1998. Statutory requirement.",
+        companies: [
+          { name:"Allianz Engineering Inspection", abbr:"AEI", rating:4.9, reviews:312, tel:"0345 600 8181", web:"www.allianz.co.uk/engineering", addr:"57 Ladymead, Guildford, Surrey, GU1 1DB", accreds:["LEEA","UKAS","ISO 17020","CHAS"], price:"£175", unit:"/lift", desc:"Insurance-grade LOLER inspections by highly qualified engineers. Legally defensible examination reports issued within 28 days. National coverage." },
+          { name:"Bureau Veritas (Lifts)", abbr:"BVL", rating:4.8, reviews:267, tel:"0345 600 1828", web:"www.bureauveritas.co.uk", addr:"Newman Street, London, W1T 3EQ", accreds:["LEEA","UKAS","ISO 17020","ISO 9001"], price:"£195", unit:"/lift", desc:"Global TIC group. LOLER thorough examinations for passenger lifts, goods lifts, MEWPs and all lifting equipment. Comprehensive certificate management." },
+          { name:"Lloyds Register (Technical)", abbr:"LRT", rating:4.9, reviews:289, tel:"020 7709 9166", web:"www.lr.org", addr:"71 Fenchurch Street, London, EC3M 4BS", accreds:["LEEA","UKAS","ISO 17020","ISO 9001"], price:"£210", unit:"/lift", desc:"Prestige inspection body with 250-year heritage. LOLER examinations with the highest level of technical authority and legal defensibility." },
+          { name:"Zurich Engineering UK", abbr:"ZE", rating:4.8, reviews:198, tel:"020 7105 8000", web:"www.zurich.co.uk/engineering", addr:"The Zurich Centre, 3000 Parkway, Whiteley, PO15 7JZ", accreds:["LEEA","UKAS","ISO 17020"], price:"£185", unit:"/lift", desc:"Insurance group engineering inspection division. LOLER thorough examinations fully integrated with insurance policy requirements and risk management." },
+          { name:"AXA XL Engineering (UK)", abbr:"AXA", rating:4.7, reviews:176, tel:"0330 024 2440", web:"www.axaxl.com/insurance/engineering", addr:"City Tower, 40 Basinghall Street, London, EC2V 5DE", accreds:["LEEA","UKAS","ISO 17020"], price:"£190", unit:"/lift", desc:"Global insurance group's engineering inspection service. LOLER inspections for lifting equipment with full insurance compliance integration." },
+          { name:"LEEA Approved Inspector", abbr:"LAI", rating:4.7, reviews:154, tel:"01480 432 801", web:"www.leea.co.uk", addr:"Huntingdon, Cambridgeshire, PE29 1GF", accreds:["LEEA","ISO 17020","CHAS"], price:"£165", unit:"/lift", desc:"The lifting industry's own association inspection service. LEEA-approved LOLER examinations carried out by fully certified lifting equipment experts." },
+          { name:"Chubb Inspection Services", abbr:"CIS", rating:4.6, reviews:145, tel:"0800 111 3473", web:"www.chubbfiresecurity.co.uk", addr:"Portsmouth, PO6 3EZ", accreds:["LEEA","UKAS","ISO 17020"], price:"£180", unit:"/lift", desc:"Fire and safety group's inspection division. LOLER examinations bundled with fire safety inspections for cost-efficient compliance programmes." },
+          { name:"Otis (LOLER)", abbr:"OTL", rating:4.7, reviews:234, tel:"01564 789 900", web:"www.otis.com/en/gb", addr:"Leatherhead, Surrey, KT22 9DF", accreds:["LEEA","ISO 17020","CHAS"], price:"£170", unit:"/lift", desc:"Lift manufacturer offering independent LOLER thorough examination. Manufacturer knowledge combined with statutory inspection expertise." },
+          { name:"Independent Lift Inspection", abbr:"ILI", rating:4.7, reviews:167, tel:"0800 234 6736", web:"www.independentliftinspection.co.uk", addr:"Coventry, CV6 6GF", accreds:["LEEA","ISO 17020","CHAS"], price:"£155", unit:"/lift", desc:"Truly independent LOLER inspection specialist. No financial relationship with lift manufacturers ensures fully impartial statutory examination reports." },
+          { name:"Capita Engineering Inspection", abbr:"CEI", rating:4.6, reviews:198, tel:"020 7799 1525", web:"www.capita.com", addr:"65 Gresham Street, London, EC2V 7NQ", accreds:["LEEA","UKAS","ISO 17020"], price:"£175", unit:"/lift", desc:"Major services group inspection division. LOLER examinations for lifts and lifting equipment across large commercial estate portfolios." }
+        ]
+      }
+    }
+  },
+  "Pressure Vessels": {
+    icon: "⚙️",
+    items: {
+      "Chiller Maintenance": {
+        freq: "Annual / 6 Monthly", price: "£1,500–£6,000/chiller/yr",
+        desc: "Planned maintenance of chiller plant including refrigerant checks, compressor servicing, condenser cleaning, controls calibration and PSSR pressure checks.",
+        companies: [
+          { name:"Daikin UK (Chiller Service)", abbr:"DCS", rating:4.8, reviews:312, tel:"01737 218 000", web:"www.daikin.co.uk", addr:"Leatherhead, Surrey, KT22 8JQ", accreds:["REFCOM","F-Gas Cert","CHAS","ISO 9001"], price:"£2,800", unit:"/chiller/yr", desc:"Leading chiller manufacturer with dedicated service division. OEM-quality chiller maintenance for air-cooled and water-cooled systems with genuine parts and remote diagnostics." },
+          { name:"Carrier UK (Chiller)", abbr:"CAR", rating:4.8, reviews:267, tel:"01392 261 700", web:"www.carrier.com/uk", addr:"Exeter, Devon, EX2 8FH", accreds:["REFCOM","F-Gas Cert","ISO 9001","CHAS"], price:"£3,000", unit:"/chiller/yr", desc:"Pioneer of modern refrigeration. Factory-trained engineers service Carrier and multi-brand chillers. AquaEdge monitoring platform available for real-time performance data." },
+          { name:"York (Johnson Controls)", abbr:"YJC", rating:4.8, reviews:289, tel:"0800 371 371", web:"www.johnsoncontrols.com/york", addr:"Leatherhead, Surrey, KT22 7UX", accreds:["REFCOM","F-Gas Cert","ISO 9001","ISO 45001"], price:"£3,200", unit:"/chiller/yr", desc:"Global chiller leader. Comprehensive planned maintenance for YORK and multi-brand chillers with BuildingConnected service management platform." },
+          { name:"Trane UK", abbr:"TR", rating:4.8, reviews:234, tel:"01780 758 000", web:"www.trane.com/uk", addr:"Stamford, Lincolnshire, PE9 2TE", accreds:["REFCOM","F-Gas Cert","ISO 9001","CHAS"], price:"£3,100", unit:"/chiller/yr", desc:"American HVAC giant. Trane chiller maintenance programmes with Trane Connect monitoring for predictive fault diagnosis and energy optimisation." },
+          { name:"Mitsubishi Electric (Cooling)", abbr:"MEC", rating:4.7, reviews:198, tel:"01707 282 880", web:"www.mitsubishielectric.co.uk/hvac", addr:"Hatfield, Hertfordshire, AL10 9BW", accreds:["REFCOM","F-Gas Cert","CHAS","ISO 9001"], price:"£2,600", unit:"/chiller/yr", desc:"Japanese electronics giant HVAC division. Expert chiller maintenance for Mitsubishi and multi-brand systems with energy monitoring integration." },
+          { name:"Star Refrigeration", abbr:"SR", rating:4.8, reviews:178, tel:"0141 638 7916", web:"www.star-ref.co.uk", addr:"Glasgow, G52 4JW", accreds:["REFCOM","F-Gas Cert","ISO 9001","CHAS"], price:"£2,900", unit:"/chiller/yr", desc:"UK's largest independent refrigeration company. Premium chiller maintenance and heat pump services for large commercial and industrial applications." },
+          { name:"Hulley & Kirkwood", abbr:"HK", rating:4.7, reviews:156, tel:"0141 285 6300", web:"www.h-k.co.uk", addr:"Glasgow, G2 4JD", accreds:["REFCOM","CHAS","ISO 9001","ISO 14001"], price:"£2,750", unit:"/chiller/yr", desc:"Scottish engineering consultancy and M&E contractor. Expert chiller maintenance for complex commercial buildings with full PSSR compliance." },
+          { name:"Emerson Climate Technologies", abbr:"ECT", rating:4.7, reviews:189, tel:"01753 770 100", web:"www.emerson.com/en-gb", addr:"Slough, Berkshire, SL1 4DX", accreds:["REFCOM","F-Gas Cert","ISO 9001"], price:"£2,850", unit:"/chiller/yr", desc:"American engineering group's climate technology division. Expert compressor and chiller maintenance with Copeland diagnostic equipment." },
+          { name:"Aggreko (Cooling)", abbr:"AGC", rating:4.8, reviews:234, tel:"0800 032 2000", web:"www.aggreko.com", addr:"Glasgow, G51 1DZ", accreds:["REFCOM","F-Gas Cert","ISO 9001","CHAS"], price:"£3,500", unit:"/chiller/yr", desc:"World-leading temporary and permanent cooling specialist. Chiller maintenance with temporary cooling backup guarantee to eliminate downtime risk." },
+          { name:"Bohn UK", abbr:"BOH", rating:4.6, reviews:143, tel:"01977 556 600", web:"www.bohnuk.com", addr:"Pontefract, West Yorkshire, WF7 7BX", accreds:["REFCOM","F-Gas Cert","CHAS"], price:"£2,500", unit:"/chiller/yr", desc:"Refrigeration specialist with commercial chiller maintenance division. Expert care for air blast coolers, condensers and packaged chiller units." }
+        ]
+      },
+      "Pressure Vessel Inspection": {
+        freq: "Annual / 2 Years", price: "£150–£500/vessel",
+        desc: "Written scheme of examination and thorough examination of pressure vessels under the Pressure Systems Safety Regulations (PSSR) 2000. Includes hydraulic testing where required.",
+        companies: [
+          { name:"Allianz Engineering (PSSR)", abbr:"AEP", rating:4.9, reviews:267, tel:"0345 600 8181", web:"www.allianz.co.uk/engineering", addr:"Guildford, Surrey, GU1 1DB", accreds:["UKAS","ISO 17020","IMechE","CHAS"], price:"£250", unit:"/vessel", desc:"Market leader in PSSR inspections. Written scheme of examination, thorough examination and statutory certification for all pressure systems." },
+          { name:"Bureau Veritas (Pressure)", abbr:"BVP", rating:4.8, reviews:223, tel:"0345 600 1828", web:"www.bureauveritas.co.uk", addr:"London, W1T 3EQ", accreds:["UKAS","ISO 17020","ISO 9001"], price:"£275", unit:"/vessel", desc:"Global TIC group. PSSR thorough examinations for boilers, autoclaves, compressors and all pressure systems." },
+          { name:"Zurich Engineering (PSSR)", abbr:"ZEP", rating:4.8, reviews:198, tel:"020 7105 8000", web:"www.zurich.co.uk/engineering", addr:"Whiteley, PO15 7JZ", accreds:["UKAS","ISO 17020"], price:"£240", unit:"/vessel", desc:"Insurance group inspection. PSSR examinations integrated with boiler and pressure vessel insurance for comprehensive risk management." },
+          { name:"Lloyds Register (Pressure)", abbr:"LRP", rating:4.9, reviews:245, tel:"020 7709 9166", web:"www.lr.org", addr:"London, EC3M 4BS", accreds:["UKAS","ISO 17020","ISO 9001"], price:"£290", unit:"/vessel", desc:"Internationally respected inspection body. PSSR thorough examinations with full legal defensibility and comprehensive written scheme management." },
+          { name:"SGS UK (Pressure)", abbr:"SGSP", rating:4.7, reviews:178, tel:"01276 697 400", web:"www.sgs.com/en-gb", addr:"Chertsey, Surrey, KT16 0PX", accreds:["UKAS","ISO 17020","ISO 9001"], price:"£260", unit:"/vessel", desc:"World's leading testing and inspection company. PSSR inspections backed by global technical resources and accredited laboratory analysis." },
+          { name:"Intertek UK (Pressure)", abbr:"ITP", rating:4.7, reviews:167, tel:"020 7396 3400", web:"www.intertek.com/uk", addr:"London, WC2N 5QP", accreds:["UKAS","ISO 17020","ISO 9001"], price:"£270", unit:"/vessel", desc:"Quality assurance group with pressure systems inspection capability. PSSR examinations for commercial boilers, autoclaves and compressed air systems." },
+          { name:"AXA XL (Pressure)", abbr:"AXP", rating:4.7, reviews:156, tel:"0330 024 2440", web:"www.axaxl.com", addr:"London, EC2V 5DE", accreds:["UKAS","ISO 17020"], price:"£245", unit:"/vessel", desc:"Insurance group inspection. PSSR examinations fully aligned with insurance policy requirements for pressure vessels and boiler plant." },
+          { name:"Socotec (Pressure)", abbr:"SCP", rating:4.6, reviews:145, tel:"01276 697 400", web:"www.socotec.co.uk", addr:"Chertsey, Surrey, KT16 0PX", accreds:["UKAS","ISO 17020","ISO 9001"], price:"£255", unit:"/vessel", desc:"International testing and inspection group. PSSR written scheme and thorough examination services for FM and engineering clients." },
+          { name:"TÜV Rheinland UK", abbr:"TUV", rating:4.8, reviews:189, tel:"020 8600 5590", web:"www.tuv.com/en-gb", addr:"Rotherham, South Yorkshire, S60 1BX", accreds:["UKAS","ISO 17020","DAkkS"], price:"£285", unit:"/vessel", desc:"German precision inspection body. Premium PSSR inspections applying the highest European engineering standards to all pressure systems." },
+          { name:"DNV GL UK", abbr:"DNV", rating:4.8, reviews:198, tel:"020 3816 2500", web:"www.dnv.com/en-gb", addr:"London, EC1V 2PY", accreds:["UKAS","ISO 17020","IMechE"], price:"£295", unit:"/vessel", desc:"Norwegian classification and risk management group. High-authority PSSR inspections particularly suited to large-scale or complex pressure systems." }
+        ]
+      }
+    }
+  },
+  "Water": {
+    icon: "💧",
+    items: {
+      "Legionella Water Sampling & Testing": {
+        freq: "Monthly / Quarterly", price: "£120–£280/sample",
+        desc: "Routine water sampling and Legionella testing to satisfy the requirements of L8 ACoP, HSG274 and the site Water Safety Plan. Covers hot and cold water systems.",
+        companies: [
+          { name:"Legionella Control International", abbr:"LCI", rating:4.9, reviews:312, tel:"0330 223 3000", web:"www.legionellacontrol.co.uk", addr:"Preston, Lancashire, PR1 3NA", accreds:["UKAS","ISO 17025","CHAS","SafeContractor"], price:"£160", unit:"/sample", desc:"UK's premier Legionella specialist. UKAS-accredited sampling and testing with ACoP L8-compliant risk assessments and water safety plan development." },
+          { name:"Hydro-X Water Treatment", abbr:"HX", rating:4.8, reviews:267, tel:"01904 607 850", web:"www.hydro-x.co.uk", addr:"York, YO30 4XA", accreds:["UKAS","ISO 17025","CHAS","WCS Group"], price:"£145", unit:"/sample", desc:"National water hygiene specialist. Legionella sampling, analysis and remedial treatment with full UKAS-accredited laboratory analysis." },
+          { name:"Initial Water Treatment", abbr:"IWT", rating:4.8, reviews:289, tel:"0800 027 2464", web:"www.initial.co.uk/water-treatment", addr:"East Grinstead, RH19 2JY", accreds:["UKAS","ISO 17025","CHAS","ISO 9001"], price:"£175", unit:"/sample", desc:"Part of Rentokil Initial. National water treatment provider with UKAS-accredited Legionella sampling and laboratory testing services." },
+          { name:"Grundfos Water Treatment UK", abbr:"GWT", rating:4.7, reviews:198, tel:"01525 850 000", web:"www.grundfos.com/en/uk", addr:"Leighton Buzzard, Bedfordshire, LU7 4TL", accreds:["CHAS","ISO 9001","WCS Member"], price:"£155", unit:"/sample", desc:"Pump and water specialist with treatment division. Water hygiene monitoring programmes for commercial buildings and critical water systems." },
+          { name:"Clearwater Technology", abbr:"CT", rating:4.7, reviews:178, tel:"01733 405 000", web:"www.clearwatertech.co.uk", addr:"Peterborough, PE3 8YD", accreds:["UKAS","CHAS","ISO 9001"], price:"£140", unit:"/sample", desc:"Water treatment technology specialist. Innovative approach to Legionella control combining chemical treatment, temperature monitoring and sampling." },
+          { name:"Veolia Water UK", abbr:"VW", rating:4.8, reviews:312, tel:"01270 754 754", web:"www.veolia.co.uk/water", addr:"London, N1 9AG", accreds:["UKAS","ISO 17025","CHAS","ISO 14001"], price:"£180", unit:"/sample", desc:"Global water services leader. Comprehensive water safety management including Legionella risk assessment, sampling, treatment and compliance reporting." },
+          { name:"Ancer UK", abbr:"ANC", rating:4.6, reviews:154, tel:"01527 558 000", web:"www.anceruk.com", addr:"Redditch, Worcestershire, B98 0ER", accreds:["CHAS","WCS Member","ISO 9001"], price:"£135", unit:"/sample", desc:"Midlands water treatment specialist. Legionella monitoring and sampling programmes at competitive rates for commercial FM clients." },
+          { name:"Safe Water Services", abbr:"SWS", rating:4.7, reviews:167, tel:"020 7481 0000", web:"www.safewaterservices.co.uk", addr:"London, EC3N 1NT", accreds:["UKAS","CHAS","ISO 9001"], price:"£165", unit:"/sample", desc:"London water hygiene specialist. Legionella sampling programmes tailored for City of London financial and commercial buildings." },
+          { name:"Integrated Water Services", abbr:"IWS", rating:4.6, reviews:143, tel:"0161 872 2020", web:"www.integratedwaterservices.co.uk", addr:"Manchester, M16 0TH", accreds:["UKAS","CHAS","WCS Member"], price:"£148", unit:"/sample", desc:"North West water treatment specialist. Full ACoP L8 compliance programmes from risk assessment through to monthly monitoring and annual review." },
+          { name:"WCS Group", abbr:"WCS", rating:4.8, reviews:234, tel:"01252 510 000", web:"www.wcsgroup.co.uk", addr:"Farnborough, Hampshire, GU14 7JP", accreds:["UKAS","ISO 17025","CHAS","ISO 9001"], price:"£158", unit:"/sample", desc:"Specialist water compliance group. Comprehensive L8 ACoP water safety programmes for complex commercial estates, including real-time monitoring platforms." }
+        ]
+      },
+      "Cooling Tower Maintenance": {
+        freq: "Monthly / Quarterly / Annual", price: "£2,000–£8,000/tower/yr",
+        desc: "Planned maintenance of cooling towers per HSG274 Part 1 including chemical dosing, blowdown, drift eliminators, basin cleaning and quarterly clean and disinfection.",
+        companies: [
+          { name:"Veolia Water Technologies", abbr:"VWT", rating:4.8, reviews:289, tel:"01270 754 754", web:"www.veolia.co.uk", addr:"London, N1 9AG", accreds:["UKAS","ISO 14001","CHAS","ISO 9001"], price:"£5,000", unit:"/tower/yr", desc:"Global water and cooling tower specialist. HSG274 compliant maintenance including chemical treatment, microbiological monitoring and quarterly clean and disinfect." },
+          { name:"Hydro-X (Cooling)", abbr:"HXC", rating:4.8, reviews:234, tel:"01904 607 850", web:"www.hydro-x.co.uk", addr:"York, YO30 4XA", accreds:["UKAS","WCS Group","CHAS"], price:"£4,500", unit:"/tower/yr", desc:"National water specialist. Full cooling tower maintenance programme including chemical treatment, Legionella risk management and ACOP L8 compliant monitoring." },
+          { name:"Delta Cooling UK", abbr:"DCU", rating:4.7, reviews:198, tel:"01257 413 000", web:"www.deltacooling.com", addr:"Chorley, Lancashire, PR6 7HT", accreds:["CHAS","ISO 9001","WCS Member"], price:"£4,200", unit:"/tower/yr", desc:"Cooling tower manufacturer and service specialist. Full lifecycle management from installation through to planned maintenance and compliance reporting." },
+          { name:"SPX Cooling Technologies UK", abbr:"SPX", rating:4.7, reviews:178, tel:"01277 244 044", web:"www.spxcooling.com/uk", addr:"Brentwood, Essex, CM15 9TL", accreds:["CHAS","ISO 9001","ISO 14001"], price:"£4,800", unit:"/tower/yr", desc:"Global cooling tower OEM with UK service capability. Manufacturer-backed maintenance maximising efficiency and minimising Legionella risk." },
+          { name:"Baltimore Aircoil UK", abbr:"BAC", rating:4.7, reviews:156, tel:"01952 209 800", web:"www.baltimoreaircoil.co.uk", addr:"Telford, Shropshire, TF3 3BD", accreds:["CHAS","ISO 9001","ISO 14001"], price:"£4,600", unit:"/tower/yr", desc:"Evaporative cooling specialist. Expert maintenance for BAC equipment and multi-brand cooling towers including adiabatic and closed-circuit coolers." },
+          { name:"Eni Services UK", abbr:"ENI", rating:4.6, reviews:145, tel:"01603 516 000", web:"www.eniservices.co.uk", addr:"Norwich, Norfolk, NR4 7TJ", accreds:["CHAS","WCS Member","ISO 9001"], price:"£3,800", unit:"/tower/yr", desc:"Water and cooling specialist with strong industrial and commercial portfolio. HSG274-aligned cooling tower maintenance at competitive rates." },
+          { name:"Clearwater Tech (Cooling)", abbr:"CTC", rating:4.7, reviews:167, tel:"01733 405 000", web:"www.clearwatertech.co.uk", addr:"Peterborough, PE3 8YD", accreds:["CHAS","WCS Member","UKAS"], price:"£4,100", unit:"/tower/yr", desc:"Technology-led cooling tower maintenance. Automated dosing systems and real-time water quality monitoring reduce chemical costs and compliance burden." },
+          { name:"Initial Water Treatment (CT)", abbr:"IWTC", rating:4.8, reviews:223, tel:"0800 027 2464", web:"www.initial.co.uk/water-treatment", addr:"East Grinstead, RH19 2JY", accreds:["UKAS","CHAS","ISO 9001"], price:"£5,200", unit:"/tower/yr", desc:"Rentokil Initial's water treatment arm. Comprehensive cooling tower maintenance with 24/7 monitoring and emergency chlorination response." },
+          { name:"Evapco UK", abbr:"EVP", rating:4.7, reviews:145, tel:"01642 767 000", web:"www.evapco.eu/en", addr:"Middlesbrough, TS1 1EE", accreds:["CHAS","ISO 9001","ISO 14001"], price:"£4,400", unit:"/tower/yr", desc:"American cooling technology manufacturer. OEM-quality maintenance for Evapco and multi-brand cooling towers with full HSG274 compliance documentation." },
+          { name:"Thermofrost Cryo UK", abbr:"TFC", rating:4.6, reviews:134, tel:"020 8592 1234", web:"www.thermocryo.co.uk", addr:"Dagenham, Essex, RM10 7UD", accreds:["CHAS","WCS Member","ISO 9001"], price:"£3,900", unit:"/tower/yr", desc:"Industrial refrigeration and cooling specialist with cooling tower division. East London based with national coverage and competitive pricing." }
+        ]
+      },
+      "RPZ Valve Testing": {
+        freq: "Annual", price: "£150–£350/valve",
+        desc: "Annual testing and certification of Reduced Pressure Zone (RPZ) valves to Water Regulations 1999 and WRAS guidelines. Protects mains water supply from backflow contamination.",
+        companies: [
+          { name:"Water Regulations Advisory Scheme", abbr:"WRA", rating:4.9, reviews:198, tel:"01495 248 454", web:"www.wras.co.uk", addr:"Oakdale, Caerphilly, CF83 2NP", accreds:["WRAS","ISO 9001","CHAS"], price:"£180", unit:"/valve", desc:"Industry body approved RPZ testing service. WRAS-accredited testers providing the most authoritative RPZ valve certification available in the UK." },
+          { name:"Watts Water UK", abbr:"WWU", rating:4.8, reviews:234, tel:"01787 313 050", web:"www.wattswater.com/en-GB", addr:"Sudbury, Suffolk, CO10 1YG", accreds:["WRAS","ISO 9001","CHAS"], price:"£165", unit:"/valve", desc:"RPZ valve manufacturer with testing and service division. OEM expertise for Watts backflow prevention devices and multi-brand RPZ testing." },
+          { name:"Caleffi UK", abbr:"CAL", rating:4.7, reviews:167, tel:"01362 852 200", web:"www.caleffi.com/en-gb", addr:"Dereham, Norfolk, NR19 1JG", accreds:["WRAS","ISO 9001"], price:"£158", unit:"/valve", desc:"Italian plumbing components manufacturer with UK testing capability. Expert RPZ valve servicing with genuine parts and same-day certification." },
+          { name:"Honeywell Building Solutions (Water)", abbr:"HBS", rating:4.7, reviews:189, tel:"0161 848 0800", web:"www.honeywell.com/uk/en", addr:"Manchester, M90 1QX", accreds:["WRAS","ISO 9001","CHAS"], price:"£175", unit:"/valve", desc:"Global building technology group. RPZ valve testing as part of wider water system compliance programmes for commercial buildings." },
+          { name:"Albion Water Services", abbr:"AWS", rating:4.6, reviews:154, tel:"020 8868 8999", web:"www.albionwater.co.uk", addr:"Harrow, Middlesex, HA1 2RF", accreds:["WRAS","CHAS"], price:"£145", unit:"/valve", desc:"London water services specialist. RPZ valve testing and certification for commercial properties across Greater London." },
+          { name:"Aqua-Tech UK", abbr:"ATU", rating:4.6, reviews:134, tel:"0800 093 3131", web:"www.aquatechuk.com", addr:"Coventry, CV4 9TU", accreds:["WRAS","CHAS","ISO 9001"], price:"£152", unit:"/valve", desc:"Water technology specialist. RPZ valve testing and maintenance programmes for commercial estates with digital certificate management." },
+          { name:"Grundfos Plumbing Services", abbr:"GPS", rating:4.7, reviews:145, tel:"01525 850 000", web:"www.grundfos.com/en/uk", addr:"Leighton Buzzard, LU7 4TL", accreds:["WRAS","CHAS","ISO 9001"], price:"£168", unit:"/valve", desc:"Pump and water specialist. RPZ valve testing incorporated into annual water system maintenance programmes." },
+          { name:"Polypipe Building Products", abbr:"PBP", rating:4.5, reviews:123, tel:"01709 770 000", web:"www.polypipe.com", addr:"Doncaster, DN12 1BY", accreds:["WRAS","CHAS"], price:"£142", unit:"/valve", desc:"Building products group with plumbing services division. Cost-effective RPZ valve testing for volume portfolios." },
+          { name:"Crane Fluid Systems", abbr:"CFS", rating:4.6, reviews:156, tel:"01480 432 900", web:"www.cranefs.com", addr:"St Ives, Cambridgeshire, PE27 5JL", accreds:["WRAS","ISO 9001","CHAS"], price:"£160", unit:"/valve", desc:"Valve manufacturer with service capability. Expert RPZ testing using calibrated test equipment with same-day digital certificate issue." },
+          { name:"Thames Water Utilities", abbr:"TW", rating:4.7, reviews:267, tel:"0800 316 9800", web:"www.thameswater.co.uk/business", addr:"Clearwater Court, Vastern Road, Reading, RG1 8DB", accreds:["WRAS","ISO 9001","ISO 14001"], price:"£195", unit:"/valve", desc:"Water utility's commercial services arm. Authoritative RPZ testing with the full backing of the water supplier for compliance with water regulations." }
+        ]
+      }
+    }
+  },
+  "Energy Performance": {
+    icon: "🌿",
+    items: {
+      "EPC Certification": {
+        freq: "Every 10 Years", price: "£1,320/certificate",
+        desc: "Energy Performance Certificate (EPC) for commercial buildings under the Energy Performance of Buildings Regulations 2012. MEES compliance requires minimum E rating for new leases.",
+        companies: [
+          { name:"JLL Energy & Sustainability", abbr:"JLL", rating:4.8, reviews:267, tel:"020 7493 4933", web:"www.jll.co.uk/en/sustainability", addr:"30 Warwick Street, London, W1B 5NH", accreds:["CIBSE Low Carbon","DEA","ISO 9001"], price:"£1,400", unit:"/certificate", desc:"Global real estate giant's EPC service. DEA-accredited assessors providing MEES compliance advice alongside certificates. Particularly strong for large commercial offices." },
+          { name:"CBRE Energy & Sustainability", abbr:"CBR", rating:4.8, reviews:234, tel:"020 7182 2000", web:"www.cbre.co.uk/sustainability", addr:"Henrietta House, Henrietta Place, London, W1G 0NB", accreds:["CIBSE Low Carbon","DEA","ISO 9001"], price:"£1,450", unit:"/certificate", desc:"World's largest real estate services group. EPC delivery with integrated MEES risk management and carbon reduction advisory for large portfolios." },
+          { name:"Savills Energy UK", abbr:"SAV", rating:4.8, reviews:198, tel:"020 3727 1444", web:"www.savills.co.uk/energy", addr:"33 Margaret Street, London, W1G 0JD", accreds:["CIBSE Low Carbon","DEA","ISO 9001"], price:"£1,380", unit:"/certificate", desc:"Estate agency group's energy team. Commercial EPC assessments by DEA-accredited engineers with MEES advisory and long-term compliance strategy." },
+          { name:"Parity Projects (EPC)", abbr:"PPE", rating:4.7, reviews:178, tel:"020 8432 8888", web:"www.parityprojects.com", addr:"Tottenham, London, N17 8BH", accreds:["DEA","CHAS","ISO 9001"], price:"£1,250", unit:"/certificate", desc:"Energy consultancy specialising in commercial EPCs. MEES compliance analysis integrated with retrofit recommendations for energy improvement." },
+          { name:"Carbon Credentials", abbr:"CC", rating:4.7, reviews:156, tel:"020 3031 5800", web:"www.carboncredentials.com", addr:"London, WC1V 6PY", accreds:["DEA","CIBSE Low Carbon","ISO 9001"], price:"£1,320", unit:"/certificate", desc:"Corporate carbon and energy management firm. EPC delivery aligned with net-zero pathway planning and sustainability reporting frameworks." },
+          { name:"Energist UK", abbr:"ENG", rating:4.6, reviews:145, tel:"029 2183 0000", web:"www.energistuk.com", addr:"Cardiff, CF24 0TF", accreds:["DEA","ISO 9001","CHAS"], price:"£1,180", unit:"/certificate", desc:"Specialist energy assessors covering commercial and domestic properties. Fast EPC turnaround with detailed MEES guidance for landlords and occupiers." },
+          { name:"Low Carbon UK", abbr:"LCU", rating:4.6, reviews:134, tel:"0845 485 2100", web:"www.lowcarbonuk.co.uk", addr:"Bristol, BS1 4QF", accreds:["DEA","CHAS","ISO 9001"], price:"£1,150", unit:"/certificate", desc:"South West energy specialists. Commercial EPC assessment with practical improvement advice for achieving better ratings." },
+          { name:"Tunstall Energy Assessors", abbr:"TEA", rating:4.5, reviews:112, tel:"020 7118 1000", web:"www.tunstallassessors.co.uk", addr:"Victoria, London, SW1E 5AP", accreds:["DEA","CHAS"], price:"£1,100", unit:"/certificate", desc:"London commercial EPC specialist. Rapid mobilisation for single assets or large portfolios with competitive volume pricing." },
+          { name:"Greenbrook Energy", abbr:"GBE", rating:4.6, reviews:145, tel:"01223 370 088", web:"www.greenbrookconsulting.co.uk", addr:"Cambridge, CB1 2JD", accreds:["DEA","CIBSE Low Carbon","ISO 9001"], price:"£1,280", unit:"/certificate", desc:"Cambridge-based sustainability and energy consultancy. EPC assessments for university, science park and commercial real estate portfolios." },
+          { name:"Arcadis UK (Energy)", abbr:"ARC", rating:4.7, reviews:198, tel:"020 7253 1400", web:"www.arcadis.com/en-gb", addr:"80 Fenchurch Street, London, EC3M 4BY", accreds:["DEA","CIBSE Low Carbon","ISO 9001","ISO 14001"], price:"£1,500", unit:"/certificate", desc:"Global design and consultancy firm. Commercial EPC services backed by deep sustainability expertise and integrated with carbon reduction and BREEAM strategies." }
+        ]
+      }
+    }
+  }
+};
+
+// ─── INIT SERVICES ───
+let currentCat = null;
+let currentItem = null;
+// inited declared at top of script
+
+function initServices() {
+  if (inited) return;
+  inited = true;
+  renderVerifiedProviders();
+  const catNames = Object.keys(CATEGORIES);
+  const tabsEl = document.getElementById('cat-tabs');
+  catNames.forEach((cat, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-tab';
+    const count = Object.keys(CATEGORIES[cat].items).length;
+    btn.innerHTML = `${CATEGORIES[cat].icon} ${cat} <span class="cat-count">${count}</span>`;
+    btn.onclick = () => selectCategory(cat);
+    tabsEl.appendChild(btn);
+  });
+  // Show verified providers default view on load — do NOT auto-jump into a category
+  var vpd = document.getElementById('verified-providers-default');
+  if (vpd) vpd.style.display = 'block';
+  var sidebar = document.getElementById('statutory-sidebar');
+  if (sidebar) sidebar.innerHTML = '';
+  var sb = document.querySelector('.services-body');
+  if (sb) sb.classList.remove('category-active');
+}
+
+function selectCategory(cat) {
+  currentCat = cat;
+  var vpd = document.getElementById('verified-providers-default');
+  if (vpd) vpd.style.display = 'none';
+  var sb = document.querySelector('.services-body');
+  if (sb) sb.classList.add('category-active');
+  document.querySelectorAll('.cat-tab').forEach((t, i) => {
+    t.classList.toggle('active', t.textContent.includes(cat));
+  });
+  const sidebar = document.getElementById('statutory-sidebar');
+  sidebar.innerHTML = '';
+  const items = CATEGORIES[cat].items;
+  const itemNames = Object.keys(items);
+  itemNames.forEach((item, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'stat-item-btn' + (i === 0 ? ' active' : '');
+    btn.innerHTML = `<span class="stat-item-dot"></span>${item}`;
+    btn.onclick = () => selectStatutoryItem(cat, item);
+    sidebar.appendChild(btn);
+  });
+  selectStatutoryItem(cat, itemNames[0]);
+}
+
+function selectStatutoryItem(cat, itemName) {
+  currentItem = itemName;
+  document.querySelectorAll('.stat-item-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === itemName);
+  });
+  const data = CATEGORIES[cat].items[itemName];
+  const panel = document.getElementById('company-panel');
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div class="panel-title">${itemName}</div>
+      <div class="panel-subtitle">
+        <span>${data.freq} &nbsp;·&nbsp; ${data.price}</span>
+        <span class="panel-badge">${data.companies.length} Verified Providers</span>
+      </div>
+      <p style="font-size:.82rem;color:rgba(227,229,232,.55);margin-top:10px;line-height:1.6;">${data.desc}</p>
+    </div>
+    <div class="company-grid">${data.companies.map(renderCard).join('')}</div>
+  `;
+}
+
+function renderCard(c) {
+  const accreds = c.accreds.map(a => {
+    const cls = a.includes('ISO') || a.includes('UKAS') ? 'gold'
+              : a.includes('CHAS') || a.includes('Safe') ? 'green' : 'blue';
+    return `<span class="accred-badge ${cls}">${a}</span>`;
+  }).join('');
+  return `
+    <div class="company-card">
+      <div class="card-header">
+        <div class="card-logo-box">${c.abbr}</div>
+        <div class="card-company-info">
+          <div class="card-company-name">${c.name}</div>
+          <div class="card-stars">
+            <span class="stars">${'★'.repeat(Math.floor(c.rating))}</span>
+            <span style="font-size:.8rem;color:var(--grey);font-weight:600;">${c.rating}</span>
+            <span class="review-count">(${c.reviews.toLocaleString()} reviews)</span>
+          </div>
+        </div>
+        <div class="card-accred">${accreds}</div>
+      </div>
+      <div class="card-body">
+        <p class="card-description">${c.desc}</p>
+        <div class="card-meta">
+          <div class="meta-row"><span class="meta-icon">📞</span><span>${c.tel}</span></div>
+          <div class="meta-row"><span class="meta-icon">🌐</span><a class="meta-link" href="https://${c.web}" target="_blank">${c.web}</a></div>
+          <div class="meta-row"><span class="meta-icon">📍</span><span>${c.addr}</span></div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-label">From</div>
+          <div class="price-value">${c.price}<span class="price-unit">${c.unit}</span></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-compare">Compare</button>
+          <button class="btn-commission" onclick="agoraAddToBasket('${c.name}','${c.name}','${(c.price||'0').replace(/[^0-9.]/g,'')}','${c.unit||''}')">🛒 Commission</button>
+          <button class="btn-enquire" onclick="location.href='payment.html'">Enquire →</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded', initServices);
+
+  function agoraAddToBasket(name, supplier, price, unit) {
+    var id = (supplier + '-' + name).replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    if (typeof AgoraBasket !== 'undefined') {
+      AgoraBasket.add({ id:id, name:name, supplierName:supplier,
+        price:parseFloat(price)||0, unit:unit, category:'FM Service' });
+    }
+  }
+
+// ── Verified Providers ────────────────────────────────────────────────────
+function renderVerifiedProviders() {
+  var container = document.getElementById('verified-providers-section');
+  if (!container) { console.error('verified-providers-section not found'); return; }
+  container.innerHTML = '';
+  VERIFIED_PROVIDERS.forEach(function(p) {
+    var accredHtml = p.accreds.map(function(a) {
+      var cls = (a.indexOf('ISO')>-1||a.indexOf('UKAS')>-1||a.indexOf('NEBOSH')>-1) ? 'gold'
+              : (a.indexOf('CHAS')>-1||a.indexOf('Safe')>-1||a.indexOf('BOHS')>-1||a.indexOf('LEIA')>-1) ? 'green' : 'blue';
+      return '<span class="accred-badge ' + cls + '">' + a + '</span>';
+    }).join('');
+    var stars = Array(Math.floor(p.rating)+1).join('★');
+    var card = document.createElement('div');
+    card.className = 'company-card';
+    card.style.cssText = 'cursor:pointer;border-left:3px solid var(--orange);';
+    card.innerHTML =
+      '<div class="card-header">' +
+        '<div class="card-logo-box">' + p.abbr + '</div>' +
+        '<div class="card-company-info">' +
+          '<div class="card-company-name">' + p.name + '</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">' +
+            '<span style="font-size:0.7rem;background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.3);color:var(--orange);padding:2px 8px;border-radius:2px;letter-spacing:1px;text-transform:uppercase;">Verified</span>' +
+            '<span style="font-size:0.72rem;color:var(--grey-dim);">' + p.cat + '</span>' +
+          '</div>' +
+          '<div class="card-stars" style="margin-top:4px;">' +
+            '<span class="stars">' + stars + '</span>' +
+            '<span style="font-size:.8rem;color:var(--grey);font-weight:600;"> ' + p.rating + '</span>' +
+            '<span class="review-count"> (' + p.reviews.toLocaleString() + ' reviews)</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-accred" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' + accredHtml + '</div>' +
+        '<p class="card-description">' + p.desc + '</p>' +
+        '<div class="card-meta">' +
+          '<div class="meta-row"><span class="meta-icon">&#128222;</span><span>' + p.tel + '</span></div>' +
+          '<div class="meta-row"><span class="meta-icon">&#127760;</span><a class="meta-link" href="https://' + p.web + '" target="_blank">' + p.web + '</a></div>' +
+          '<div class="meta-row"><span class="meta-icon">&#128205;</span><span>' + p.addr + '</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-footer">' +
+        '<div class="price-block">' +
+          '<div class="price-label">From</div>' +
+          '<div class="price-value">' + p.price + '<span class="price-unit"> ' + p.unit + '</span></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="btn-commission vp-btn" style="background:var(--orange);color:var(--navy);">View Storefront &#8594;</button>' +
+        '</div>' +
+      '</div>';
+    card.addEventListener('click', (function(id,name){ return function(){ viewProviderProfile(id,name); }; })(p.id,p.name));
+    var btn = card.querySelector('.vp-btn');
+    if (btn) btn.addEventListener('click', (function(id,name){ return function(e){ e.stopPropagation(); viewProviderProfile(id,name); }; })(p.id,p.name));
+    container.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>
