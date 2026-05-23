@@ -6,11 +6,7 @@ Open: http://localhost:5000
 import os, json, sqlite3, hashlib, secrets, datetime, io
 from flask import Flask, request, jsonify, session, send_from_directory, send_file, g
 
-try:
-    import weasyprint
-    WEASYPRINT_OK = True
-except ImportError:
-    WEASYPRINT_OK = False
+WEASYPRINT_OK = False
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH  = os.path.join(BASE_DIR, 'agora.db')
