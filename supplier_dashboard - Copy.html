@@ -460,7 +460,7 @@
 </footer>
 
 <script>
-var views=['overview','enquiries','contracts','revenue','commission','profile','accreditations'];
+var views=['overview','enquiries','orders-received','contracts','revenue','commission','profile','accreditations'];
 function showView(id){
   views.forEach(function(v){document.getElementById('view-'+v).style.display=(v===id)?'':'none';});
   document.querySelectorAll('.sidebar-link').forEach(function(l){l.classList.remove('active');});
