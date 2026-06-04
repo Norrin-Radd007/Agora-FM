@@ -394,7 +394,7 @@
       </div>
     </div>
 
-    <!-- ACCREDITATIONS VIEW -->
+      <!-- ACCREDITATIONS VIEW -->
     <div id="view-accreditations" style="display:none;">
       <div class="dash-header">
         <div><div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Verification</span></div><div class="dash-title">My <span style="color:var(--orange)">Accreditations</span></div><div class="dash-subtitle">All accreditations are verified by the Agora FM team</div></div>
@@ -417,23 +417,21 @@
       <div style="margin-top:16px;"><a href="#" class="btn-primary" style="font-size:0.78rem;padding:10px 20px;">+ Upload New Certificate</a></div>
     </div>
 
-      <!-- ORDERS RECEIVED VIEW -->
+    <!-- ORDERS RECEIVED VIEW -->
     <div id="view-orders-received" style="display:none;">
       <div class="dash-header">
         <div>
-          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Order Management</span></div>
+          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eybrow-line"></span><span class="eyebrow-text">Order Management</span></div>
           <div class="dash-title">Orders <span style="color:var(--orange)">Received</span></div>
           <div class="dash-subtitle" id="sup-orders-subtitle">Orders commissioned through Agora FM</div>
         </div>
       </div>
-
       <div id="sup-orders-list">
         <div style="padding:40px;text-align:center;color:var(--grey-dim);">
           <div style="font-size:2rem;margin-bottom:12px;">📦</div>
           Loading your orders…
         </div>
       </div>
-
       <!-- Order detail modal -->
       <div id="sup-order-modal" style="display:none;position:fixed;inset:0;background:rgba(10,26,47,0.92);z-index:500;overflow:auto;padding:32px 24px;">
         <div style="max-width:760px;margin:0 auto;background:#0D2040;border:1px solid rgba(62,107,137,0.3);border-radius:2px;">
@@ -654,4 +652,8 @@ document.getElementById('navSearch').addEventListener('keydown',function(e){if(e
       btn.disabled    = false;
       btn.textContent = '✓ Mark as Completed';
       alert('Error: ' + e.message);
-    
+    }
+  }
+</script>
+</body>
+</html>
