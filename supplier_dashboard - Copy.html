@@ -462,7 +462,10 @@
 <script>
 var views=['overview','enquiries','orders-received','contracts','revenue','commission','profile','accreditations'];
 function showView(id){
-  views.forEach(function(v){document.getElementById('view-'+v).style.display=(v===id)?'':'none';});
+  views.forEach(function(v){
+    var el = document.getElementById('view-'+v);
+    if(el) el.style.display=(v===id)?'':'none';
+  });
   document.querySelectorAll('.sidebar-link').forEach(function(l){l.classList.remove('active');});
   if(event&&event.currentTarget&&event.currentTarget.classList)event.currentTarget.classList.add('active');
 }
@@ -651,8 +654,4 @@ document.getElementById('navSearch').addEventListener('keydown',function(e){if(e
       btn.disabled    = false;
       btn.textContent = '✓ Mark as Completed';
       alert('Error: ' + e.message);
-    }
-  }
-</script>
-</body>
-</html>
+    
