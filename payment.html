@@ -771,15 +771,20 @@ window.AgoraDB = AgoraDB;
           if (typeof calcCC === 'function') calcCC();
           // Update all basket total displays
           var totals = await AgoraDB.basket.getTotals();
+          // Always recalculate VAT and total from subtotal to avoid stored value errors
+          var sub  = parseFloat(totals.subtotal) || 0;
+          var vat  = Math.round(sub * 0.20 * 100) / 100;
+          var comm = Math.round(sub * 0.05 * 100) / 100;
+          var tot  = Math.round((sub + vat) * 100) / 100;
           var els = {
-            'cc-subtotal':  totals.subtotal,
-            'cc-vat':       totals.vat,
-            'cc-commission':totals.commission,
-            'cc-total':     totals.total,
-            'po-subtotal':  totals.subtotal,
-            'po-vat':       totals.vat,
-            'po-commission':totals.commission,
-            'po-total':     totals.total,
+            'cc-subtotal':  sub,
+            'cc-vat':       vat,
+            'cc-commission':comm,
+            'cc-total':     tot,
+            'po-subtotal':  sub,
+            'po-vat':       vat,
+            'po-commission':comm,
+            'po-total':     tot,
           };
           Object.keys(els).forEach(function(id) {
             var el = document.getElementById(id);
