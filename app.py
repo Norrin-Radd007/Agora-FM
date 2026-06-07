@@ -2,16 +2,28 @@
 AGORA FM — Flask Backend (app.py)
 Run:  python app.py
 Open: http://localhost:5000
+
+Database: Uses PostgreSQL on Railway (DATABASE_URL env var) or SQLite locally.
 """
-import os, json, sqlite3, hashlib, secrets, datetime, io
+import os, json, hashlib, secrets, datetime, io
 from flask import Flask, request, jsonify, session, send_from_directory, send_file, g
 
-WEASYPRINT_OK = False
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH  = os.path.join(BASE_DIR, 'agora.db')
+WEASYPRINT_OK   = False   # Removed — do not re-enable
 COMMISSION_RATE = 0.05
 VAT_RATE        = 0.20
+
+# ── Database mode detection ──────────────────────────────────────────────────
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+USE_POSTGRES = bool(DATABASE_URL)
+
+if USE_POSTGRES:
+    import psycopg2
+    import psycopg2.extras
+else:
+    import sqlite3
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH  = os.path.join(BASE_DIR, 'agora.db')   # SQLite only (local dev)
 
 app = Flask(__name__, static_folder=BASE_DIR, static_url_path='')
 app.secret_key = 'agora-fm-demo-secret-key-2026'
@@ -20,26 +32,39 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 # ── DB helpers ──────────────────────────────────────────────────────────────
 def get_db():
     if 'db' not in g:
-        g.db = sqlite3.connect(DB_PATH)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute('PRAGMA foreign_keys = ON')
+        if USE_POSTGRES:
+            g.db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        else:
+            g.db = sqlite3.connect(DB_PATH)
+            g.db.row_factory = sqlite3.Row
+            g.db.execute('PRAGMA foreign_keys = ON')
     return g.db
 
 @app.teardown_appcontext
 def close_db(e=None):
     db = g.pop('db', None)
-    if db: db.close()
+    if db:
+        try: db.close()
+        except: pass
+
+def _pg_sql(sql):
+    """Convert SQLite ? placeholders to PostgreSQL %s."""
+    return sql.replace('?', '%s') if USE_POSTGRES else sql
 
 def query(sql, params=(), one=False):
-    cur = get_db().execute(sql, params)
-    get_db().commit()
+    db  = get_db()
+    cur = db.cursor()
+    cur.execute(_pg_sql(sql), params)
+    db.commit()
     rows = [dict(r) for r in cur.fetchall()]
     return (rows[0] if rows else None) if one else rows
 
 def execute(sql, params=()):
-    cur = get_db().execute(sql, params)
-    get_db().commit()
-    return cur.lastrowid
+    db  = get_db()
+    cur = db.cursor()
+    cur.execute(_pg_sql(sql), params)
+    db.commit()
+    return getattr(cur, 'lastrowid', None)
 
 def hash_pw(p): return hashlib.sha256(p.encode()).hexdigest()
 def uid():      return secrets.token_hex(5)
@@ -379,8 +404,11 @@ def admin_dump():
 @app.route('/api/admin/reset', methods=['POST'])
 def admin_reset():
     db = get_db()
-    for t in ('customers','suppliers','orders','baskets'): db.execute(f'DELETE FROM {t}')
-    db.commit(); session.clear(); _seed(db)
+    cur = db.cursor()
+    for t in ('customers','suppliers','orders','baskets'):
+        cur.execute(f'DELETE FROM {t}')
+    db.commit()
+    session.clear(); _seed(db)
     return jsonify(ok=True, message='Reset and re-seeded.')
 
 # ── DB INIT ─────────────────────────────────────────────────────────────────
@@ -408,20 +436,30 @@ CREATE TABLE IF NOT EXISTS baskets(
     user_id TEXT PRIMARY KEY, items TEXT DEFAULT '[]', updated_at TEXT);
 CREATE TABLE IF NOT EXISTS orders(
     id TEXT PRIMARY KEY, customer_id TEXT, customer_email TEXT, customer_org TEXT,
-    items TEXT, subtotal REAL, vat REAL, commission REAL, total REAL,
+    items TEXT, subtotal NUMERIC, vat NUMERIC, commission NUMERIC, total NUMERIC,
     payment_method TEXT, handshake_at TEXT, status TEXT DEFAULT 'confirmed', created_at TEXT);
 '''
 
 def _seed(db=None):
     close = False
     if db is None:
-        db = sqlite3.connect(DB_PATH); close = True
+        if USE_POSTGRES:
+            db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        else:
+            import sqlite3 as _sq3
+            db = _sq3.connect(DB_PATH)
+        close = True
+
+    def _x(sql, params=()):
+        cur = db.cursor()
+        cur.execute(_pg_sql(sql), params)
+        db.commit()
 
     def h(p): return hashlib.sha256(p.encode()).hexdigest()
     t = datetime.datetime.utcnow().isoformat()
 
     try:
-        db.execute('''INSERT OR IGNORE INTO customers(id,org_name,org_type,reg_address,phone,first_name,last_name,job_title,email,password_hash,created_at)
+        _x('''INSERT OR IGNORE INTO customers(id,org_name,org_type,reg_address,phone,first_name,last_name,job_title,email,password_hash,created_at)
             VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
             ('cust_demo','Whitmore Estate Services Ltd','Commercial Property Owner',
              '1 Canada Square, London E14 5AB','020 7123 0001',
@@ -446,7 +484,7 @@ def _seed(db=None):
     # Insert original 5 suppliers FIRST (services reference them)
     for s in seed:
         try:
-            db.execute('''INSERT OR IGNORE INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
+            _x('''INSERT OR IGNORE INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
                 contact_first,contact_last,contact_role,email,password_hash,coverage,categories,
                 accreditations,pl_insurance,el_insurance,bank_name,sort_code,account_num,company_desc,verified,created_at)
                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', s+(t,))
@@ -456,7 +494,7 @@ def _seed(db=None):
     # Then insert 5 extra suppliers
     for s in extra:
         try:
-            db.execute('''INSERT OR IGNORE INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
+            _x('''INSERT OR IGNORE INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
                 contact_first,contact_last,contact_role,email,password_hash,coverage,categories,
                 accreditations,pl_insurance,el_insurance,bank_name,sort_code,account_num,company_desc,verified,created_at)
                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', s+(t,))
@@ -498,35 +536,46 @@ def _seed(db=None):
     ]
     for s in services:
         try:
-            db.execute('''INSERT OR IGNORE INTO services(id,supplier_id,name,description,unit_label,unit_price_pennies,active)
+            _x('''INSERT OR IGNORE INTO services(id,supplier_id,name,description,unit_label,unit_price_pennies,active)
                 VALUES(?,?,?,?,?,?,1)''', s)
         except Exception as e:
             print(f'  Seed warning (svc): {e}')
 
     # Force-update demo credentials so they always work
     try:
-        db.execute("UPDATE customers SET password_hash=? WHERE id='cust_demo'",
-                   (hashlib.sha256('Demo123!'.encode()).hexdigest(),))
-        db.execute("UPDATE suppliers SET password_hash=? WHERE id='sup_001'",
-                   (hashlib.sha256('Apollo123!'.encode()).hexdigest(),))
-        db.execute("UPDATE suppliers SET password_hash=? WHERE id='sup_002'",
-                   (hashlib.sha256('Aqua456!'.encode()).hexdigest(),))
-        db.execute("UPDATE suppliers SET password_hash=? WHERE id='sup_003'",
-                   (hashlib.sha256('Volt789!'.encode()).hexdigest(),))
-        db.execute("UPDATE suppliers SET password_hash=? WHERE id='sup_004'",
-                   (hashlib.sha256('BritHeat1!'.encode()).hexdigest(),))
-        db.execute("UPDATE suppliers SET password_hash=? WHERE id='sup_005'",
-                   (hashlib.sha256('PureAir2!'.encode()).hexdigest(),))
+        _x("UPDATE customers SET password_hash=? WHERE id='cust_demo'",
+           (hashlib.sha256('Demo123!'.encode()).hexdigest(),))
+        _x("UPDATE suppliers SET password_hash=? WHERE id='sup_001'",
+           (hashlib.sha256('Apollo123!'.encode()).hexdigest(),))
+        _x("UPDATE suppliers SET password_hash=? WHERE id='sup_002'",
+           (hashlib.sha256('Aqua456!'.encode()).hexdigest(),))
+        _x("UPDATE suppliers SET password_hash=? WHERE id='sup_003'",
+           (hashlib.sha256('Volt789!'.encode()).hexdigest(),))
+        _x("UPDATE suppliers SET password_hash=? WHERE id='sup_004'",
+           (hashlib.sha256('BritHeat1!'.encode()).hexdigest(),))
+        _x("UPDATE suppliers SET password_hash=? WHERE id='sup_005'",
+           (hashlib.sha256('PureAir2!'.encode()).hexdigest(),))
     except Exception as e:
         print(f'  Warning: could not update demo credentials: {e}')
-    db.commit()
-    if close: db.close()
-    if close: db.close()
+    if close:
+        try: db.close()
+        except: pass
 
 def init_db():
-    db = sqlite3.connect(DB_PATH)
-    db.executescript(SCHEMA)
-    db.commit(); db.close()
+    if USE_POSTGRES:
+        db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = db.cursor()
+        # PostgreSQL: run each statement separately
+        for stmt in SCHEMA.strip().split(';'):
+            stmt = stmt.strip()
+            if stmt:
+                cur.execute(stmt)
+        db.commit(); db.close()
+    else:
+        import sqlite3 as _sq3
+        db = _sq3.connect(DB_PATH)
+        db.executescript(SCHEMA)
+        db.commit(); db.close()
 
 if __name__ == '__main__':
     print('\n' + '='*52)
@@ -534,13 +583,23 @@ if __name__ == '__main__':
     print('='*52)
     init_db()
     _seed()
-    db_check = sqlite3.connect(DB_PATH)
-    sup_count = db_check.execute('SELECT COUNT(*) FROM suppliers').fetchone()[0]
-    svc_count = db_check.execute('SELECT COUNT(*) FROM services').fetchone()[0]
-    db_check.close()
+    if USE_POSTGRES:
+        db_check = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = db_check.cursor()
+        cur.execute('SELECT COUNT(*) FROM suppliers'); sup_count = cur.fetchone()['count']
+        cur.execute('SELECT COUNT(*) FROM services');  svc_count = cur.fetchone()['count']
+        db_check.close()
+        print(f'  Mode     : PostgreSQL (Railway)')
+    else:
+        import sqlite3 as _sq3
+        db_check = _sq3.connect(DB_PATH)
+        sup_count = db_check.execute('SELECT COUNT(*) FROM suppliers').fetchone()[0]
+        svc_count = db_check.execute('SELECT COUNT(*) FROM services').fetchone()[0]
+        db_check.close()
+        print(f'  Mode     : SQLite (local)')
+        print(f'  Database : {DB_PATH}')
     print(f'  Suppliers: {sup_count} seeded')
     print(f'  Services : {svc_count} seeded')
-    print(f'  Database : {DB_PATH}')
     print('  Customer : customer@demo.com / Demo123!')
     print('  Supplier : enquiries@apollofire.co.uk / Apollo123!')
     print('  Open     : http://localhost:5000')
