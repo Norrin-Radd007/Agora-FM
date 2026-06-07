@@ -561,11 +561,11 @@ def _seed(db=None):
         try: db.close()
         except: pass
 
+
 def init_db():
     if USE_POSTGRES:
         db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
         cur = db.cursor()
-        # PostgreSQL: run each statement separately
         for stmt in SCHEMA.strip().split(';'):
             stmt = stmt.strip()
             if stmt:
@@ -577,32 +577,15 @@ def init_db():
         db.executescript(SCHEMA)
         db.commit(); db.close()
 
+# ── Startup (runs under gunicorn AND python app.py) ──────────────────────────
+print('=' * 52)
+print('  AGORA FM — Python Backend')
+print('  Mode: ' + ('PostgreSQL (Railway)' if USE_POSTGRES else 'SQLite (local)'))
+print('=' * 52)
+init_db()
+_seed()
+print('  DB ready.')
+
 if __name__ == '__main__':
-    print('\n' + '='*52)
-    print('  AGORA FM — Python Backend')
-    print('='*52)
-    init_db()
-    _seed()
-    if USE_POSTGRES:
-        db_check = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
-        cur = db_check.cursor()
-        cur.execute('SELECT COUNT(*) FROM suppliers'); sup_count = cur.fetchone()['count']
-        cur.execute('SELECT COUNT(*) FROM services');  svc_count = cur.fetchone()['count']
-        db_check.close()
-        print(f'  Mode     : PostgreSQL (Railway)')
-    else:
-        import sqlite3 as _sq3
-        db_check = _sq3.connect(DB_PATH)
-        sup_count = db_check.execute('SELECT COUNT(*) FROM suppliers').fetchone()[0]
-        svc_count = db_check.execute('SELECT COUNT(*) FROM services').fetchone()[0]
-        db_check.close()
-        print(f'  Mode     : SQLite (local)')
-        print(f'  Database : {DB_PATH}')
-    print(f'  Suppliers: {sup_count} seeded')
-    print(f'  Services : {svc_count} seeded')
-    print('  Customer : customer@demo.com / Demo123!')
-    print('  Supplier : enquiries@apollofire.co.uk / Apollo123!')
-    print('  Open     : http://localhost:5000')
-    print('='*52 + '\n')
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, port=port, host='0.0.0.0')
