@@ -58,18 +58,29 @@ def _pg_sql(sql):
 
 def query(sql, params=(), one=False):
     db  = get_db()
-    cur = db.cursor()
-    cur.execute(_pg_sql(sql), params)
-    db.commit()
-    rows = [dict(r) for r in cur.fetchall()]
-    return (rows[0] if rows else None) if one else rows
+    try:
+        cur = db.cursor()
+        cur.execute(_pg_sql(sql), params)
+        rows = [dict(r) for r in cur.fetchall()]
+        return (rows[0] if rows else None) if one else rows
+    except Exception as e:
+        print(f'[query error] {e}')
+        try: db.rollback()
+        except: pass
+        return None if one else []
 
 def execute(sql, params=()):
     db  = get_db()
-    cur = db.cursor()
-    cur.execute(_pg_sql(sql), params)
-    db.commit()
-    return getattr(cur, 'lastrowid', None)
+    try:
+        cur = db.cursor()
+        cur.execute(_pg_sql(sql), params)
+        db.commit()
+        return getattr(cur, 'lastrowid', None)
+    except Exception as e:
+        print(f'[execute error] {e}')
+        try: db.rollback()
+        except: pass
+        return None
 
 def hash_pw(p): return hashlib.sha256(p.encode()).hexdigest()
 def uid():      return secrets.token_hex(5)
