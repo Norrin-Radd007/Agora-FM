@@ -1354,13 +1354,13 @@ function initServices() {
   const tabsEl = document.getElementById('cat-tabs');
   catNames.forEach((cat, i) => {
     const btn = document.createElement('button');
-    btn.className = 'cat-tab' + (i === 0 ? ' active' : '');
+    btn.className = 'cat-tab';
     const count = Object.keys(CATEGORIES[cat].items).length;
     btn.innerHTML = `${CATEGORIES[cat].icon} ${cat} <span class="cat-count">${count}</span>`;
     btn.onclick = () => selectCategory(cat);
     tabsEl.appendChild(btn);
   });
-  selectCategory(catNames[0]);
+  // Show verified providers by default — user clicks a category tab to browse
 }
 
 function selectCategory(cat) {
