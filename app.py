@@ -14,13 +14,18 @@ VAT_RATE        = 0.20
 
 # ── Database mode detection ──────────────────────────────────────────────────
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
+# Railway provides postgres:// but psycopg2 requires postgresql://
+if DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 USE_POSTGRES = bool(DATABASE_URL)
 
 if USE_POSTGRES:
     import psycopg2
     import psycopg2.extras
+    print(f'  PG URL prefix: {DATABASE_URL[:30]}...')
 else:
     import sqlite3
+    print('  WARNING: No DATABASE_URL found — using SQLite')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH  = os.path.join(BASE_DIR, 'agora.db')   # SQLite only (local dev)
