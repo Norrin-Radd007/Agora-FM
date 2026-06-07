@@ -459,8 +459,8 @@ def _seed(db=None):
     t = datetime.datetime.utcnow().isoformat()
 
     try:
-        _x('''INSERT OR IGNORE INTO customers(id,org_name,org_type,reg_address,phone,first_name,last_name,job_title,email,password_hash,created_at)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
+        _x('''INSERT INTO customers(id,org_name,org_type,reg_address,phone,first_name,last_name,job_title,email,password_hash,created_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''',
             ('cust_demo','Whitmore Estate Services Ltd','Commercial Property Owner',
              '1 Canada Square, London E14 5AB','020 7123 0001',
              'James','Hartley','FM Director','customer@demo.com',h('Demo123!'),t))
@@ -484,20 +484,20 @@ def _seed(db=None):
     # Insert original 5 suppliers FIRST (services reference them)
     for s in seed:
         try:
-            _x('''INSERT OR IGNORE INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
+            _x('''INSERT INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
                 contact_first,contact_last,contact_role,email,password_hash,coverage,categories,
                 accreditations,pl_insurance,el_insurance,bank_name,sort_code,account_num,company_desc,verified,created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', s+(t,))
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''', s+(t,))
         except Exception as e:
             print(f'  Seed warning (sup): {e}')
 
     # Then insert 5 extra suppliers
     for s in extra:
         try:
-            _x('''INSERT OR IGNORE INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
+            _x('''INSERT INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
                 contact_first,contact_last,contact_role,email,password_hash,coverage,categories,
                 accreditations,pl_insurance,el_insurance,bank_name,sort_code,account_num,company_desc,verified,created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', s+(t,))
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''', s+(t,))
         except Exception as e:
             print(f'  Seed warning (extra): {e}')
 
@@ -536,8 +536,8 @@ def _seed(db=None):
     ]
     for s in services:
         try:
-            _x('''INSERT OR IGNORE INTO services(id,supplier_id,name,description,unit_label,unit_price_pennies,active)
-                VALUES(?,?,?,?,?,?,1)''', s)
+            _x('''INSERT INTO services(id,supplier_id,name,description,unit_label,unit_price_pennies,active)
+                VALUES(?,?,?,?,?,?,1) ON CONFLICT (id) DO NOTHING''', s)
         except Exception as e:
             print(f'  Seed warning (svc): {e}')
 
