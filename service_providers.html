@@ -51,22 +51,12 @@
   .cat-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
   .cat-count { background: rgba(241,143,1,.15); color: var(--orange); border-radius: 10px; padding: 1px 7px; font-size: .65rem; }
 
-  /* ── Three-panel body ── */
+  /* ── Three-panel body — KEY FIX: use a fixed viewport height minus nav/header ── */
   .services-body {
-    display: block;
-    position: relative; z-index: 1;
-    min-height: calc(100vh - var(--nav-height) - 120px);
-  }
-  /* When a category is active restore the three-panel flex layout */
-  .services-body.category-active {
     display: flex;
+    position: relative; z-index: 1;
     height: calc(100vh - var(--nav-height) - 120px);
     min-height: 500px;
-    overflow: hidden;
-  }
-  .services-body.category-active .statutory-sidebar,
-  .services-body.category-active .company-panel {
-    overflow-y: auto;
   }
 
   /* Sidebar */
@@ -76,11 +66,7 @@
     overflow-y: auto;
     background: rgba(10,26,47,.6);
     padding: 16px 0;
-    display: none;
-  }
-  .category-active .statutory-sidebar {
-    display: block;
-  }
+      }
   .statutory-sidebar::-webkit-scrollbar { width: 4px; }
   .statutory-sidebar::-webkit-scrollbar-thumb { background: rgba(62,107,137,.4); }
   .stat-item-btn {
@@ -99,14 +85,9 @@
 
   /* Company panel */
   .company-panel {
-    width: 100%;
-    flex: 1; overflow-y: visible;
+    flex: 1; overflow-y: auto;
     padding: 28px 32px;
-  }
-  .category-active .company-panel {
-    width: auto;
-    overflow-y: auto;
-  }
+      }
   .company-panel::-webkit-scrollbar { width: 6px; }
   .company-panel::-webkit-scrollbar-thumb { background: rgba(62,107,137,.4); border-radius: 3px; }
 
@@ -1373,27 +1354,19 @@ function initServices() {
   const tabsEl = document.getElementById('cat-tabs');
   catNames.forEach((cat, i) => {
     const btn = document.createElement('button');
-    btn.className = 'cat-tab';
+    btn.className = 'cat-tab' + (i === 0 ? ' active' : '');
     const count = Object.keys(CATEGORIES[cat].items).length;
     btn.innerHTML = `${CATEGORIES[cat].icon} ${cat} <span class="cat-count">${count}</span>`;
     btn.onclick = () => selectCategory(cat);
     tabsEl.appendChild(btn);
   });
-  // Show verified providers default view on load — do NOT auto-jump into a category
-  var vpd = document.getElementById('verified-providers-default');
-  if (vpd) vpd.style.display = 'block';
-  var sidebar = document.getElementById('statutory-sidebar');
-  if (sidebar) sidebar.innerHTML = '';
-  var sb = document.querySelector('.services-body');
-  if (sb) sb.classList.remove('category-active');
+  selectCategory(catNames[0]);
 }
 
 function selectCategory(cat) {
   currentCat = cat;
   var vpd = document.getElementById('verified-providers-default');
   if (vpd) vpd.style.display = 'none';
-  var sb = document.querySelector('.services-body');
-  if (sb) sb.classList.add('category-active');
   document.querySelectorAll('.cat-tab').forEach((t, i) => {
     t.classList.toggle('active', t.textContent.includes(cat));
   });
@@ -1514,9 +1487,9 @@ function renderVerifiedProviders() {
             '<span class="review-count"> (' + p.reviews.toLocaleString() + ' reviews)</span>' +
           '</div>' +
         '</div>' +
+        '<div class="card-accred">' + accredHtml + '</div>' +
       '</div>' +
       '<div class="card-body">' +
-        '<div class="card-accred" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' + accredHtml + '</div>' +
         '<p class="card-description">' + p.desc + '</p>' +
         '<div class="card-meta">' +
           '<div class="meta-row"><span class="meta-icon">&#128222;</span><span>' + p.tel + '</span></div>' +
