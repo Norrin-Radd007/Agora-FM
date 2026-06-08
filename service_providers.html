@@ -1468,7 +1468,6 @@ function renderVerifiedProviders() {
               : (a.indexOf('CHAS')>-1||a.indexOf('Safe')>-1||a.indexOf('BOHS')>-1||a.indexOf('LEIA')>-1) ? 'green' : 'blue';
       return '<span class="accred-badge ' + cls + '">' + a + '</span>';
     }).join('');
-    var stars = Array(Math.floor(p.rating)+1).join('★');
     var card = document.createElement('div');
     card.className = 'company-card';
     card.style.cssText = 'cursor:pointer;border-left:3px solid var(--orange);';
@@ -1481,10 +1480,8 @@ function renderVerifiedProviders() {
             '<span style="font-size:0.7rem;background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.3);color:var(--orange);padding:2px 8px;border-radius:2px;letter-spacing:1px;text-transform:uppercase;">Verified</span>' +
             '<span style="font-size:0.72rem;color:var(--grey-dim);">' + p.cat + '</span>' +
           '</div>' +
-          '<div class="card-stars" style="margin-top:4px;">' +
-            '<span class="stars">' + stars + '</span>' +
-            '<span style="font-size:.8rem;color:var(--grey);font-weight:600;"> ' + p.rating + '</span>' +
-            '<span class="review-count"> (' + p.reviews.toLocaleString() + ' reviews)</span>' +
+          '<div class="card-stars" style="margin-top:4px;" id="card-rating-' + p.id + '">' +
+            '<span style="font-size:0.72rem;color:var(--grey-dim);">Loading rating…</span>' +
           '</div>' +
         '</div>' +
         '<div class="card-accred">' + accredHtml + '</div>' +
@@ -1510,6 +1507,23 @@ function renderVerifiedProviders() {
     var btn = card.querySelector('.vp-btn');
     if (btn) btn.addEventListener('click', (function(id,name){ return function(e){ e.stopPropagation(); viewProviderProfile(id,name); }; })(p.id,p.name));
     container.appendChild(card);
+    // Fetch live rating for this provider
+    (function(pid) {
+      fetch('/api/suppliers/' + pid + '/reviews')
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          var el = document.getElementById('card-rating-' + pid);
+          if (!el) return;
+          if (data.ok && data.count > 0) {
+            var stars = '★'.repeat(Math.floor(data.average)) + (data.average % 1 >= 0.5 ? '★' : '') + '☆'.repeat(5 - Math.ceil(data.average));
+            el.innerHTML = '<span class="stars" style="color:var(--orange);">' + stars + '</span>' +
+              '<span style="font-size:.8rem;color:var(--grey);font-weight:600;"> ' + data.average.toFixed(1) + '</span>' +
+              '<span class="review-count"> (' + data.count + ' review' + (data.count !== 1 ? 's' : '') + ')</span>';
+          } else {
+            el.innerHTML = '<span style="font-size:0.72rem;color:var(--grey-dim);">No reviews yet</span>';
+          }
+        }).catch(function(){ });
+    })(p.id);
   });
 }
 </script>
