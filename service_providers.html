@@ -109,7 +109,7 @@
   .card-header {
     background: linear-gradient(135deg, rgba(62,107,137,.25) 0%, rgba(10,26,47,.8) 100%);
     padding: 18px 20px 14px;
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    display: flex; align-items: flex-start; gap: 12px;
     border-bottom: 1px solid rgba(62,107,137,.15);
   }
   .card-logo-box {
@@ -1483,8 +1483,8 @@ function renderVerifiedProviders() {
           '<div class="card-stars" style="margin-top:4px;" id="card-rating-' + p.id + '">' +
             '<span style="font-size:0.72rem;color:var(--grey-dim);">Loading rating…</span>' +
           '</div>' +
+          '<div class="card-accred" style="margin-top:8px;">' + accredHtml + '</div>' +
         '</div>' +
-        '<div class="card-accred">' + accredHtml + '</div>' +
       '</div>' +
       '<div class="card-body">' +
         '<p class="card-description">' + p.desc + '</p>' +
