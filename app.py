@@ -421,11 +421,56 @@ def admin_dump():
 def admin_reset():
     db = get_db()
     cur = db.cursor()
-    for t in ('customers','suppliers','orders','baskets'):
+    for t in ('customers','suppliers','orders','baskets','reviews'):
         cur.execute(f'DELETE FROM {t}')
     db.commit()
     session.clear(); _seed(db)
     return jsonify(ok=True, message='Reset and re-seeded.')
+
+# ── Reviews API ──────────────────────────────────────────────────────────────
+@app.route('/api/suppliers/<sid>/reviews', methods=['GET'])
+def get_reviews(sid):
+    reviews = query('SELECT * FROM reviews WHERE supplier_id=? ORDER BY created_at DESC', (sid,))
+    avg = round(sum(r['rating'] for r in reviews) / len(reviews), 1) if reviews else 0
+    return jsonify(ok=True, reviews=reviews, count=len(reviews), average=avg)
+
+@app.route('/api/suppliers/<sid>/reviews', methods=['POST'])
+def post_review(sid):
+    if 'user_id' not in session or session.get('user_type') != 'customer':
+        return jsonify(ok=False, error='Must be logged in as a customer to leave a review.')
+    d = request.json or {}
+    rating = int(d.get('rating', 0))
+    if not (1 <= rating <= 5):
+        return jsonify(ok=False, error='Rating must be between 1 and 5.')
+    if not d.get('title','').strip():
+        return jsonify(ok=False, error='Please provide a review title.')
+    if not d.get('body','').strip():
+        return jsonify(ok=False, error='Please provide review comments.')
+    rid = 'rev_' + secrets.token_hex(6)
+    execute(
+        'INSERT INTO reviews(id,supplier_id,customer_id,customer_name,customer_org,rating,title,body,service_used,verified_purchase,created_at) VALUES(?,?,?,?,?,?,?,?,?,0,?)',
+        (rid, sid, session['user_id'], session.get('name','Anonymous'),
+         session.get('org_name',''), rating,
+         d['title'].strip(), d['body'].strip(),
+         d.get('service_used',''), now()))
+    return jsonify(ok=True, id=rid)
+
+@app.route('/api/reviews/<rid>/respond', methods=['POST'])
+def respond_review(rid):
+    if 'user_id' not in session or session.get('user_type') != 'supplier':
+        return jsonify(ok=False, error='Must be logged in as a supplier to respond.')
+    d = request.json or {}
+    response_text = d.get('response','').strip()
+    if not response_text:
+        return jsonify(ok=False, error='Response cannot be empty.')
+    rev = query('SELECT * FROM reviews WHERE id=?', (rid,), one=True)
+    if not rev:
+        return jsonify(ok=False, error='Review not found.')
+    if rev['supplier_id'] != session['user_id']:
+        return jsonify(ok=False, error='You can only respond to your own reviews.')
+    execute('UPDATE reviews SET supplier_response=?, supplier_response_at=? WHERE id=?',
+            (response_text, now(), rid))
+    return jsonify(ok=True)
 
 # ── DB INIT ─────────────────────────────────────────────────────────────────
 SCHEMA = '''
@@ -454,6 +499,20 @@ CREATE TABLE IF NOT EXISTS orders(
     id TEXT PRIMARY KEY, customer_id TEXT, customer_email TEXT, customer_org TEXT,
     items TEXT, subtotal NUMERIC, vat NUMERIC, commission NUMERIC, total NUMERIC,
     payment_method TEXT, handshake_at TEXT, status TEXT DEFAULT 'confirmed', created_at TEXT);
+CREATE TABLE IF NOT EXISTS reviews(
+    id TEXT PRIMARY KEY,
+    supplier_id TEXT NOT NULL,
+    customer_id TEXT NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_org TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    service_used TEXT,
+    verified_purchase INTEGER DEFAULT 0,
+    supplier_response TEXT,
+    supplier_response_at TEXT,
+    created_at TEXT NOT NULL);
 '''
 
 def _seed(db=None):
@@ -573,6 +632,59 @@ def _seed(db=None):
            (hashlib.sha256('PureAir2!'.encode()).hexdigest(),))
     except Exception as e:
         print(f'  Warning: could not update demo credentials: {e}')
+
+    # ── Seed reviews ────────────────────────────────────────────────────────
+    REVIEWS = [
+        ('rev_001','sup_001','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Exceptional fire alarm service','Apollo Fire have been maintaining our fire alarm systems for two years. Response times are outstanding and their engineers always arrive on time and fully prepared. Digital logbook is a real bonus.','Fire Alarm PPM Visit',1),
+        ('rev_002','sup_001','cust_r02','Sarah Chen','Meridian Property Group',5,'Best fire contractor we have used','Switched to Apollo after a poor experience elsewhere. The difference is night and day. Fully BAFE certified, always compliant, and the team communicate brilliantly.','Fire Extinguisher Service',1),
+        ('rev_003','sup_001','cust_r03','David Okafor','Langham Estates Ltd',5,'Highly recommended','Professional, thorough and competitively priced. Our compliance audits have been spotless since appointing Apollo.','Fire Alarm PPM Visit',1),
+        ('rev_004','sup_001','cust_r04','Emma Thornton','Nexus FM Solutions',4,'Very good, minor scheduling issue','Excellent technical quality. Only reason for 4 stars is one rescheduled visit at short notice. Otherwise flawless.','Fire Door Checks',1),
+        ('rev_005','sup_002','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Thorough legionella management','AquaSafe completely overhauled our water hygiene programme. Their sampling reports are detailed and easy to understand. Highly compliant.','Legionella Water Sampling',1),
+        ('rev_006','sup_002','cust_r02','Sarah Chen','Meridian Property Group',5,'Excellent water hygiene service','Prompt, professional and their risk assessments are comprehensive. We have had zero issues since appointment.','Monthly Sentinel Outlet Checks',1),
+        ('rev_007','sup_002','cust_r03','David Okafor','Langham Estates Ltd',4,'Good service, reports could be faster','Technically very competent. Water sampling results sometimes take a few extra days to arrive but quality is high.','Legionella Water Sampling',1),
+        ('rev_008','sup_002','cust_r05','Priya Sharma','BlueSky Facilities',5,'Saved us from a compliance failure','AquaSafe identified a Legionella risk that our previous contractor had missed entirely. Exceptional attention to detail.','Legionella Water Sampling',1),
+        ('rev_009','sup_003','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Excellent EICR service','Volt completed our full site EICR efficiently and the report was clear and actionable. All remedials quoted fairly.','EICR Inspection',1),
+        ('rev_010','sup_003','cust_r02','Sarah Chen','Meridian Property Group',4,'Competent and reliable','Good engineers, solid compliance knowledge. Occasionally hard to reach by phone but work quality is consistently high.','Emergency Lighting Test',1),
+        ('rev_011','sup_003','cust_r04','Emma Thornton','Nexus FM Solutions',5,'Transformed our electrical compliance','Volt identified several urgent remedials our previous contractor had overlooked. Very thorough.','EICR Inspection',1),
+        ('rev_012','sup_003','cust_r06','Marcus Webb','Crown Commercial Estates',4,'Good value EICR','Competitive pricing, professional engineers and a well-structured report. Would use again.','EICR Inspection',1),
+        ('rev_013','sup_004','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Superb boiler servicing','BritHeat have kept our commercial boilers running perfectly. Their engineers are knowledgeable and efficient.','Commercial Boiler Service',1),
+        ('rev_014','sup_004','cust_r03','David Okafor','Langham Estates Ltd',4,'Reliable gas safety','Professional gas safety inspections. Certificates issued promptly and all work fully documented.','Gas Safety Inspection',1),
+        ('rev_015','sup_004','cust_r05','Priya Sharma','BlueSky Facilities',5,'Prevented a costly breakdown','BritHeat spotted a developing fault during routine service that would have caused a complete boiler failure mid-winter. Excellent work.','Commercial Boiler Service',1),
+        ('rev_016','sup_004','cust_r06','Marcus Webb','Crown Commercial Estates',4,'Good service overall','Competent team, responsive to urgent callouts. Minor paperwork delays occasionally but nothing serious.','Gas Safety Inspection',1),
+        ('rev_017','sup_005','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Outstanding HVAC maintenance','PureAir have dramatically improved air quality across our portfolio. PPM visits are thorough and their filter change reports are excellent.','Quarterly HVAC PPM Visit',1),
+        ('rev_018','sup_005','cust_r02','Sarah Chen','Meridian Property Group',5,'Highly professional team','Engineers are punctual, tidy and technically excellent. Our AHU performance has improved significantly.','AHU Filter Change',1),
+        ('rev_019','sup_005','cust_r04','Emma Thornton','Nexus FM Solutions',4,'Good HVAC partner','Solid maintenance programme, good communication. Slightly slow on issuing service reports but work quality is high.','Quarterly HVAC PPM Visit',1),
+        ('rev_020','sup_005','cust_r06','Marcus Webb','Crown Commercial Estates',5,'Best HVAC contractor we have used','Switched to PureAir after persistent problems with our previous contractor. Immediately noticed the improvement.','AHU Filter Change',1),
+        ('rev_021','sup_006','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Excellent lift maintenance','ClearLift keep our passenger lifts running reliably. LOLER inspections are thorough and certificates issued same day.','Passenger Lift Maintenance',1),
+        ('rev_022','sup_006','cust_r03','David Okafor','Langham Estates Ltd',4,'Reliable and compliant','Good technical team, always LOLER compliant. Response to breakdowns is quick which is critical for our buildings.','LOLER Inspection',1),
+        ('rev_023','sup_006','cust_r05','Priya Sharma','BlueSky Facilities',5,'Zero lift failures in 18 months','Since appointing ClearLift we have had zero lift failures. Their preventative maintenance programme is clearly effective.','Passenger Lift Maintenance',1),
+        ('rev_024','sup_006','cust_r06','Marcus Webb','Crown Commercial Estates',4,'Good value maintenance','Competitive contract pricing and a professional team. Minor admin delays occasionally but operationally excellent.','LOLER Inspection',1),
+        ('rev_025','sup_007','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Comprehensive asbestos surveys','SafeAir produced the most detailed asbestos management survey we have ever received. Register is clear and fully actionable.','Asbestos Management Survey',1),
+        ('rev_026','sup_007','cust_r02','Sarah Chen','Meridian Property Group',5,'Exceptional survey quality','The level of detail in SafeAir reports is remarkable. Found asbestos-containing materials two previous surveyors had missed.','Asbestos R&D Survey',1),
+        ('rev_027','sup_007','cust_r04','Emma Thornton','Nexus FM Solutions',5,'Highly professional surveyors','Thorough, compliant and excellent communicators. Our asbestos management is now fully under control.','Asbestos Management Survey',1),
+        ('rev_028','sup_007','cust_r06','Marcus Webb','Crown Commercial Estates',4,'Very good asbestos management','High quality surveys and a well-maintained register. Slightly premium pricing but the quality justifies it.','Asbestos Management Survey',1),
+        ('rev_029','sup_008','cust_demo','James Hartley','Whitmore Estate Services Ltd',4,'Good AC maintenance','CoolEdge keep our air conditioning units well maintained. Engineers are knowledgeable and PPM visits thorough.','Split System AC Service',1),
+        ('rev_030','sup_008','cust_r03','David Okafor','Langham Estates Ltd',5,'Excellent VRF specialists','CoolEdge have real expertise in VRF systems. Their diagnostic work on a fault that stumped our previous contractor was impressive.','VRF System PPM Visit',1),
+        ('rev_031','sup_008','cust_r05','Priya Sharma','BlueSky Facilities',4,'Reliable AC servicing','Consistent service quality, good compliance documentation. Response to breakdowns could be slightly faster.','Split System AC Service',1),
+        ('rev_032','sup_008','cust_r06','Marcus Webb','Crown Commercial Estates',5,'Transformed our AC reliability','Following a full system service our AC breakdown rate dropped by over 80 percent. Excellent preventative work.','VRF System PPM Visit',1),
+        ('rev_033','sup_009','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Thorough pressure vessel inspections','PressureSafe carry out our statutory pressure vessel inspections efficiently. Reports are detailed and issued promptly.','Pressure Vessel Inspection',1),
+        ('rev_034','sup_009','cust_r02','Sarah Chen','Meridian Property Group',4,'Competent inspection service','Professional inspectors, good compliance knowledge. We have been fully compliant since appointing PressureSafe.','Chiller Maintenance Visit',1),
+        ('rev_035','sup_009','cust_r04','Emma Thornton','Nexus FM Solutions',5,'Excellent chiller maintenance','PressureSafe significantly extended the life of our ageing chiller plant through proactive maintenance. Great value.','Chiller Maintenance Visit',1),
+        ('rev_036','sup_009','cust_r06','Marcus Webb','Crown Commercial Estates',4,'Good inspection service','Reliable, competent and thorough. Minor delays in issuing certificates occasionally but nothing that has caused compliance issues.','Pressure Vessel Inspection',1),
+        ('rev_037','sup_010','cust_demo','James Hartley','Whitmore Estate Services Ltd',5,'Outstanding fire risk assessments','RiskFirst produced the most comprehensive fire risk assessment we have seen. Actionable recommendations and excellent follow-up.','Fire Risk Assessment',1),
+        ('rev_038','sup_010','cust_r03','David Okafor','Langham Estates Ltd',5,'Excellent risk consultancy','Thorough, professional and highly knowledgeable. Their FRA identified several issues our previous assessor had overlooked.','Fire Risk Assessment',1),
+        ('rev_039','sup_010','cust_r05','Priya Sharma','BlueSky Facilities',4,'Good DSE assessments','Professional workstation assessments, well-presented reports. Slightly slow turnaround on final reports.','DSE Workstation Assessment',1),
+        ('rev_040','sup_010','cust_r06','Marcus Webb','Crown Commercial Estates',5,'Transformed our compliance posture','RiskFirst conducted a full compliance audit across our estate. The quality of their work has been transformative.','Fire Risk Assessment',1),
+    ]
+    t = now()
+    for r in REVIEWS:
+        try:
+            _x("""INSERT INTO reviews(id,supplier_id,customer_id,customer_name,customer_org,rating,title,body,service_used,verified_purchase,created_at)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING""",
+                r + (t,))
+        except Exception as e:
+            print(f'  Seed warning (review): {e}')
+
     if close:
         try: db.close()
         except: pass
