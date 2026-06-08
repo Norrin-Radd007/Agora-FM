@@ -660,11 +660,63 @@ window.AgoraDB = AgoraDB;
 
         <!-- Reviews -->
         <div class="panel">
-          <div class="panel-header"><span class="panel-title">Client Reviews</span><span style="font-size:0.68rem;color:var(--grey-dim);" id="reviewSummary">—</span></div>
+          <div class="panel-header">
+            <span class="panel-title">Client Reviews</span>
+            <span style="font-size:0.68rem;color:var(--grey-dim);" id="reviewSummary">Loading…</span>
+          </div>
+
+          <!-- Rating summary bar -->
+          <div id="ratingsSummaryBar" style="padding:16px 20px;border-bottom:1px solid rgba(62,107,137,0.1);display:none;">
+            <div style="display:flex;align-items:center;gap:20px;">
+              <div style="text-align:center;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--orange);line-height:1;" id="avgRatingBig">—</div>
+                <div style="color:var(--orange);font-size:1rem;letter-spacing:2px;" id="avgStarsBig">★★★★★</div>
+                <div style="font-size:0.68rem;color:var(--grey-dim);margin-top:4px;" id="totalReviewCount">— reviews</div>
+              </div>
+              <div style="flex:1;" id="ratingBars"></div>
+            </div>
+          </div>
+
+          <!-- Review cards -->
           <div class="panel-body no-pad" id="reviewsContainer">
-            <div class="review-card"><div class="review-header"><div class="review-stars">★★★★★</div><div class="review-date">March 2026</div></div><p class="review-text">"Excellent service delivery. Engineers are professional, paperwork is always on time, and the digital compliance portal saves our team hours each month."</p><div class="review-author">Head of Estates</div><div class="review-role">NHS Foundation Trust</div></div>
-            <div class="review-card"><div class="review-header"><div class="review-stars">★★★★★</div><div class="review-date">January 2026</div></div><p class="review-text">"Exceptional service. The team completed our risk assessment ahead of schedule and flagged several issues our previous contractor had missed."</p><div class="review-author">FM Director</div><div class="review-role">FTSE 250 Financial Services</div></div>
-            <div class="review-card"><div class="review-header"><div class="review-stars">★★★★☆</div><div class="review-date">November 2025</div></div><p class="review-text">"Very good service overall. Engineers are knowledgeable and the reporting portal is excellent. Took a few days to get initial paperwork sorted but smooth sailing since."</p><div class="review-author">Facilities Manager</div><div class="review-role">Retail Portfolio, Midlands</div></div>
+            <div style="padding:24px;text-align:center;color:var(--grey-dim);font-size:0.8rem;">Loading reviews…</div>
+          </div>
+
+          <!-- Leave a review form -->
+          <div id="leaveReviewSection" style="display:none;border-top:2px solid rgba(62,107,137,0.15);padding:20px;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--grey);margin-bottom:14px;">LEAVE A REVIEW</div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:0.72rem;color:var(--grey-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Your Rating *</div>
+              <div id="starPicker" style="display:flex;gap:6px;cursor:pointer;">
+                <span class="star-pick" data-v="1" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="2" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="3" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="4" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="5" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
+              </div>
+              <input type="hidden" id="reviewRating" value="0">
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label">Review Title *</label>
+              <input class="form-input" id="reviewTitle" type="text" placeholder="Summarise your experience in a few words"/>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label">Service Used</label>
+              <select class="form-select" id="reviewService"><option value="">Select a service…</option></select>
+            </div>
+            <div class="form-group" style="margin-bottom:14px;">
+              <label class="form-label">Your Review *</label>
+              <textarea class="form-textarea" id="reviewBody" placeholder="Tell others about your experience with this provider…" style="min-height:80px;"></textarea>
+            </div>
+            <button onclick="submitReview()" style="padding:11px 24px;background:var(--orange);border:none;border-radius:2px;color:#0A1A2F;font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;">Submit Review →</button>
+            <div id="reviewFormMsg" style="margin-top:10px;font-size:0.78rem;display:none;"></div>
+          </div>
+
+          <!-- Login prompt for non-logged-in users -->
+          <div id="reviewLoginPrompt" style="display:none;border-top:2px solid rgba(62,107,137,0.15);padding:16px 20px;">
+            <p style="font-size:0.78rem;color:var(--grey-dim);margin:0 0 10px;">
+              <a href="index.html" style="color:var(--orange);text-decoration:none;">Sign in</a> to leave a review for this provider.
+            </p>
           </div>
         </div>
       </div>
@@ -798,15 +850,17 @@ async function renderProvider(p) {
   document.getElementById('provTel').textContent    = '📞 ' + (p.main_tel || '—');
   document.getElementById('provWeb').textContent    = '🌐 ' + (p.website || '—');
 
-  // Stats (demo values based on seed)
-  var statsMap = {'sup_001':[312,'20+',47],'sup_002':[148,'15+',63],'sup_003':[289,'12+',89],'sup_004':[94,'18+',38],'sup_005':[177,'10+',52]};
-  var stats = statsMap[p.id] || [Math.floor(50+Math.random()*200), '10+', Math.floor(10+Math.random()*60)];
+  // Stats — clients/years are demo values, ratings loaded live from API
+  var statsMap = {'sup_001':[312,'20+'],'sup_002':[148,'15+'],'sup_003':[289,'12+'],'sup_004':[94,'18+'],'sup_005':[177,'10+'],'sup_006':[203,'14+'],'sup_007':[118,'11+'],'sup_008':[165,'9+'],'sup_009':[142,'13+'],'sup_010':[97,'8+']};
+  var stats = statsMap[p.id] || [Math.floor(50+Math.random()*200), '10+'];
   document.getElementById('statClients').textContent = stats[0];
   document.getElementById('statYears').textContent   = stats[1];
-  document.getElementById('statReviews').textContent = stats[2];
-  document.getElementById('provRating').textContent  = p.id === 'sup_001' ? '4.9' : p.id === 'sup_003' ? '4.6' : '4.8';
-  document.getElementById('provReviews').textContent = stats[2] + ' verified reviews';
-  document.getElementById('reviewSummary').textContent = stats[2] + ' verified reviews · ' + (p.id === 'sup_001' ? '4.9' : '4.8') + ' avg';
+  // Ratings loaded by loadReviews() below — set placeholders for now
+  document.getElementById('provRating').textContent  = '—';
+  document.getElementById('provReviews').textContent = 'Loading…';
+  document.getElementById('reviewSummary').textContent = 'Loading reviews…';
+  // Load live reviews
+  await loadReviews(p.id);
 
   // Description
   document.getElementById('provDesc').textContent = p.company_desc || '—';
@@ -1015,6 +1069,153 @@ document.addEventListener('DOMContentLoaded', async function() {
     // prefill is optional - ignore errors
   }
 });
+
+// ── Reviews ──────────────────────────────────────────────────────────────────
+var _currentSupplierId = null;
+
+async function loadReviews(supplierId) {
+  _currentSupplierId = supplierId;
+  try {
+    var resp = await fetch('/api/suppliers/' + supplierId + '/reviews');
+    var data = await resp.json();
+    if (data.ok) {
+      renderReviews(data.reviews, data.average, data.count);
+      document.getElementById('provRating').textContent  = data.average > 0 ? data.average.toFixed(1) : '—';
+      document.getElementById('provReviews').textContent = data.count + ' verified review' + (data.count !== 1 ? 's' : '');
+      document.getElementById('reviewSummary').textContent = data.count + ' verified reviews · ' + (data.average > 0 ? data.average.toFixed(1) : '—') + ' avg';
+      if (document.getElementById('statReviews')) document.getElementById('statReviews').textContent = data.count;
+    }
+  } catch(e) { console.error('loadReviews error:', e); }
+
+  // Show leave-review form or login prompt
+  var s = await AgoraDB.auth.getSession();
+  if (s && s.loggedIn && s.type === 'customer') {
+    document.getElementById('leaveReviewSection').style.display = 'block';
+    var enqSel = document.getElementById('enqService');
+    var revSel = document.getElementById('reviewService');
+    if (enqSel && revSel) revSel.innerHTML = enqSel.innerHTML;
+  } else if (!s || !s.loggedIn) {
+    document.getElementById('reviewLoginPrompt').style.display = 'block';
+  }
+  initStarPicker();
+}
+
+function renderReviews(reviews, average, count) {
+  var container  = document.getElementById('reviewsContainer');
+  var summaryBar = document.getElementById('ratingsSummaryBar');
+  if (!container) return;
+
+  // Rating summary bar
+  if (count > 0 && summaryBar) {
+    summaryBar.style.display = 'block';
+    document.getElementById('avgRatingBig').textContent = average.toFixed(1);
+    document.getElementById('avgStarsBig').textContent  = starsStr(average);
+    document.getElementById('totalReviewCount').textContent = count + ' verified review' + (count !== 1 ? 's' : '');
+    var barsHtml = '';
+    for (var i = 5; i >= 1; i--) {
+      var cnt = reviews.filter(function(r){ return r.rating === i; }).length;
+      var pct = count > 0 ? Math.round((cnt / count) * 100) : 0;
+      barsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">' +
+        '<span style="font-size:0.68rem;color:var(--grey-dim);min-width:10px;">' + i + '</span>' +
+        '<span style="color:var(--orange);font-size:0.65rem;">★</span>' +
+        '<div style="flex:1;height:6px;background:rgba(62,107,137,0.2);border-radius:3px;">' +
+          '<div style="width:' + pct + '%;height:100%;background:var(--orange);border-radius:3px;"></div>' +
+        '</div>' +
+        '<span style="font-size:0.68rem;color:var(--grey-dim);min-width:24px;text-align:right;">' + cnt + '</span></div>';
+    }
+    document.getElementById('ratingBars').innerHTML = barsHtml;
+  }
+
+  if (reviews.length === 0) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--grey-dim);font-size:0.8rem;">No reviews yet. Be the first to review this provider.</div>';
+    return;
+  }
+
+  container.innerHTML = reviews.map(function(r) {
+    var date     = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB',{month:'long',year:'numeric'}) : '';
+    var verified = r.verified_purchase ? '<span style="font-size:0.65rem;color:#5cb85c;margin-left:8px;">✓ Verified Purchase</span>' : '';
+    var svcTag   = r.service_used ? '<span style="font-size:0.65rem;color:var(--steel-light);background:rgba(62,107,137,0.12);padding:2px 7px;border-radius:2px;margin-left:8px;">' + r.service_used + '</span>' : '';
+    var response = r.supplier_response ?
+      '<div style="margin-top:12px;padding:10px 14px;background:rgba(241,143,1,0.05);border-left:2px solid rgba(241,143,1,0.3);">' +
+        '<div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:5px;font-weight:600;">Provider Response</div>' +
+        '<p style="font-size:0.78rem;color:var(--grey-dim);margin:0;line-height:1.6;">' + r.supplier_response + '</p></div>' : '';
+    return '<div class="review-card">' +
+      '<div class="review-header">' +
+        '<div style="display:flex;align-items:center;gap:4px;">' +
+          '<span style="color:var(--orange);font-size:0.9rem;letter-spacing:2px;">' + starsStr(r.rating) + '</span>' +
+          verified + svcTag +
+        '</div>' +
+        '<div class="review-date">' + date + '</div>' +
+      '</div>' +
+      '<div style="font-size:0.82rem;font-weight:600;color:var(--grey);margin-bottom:6px;">' + r.title + '</div>' +
+      '<p class="review-text">&ldquo;' + r.body + '&rdquo;</p>' +
+      '<div class="review-author">' + r.customer_name + '</div>' +
+      '<div class="review-role">' + r.customer_org + '</div>' +
+      response + '</div>';
+  }).join('');
+}
+
+function starsStr(rating) {
+  var full = Math.floor(rating), empty = 5 - Math.ceil(rating);
+  return '★'.repeat(full) + (rating % 1 >= 0.5 ? '★' : '') + '☆'.repeat(empty);
+}
+
+var _selectedRating = 0;
+
+function initStarPicker() {
+  var stars = document.querySelectorAll('.star-pick');
+  stars.forEach(function(star) {
+    star.addEventListener('mouseover', function() {
+      var v = parseInt(this.dataset.v);
+      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= v ? '#F18F01' : 'rgba(241,143,1,0.25)'; });
+    });
+    star.addEventListener('mouseout', function() {
+      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= _selectedRating ? '#F18F01' : 'rgba(241,143,1,0.25)'; });
+    });
+    star.addEventListener('click', function() {
+      _selectedRating = parseInt(this.dataset.v);
+      document.getElementById('reviewRating').value = _selectedRating;
+      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= _selectedRating ? '#F18F01' : 'rgba(241,143,1,0.25)'; });
+    });
+  });
+}
+
+async function submitReview() {
+  var rating  = parseInt(document.getElementById('reviewRating').value);
+  var title   = document.getElementById('reviewTitle').value.trim();
+  var body    = document.getElementById('reviewBody').value.trim();
+  var service = document.getElementById('reviewService').value;
+  if (!rating) { showReviewMsg('Please select a star rating.', 'error'); return; }
+  if (!title)  { showReviewMsg('Please enter a review title.', 'error'); return; }
+  if (!body)   { showReviewMsg('Please write your review.', 'error'); return; }
+  try {
+    var resp = await fetch('/api/suppliers/' + _currentSupplierId + '/reviews', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({rating:rating, title:title, body:body, service_used:service})
+    });
+    var data = await resp.json();
+    if (data.ok) {
+      showReviewMsg('Thank you — your review has been submitted.', 'success');
+      document.getElementById('reviewTitle').value = '';
+      document.getElementById('reviewBody').value  = '';
+      document.getElementById('reviewRating').value = '0';
+      _selectedRating = 0;
+      document.querySelectorAll('.star-pick').forEach(function(s){ s.style.color='rgba(241,143,1,0.25)'; });
+      await loadReviews(_currentSupplierId);
+    } else {
+      showReviewMsg(data.error || 'Could not submit review.', 'error');
+    }
+  } catch(e) { showReviewMsg('Error submitting review. Please try again.', 'error'); }
+}
+
+function showReviewMsg(text, type) {
+  var el = document.getElementById('reviewFormMsg');
+  if (!el) return;
+  el.textContent = text;
+  el.style.display = 'block';
+  el.style.color = type === 'success' ? '#5cb85c' : '#e74c3c';
+}
 </script>
 </body>
 </html>
