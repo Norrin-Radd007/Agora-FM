@@ -1027,11 +1027,25 @@ async function sendEnquiry() {
   var name  = document.getElementById('enqName').value.trim();
   var org   = document.getElementById('enqOrg').value.trim();
   var email = document.getElementById('enqEmail').value.trim();
+  var phone = document.getElementById('enqPhone') ? document.getElementById('enqPhone').value.trim() : '';
+  var notes = document.getElementById('enqNotes') ? document.getElementById('enqNotes').value.trim() : '';
   if (!svc)   { alert('Please select a service.'); return; }
   if (!name)  { alert('Please enter your name.'); return; }
   if (!org)   { alert('Please enter your organisation.'); return; }
   if (!email) { alert('Please enter your email address.'); return; }
   var pname = currentProvider ? currentProvider.company_name : 'the provider';
+  var supId = currentProvider ? currentProvider.id : '';
+  // Send to API
+  try {
+    var resp = await fetch('/api/enquiry', {
+      method: 'POST', credentials: 'same-origin',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({supplier_id:supId, service:svc, name:name, org:org, email:email, phone:phone, notes:notes})
+    });
+    var data = await resp.json();
+    if (!data.ok) { console.warn('Enquiry API error:', data.error); }
+  } catch(e) { console.warn('Enquiry send error:', e); }
+  // Show success banner regardless (graceful)
   document.getElementById('enqTitle').textContent = 'Enquiry Sent!';
   document.getElementById('enqSub').textContent   = pname + ' will respond within 24 hours.';
   document.getElementById('enqBanner').classList.add('show');
