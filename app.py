@@ -12,6 +12,8 @@ WEASYPRINT_OK   = False   # Removed — do not re-enable
 COMMISSION_RATE = 0.05
 VAT_RATE        = 0.20
 
+
+
 # ── Database mode detection ──────────────────────────────────────────────────
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 # Railway provides postgres:// but psycopg2 requires postgresql://
@@ -289,6 +291,19 @@ def create_order():
     _save_basket([])
     order = query('SELECT * FROM orders WHERE id=?', (oid,), one=True)
     order['items'] = json.loads(order['items'])
+    # ── Email notifications ──────────────────────────────────────────────
+    try:
+        cust_name = session.get('name', 'Customer')
+        email_order_confirmation(order, session['email'], cust_name)
+        # Notify each unique supplier
+        sup_ids = list(set(i.get('supplierId','') for i in order['items'] if i.get('supplierId')))
+        for sid in sup_ids:
+            sup = query('SELECT email, contact_first, contact_last, company_name FROM suppliers WHERE id=?', (sid,), one=True)
+            if sup:
+                sup_name = sup.get('company_name') or f"{sup.get('contact_first','')} {sup.get('contact_last','')}".strip()
+                email_new_order_supplier(order, sup['email'], sup_name)
+    except Exception as e:
+        print(f'[Email] Order notification error: {e}')
     return jsonify(ok=True, order=order)
 
 @app.route('/api/orders')
@@ -453,6 +468,15 @@ def post_review(sid):
          session.get('org_name',''), rating,
          d['title'].strip(), d['body'].strip(),
          d.get('service_used',''), now()))
+    # ── Email supplier ────────────────────────────────────────────────────
+    try:
+        sup = query('SELECT email, company_name FROM suppliers WHERE id=?', (sid,), one=True)
+        if sup:
+            email_new_review(sup['email'], sup['company_name'],
+                session.get('name','Anonymous'), session.get('org_name',''),
+                rating, d['title'].strip(), sid)
+    except Exception as e:
+        print(f'[Email] Review notification error: {e}')
     return jsonify(ok=True, id=rid)
 
 @app.route('/api/reviews/<rid>/respond', methods=['POST'])
@@ -471,6 +495,31 @@ def respond_review(rid):
     execute('UPDATE reviews SET supplier_response=?, supplier_response_at=? WHERE id=?',
             (response_text, now(), rid))
     return jsonify(ok=True)
+
+# ── Enquiry ───────────────────────────────────────────────────────────────────
+@app.route('/api/enquiry', methods=['POST'])
+def submit_enquiry():
+    d = request.json or {}
+    supplier_id  = d.get('supplier_id', '')
+    service      = d.get('service', 'General Enquiry')
+    cust_name    = d.get('name', '').strip()
+    cust_org     = d.get('org', '').strip()
+    cust_email   = d.get('email', '').strip()
+    cust_phone   = d.get('phone', '').strip()
+    notes        = d.get('notes', '').strip()
+    if not supplier_id or not cust_email:
+        return jsonify(ok=False, error='Missing required fields.')
+    # Look up supplier
+    sup = query('SELECT email, company_name, contact_first FROM suppliers WHERE id=?', (supplier_id,), one=True)
+    if not sup:
+        return jsonify(ok=False, error='Supplier not found.')
+    # Send email to supplier
+    try:
+        sup_name = sup.get('company_name') or sup.get('contact_first', 'Team')
+        email_new_enquiry(sup['email'], sup_name, cust_name, cust_org, cust_email, cust_phone, service, notes)
+    except Exception as e:
+        print(f'[Email] Enquiry notification error: {e}')
+    return jsonify(ok=True, message='Enquiry sent successfully.')
 
 # ── DB INIT ─────────────────────────────────────────────────────────────────
 SCHEMA = '''
