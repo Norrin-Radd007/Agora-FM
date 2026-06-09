@@ -587,7 +587,7 @@ def _seed(db=None):
             VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''',
             ('cust_demo','Whitmore Estate Services Ltd','Commercial Property Owner',
              '1 Canada Square, London E14 5AB','020 7123 0001',
-             'James','Hartley','FM Director','customer@demo.com',h('Demo123!'),t))
+             'James','Hartley','FM Director','dtait29@hotmail.com',h('Demo123!'),t))
     except: pass
 
     seed = [
