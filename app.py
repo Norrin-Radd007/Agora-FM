@@ -12,7 +12,147 @@ WEASYPRINT_OK   = False   # Removed — do not re-enable
 COMMISSION_RATE = 0.05
 VAT_RATE        = 0.20
 
+# ── Resend email ─────────────────────────────────────────────────────────────
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+EMAIL_FROM     = 'Agora FM <noreply@agorafm.co.uk>'
+EMAIL_ENABLED  = bool(RESEND_API_KEY)
 
+def send_email(to, subject, html_body):
+    if not EMAIL_ENABLED:
+        print('[Email] Skipped (no RESEND_API_KEY): ' + subject)
+        return False
+    try:
+        import urllib.request
+        payload = json.dumps({'from': EMAIL_FROM, 'to': [to] if isinstance(to, str) else to,
+                              'subject': subject, 'html': html_body}).encode('utf-8')
+        req = urllib.request.Request('https://api.resend.com/emails', data=payload,
+            headers={'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json'},
+            method='POST')
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            result = json.loads(resp.read())
+            print('[Email] Sent: ' + subject + ' (id:' + str(result.get('id','')) + ')')
+            return True
+    except Exception as e:
+        print('[Email] Failed: ' + str(e))
+        return False
+
+def _ew(body):
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        'body{margin:0;background:#0A1A2F;font-family:Arial,sans-serif;}'
+        '.w{max-width:600px;margin:0 auto;background:#0F2239;}'
+        '.h{background:#0A1A2F;padding:24px 32px;border-bottom:3px solid #F18F01;}'
+        '.logo{font-size:1.5rem;font-weight:900;color:#E3E5E8;letter-spacing:2px;}'
+        '.logo span{color:#F18F01;}'
+        '.b{padding:32px;color:#E3E5E8;font-size:0.9rem;line-height:1.7;}'
+        '.s{background:#112240;border:1px solid rgba(62,107,137,0.3);border-radius:4px;padding:20px;margin:20px 0;}'
+        '.lbl{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:rgba(227,229,232,0.4);margin-bottom:4px;}'
+        '.val{font-size:0.95rem;color:#E3E5E8;font-weight:600;}'
+        '.amt{font-size:1.3rem;color:#F18F01;font-weight:900;}'
+        'hr{border:none;border-top:1px solid rgba(62,107,137,0.2);margin:12px 0;}'
+        'a{color:#F18F01;}'
+        '.ft{padding:16px 32px;border-top:1px solid rgba(62,107,137,0.2);font-size:0.7rem;color:rgba(227,229,232,0.3);text-align:center;}'
+        '</style></head><body><div class="w">'
+        '<div class="h"><span class="logo">AGORA<span>FM</span></span></div>'
+        '<div class="b">' + body + '</div>'
+        '<div class="ft">Agora FM Ltd &middot; <a href="https://agora-fm-production.up.railway.app">agora-fm-production.up.railway.app</a></div>'
+        '</div></body></html>'
+    )
+
+def _row3(name, supplier, price):
+    s = 'padding:6px 0;border-bottom:1px solid rgba(62,107,137,0.1);'
+    return ('<tr>'
+        '<td style="' + s + 'color:#E3E5E8;">' + name + '</td>'
+        '<td style="' + s + 'color:rgba(227,229,232,0.5);">' + supplier + '</td>'
+        '<td style="' + s + 'text-align:right;color:#F18F01;">&#163;' + price + '</td>'
+        '</tr>')
+
+def _row2(name, price):
+    s = 'padding:6px 0;border-bottom:1px solid rgba(62,107,137,0.1);'
+    return ('<tr>'
+        '<td style="' + s + 'color:#E3E5E8;">' + name + '</td>'
+        '<td style="' + s + 'text-align:right;color:#F18F01;">&#163;' + price + '</td>'
+        '</tr>')
+
+def email_order_confirmation(order, to_email, to_name):
+    items = order.get('items', [])
+    rows = ''.join(_row3(i.get('name',''), i.get('supplierName',''), '{:.2f}'.format(float(i.get('price',0)))) for i in items)
+    th = 'font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:rgba(227,229,232,0.4);padding-bottom:8px;'
+    body = (
+        '<p>Dear ' + to_name + ',</p>'
+        '<p>Your order has been confirmed on Agora FM. Your selected service providers have been notified.</p>'
+        '<div class="s">'
+        '<div class="lbl">Order Reference</div><div class="val">' + order.get('id','') + '</div><hr>'
+        '<div class="lbl">Payment Method</div><div class="val">' + order.get('payment_method','').replace('_',' ').title() + '</div>'
+        '</div>'
+        '<div class="s"><table style="width:100%;border-collapse:collapse;">'
+        '<thead><tr>'
+        '<th style="text-align:left;' + th + '">Service</th>'
+        '<th style="text-align:left;' + th + '">Provider</th>'
+        '<th style="text-align:right;' + th + '">Price</th>'
+        '</tr></thead><tbody>' + rows + '</tbody></table><hr>'
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(227,229,232,0.5);">Subtotal</span><span>&#163;' + '{:.2f}'.format(float(order.get('subtotal',0))) + '</span></div>'
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(227,229,232,0.5);">VAT (20%)</span><span>&#163;' + '{:.2f}'.format(float(order.get('vat',0))) + '</span></div>'
+        '<div style="display:flex;justify-content:space-between;margin-top:8px;"><span style="font-weight:700;">Total inc. VAT</span><span class="amt">&#163;' + '{:.2f}'.format(float(order.get('total',0))) + '</span></div>'
+        '</div>'
+        '<p style="font-size:0.8rem;color:rgba(227,229,232,0.5);">View your order history in your <a href="https://agora-fm-production.up.railway.app/dashboard.html">Agora FM dashboard</a>.</p>'
+        '<p style="font-size:0.8rem;color:rgba(227,229,232,0.5);">The 5% Agora FM commission is charged to your service provider, not you.</p>'
+    )
+    send_email(to_email, 'Order Confirmed -- ' + order.get('id','') + ' -- Agora FM', _ew(body))
+
+def email_new_order_supplier(order, to_email, to_name):
+    items = order.get('items', [])
+    rows = ''.join(_row2(i.get('name',''), '{:.2f}'.format(float(i.get('price',0)))) for i in items)
+    th = 'font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:rgba(227,229,232,0.4);padding-bottom:8px;'
+    body = (
+        '<p>Dear ' + to_name + ',</p>'
+        '<p>You have received a new order via Agora FM. Please contact the customer to arrange service delivery.</p>'
+        '<div class="s">'
+        '<div class="lbl">Order Reference</div><div class="val">' + order.get('id','') + '</div><hr>'
+        '<div class="lbl">Customer Organisation</div><div class="val">' + order.get('customer_org','') + '</div><hr>'
+        '<div class="lbl">Customer Email</div><div class="val">' + order.get('customer_email','') + '</div>'
+        '</div>'
+        '<div class="s"><table style="width:100%;border-collapse:collapse;">'
+        '<thead><tr>'
+        '<th style="text-align:left;' + th + '">Service Ordered</th>'
+        '<th style="text-align:right;' + th + '">Value</th>'
+        '</tr></thead><tbody>' + rows + '</tbody></table><hr>'
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(227,229,232,0.5);">Order Total</span><span class="amt">&#163;' + '{:.2f}'.format(float(order.get('total',0))) + '</span></div>'
+        '<div style="display:flex;justify-content:space-between;"><span style="color:rgba(227,229,232,0.5);">Your net (after 5% commission)</span><span style="color:#5cb85c;">&#163;' + '{:.2f}'.format(float(order.get('total',0))*0.95) + '</span></div>'
+        '</div>'
+        '<p style="font-size:0.8rem;color:rgba(227,229,232,0.5);">Log in to your <a href="https://agora-fm-production.up.railway.app/supplier_dashboard.html">supplier dashboard</a> to manage this order.</p>'
+    )
+    send_email(to_email, 'New Order Received -- ' + order.get('id','') + ' -- Agora FM', _ew(body))
+
+def email_new_review(to_email, to_name, reviewer_name, reviewer_org, rating, title, supplier_id):
+    stars = '&#9733;' * rating + '&#9734;' * (5 - rating)
+    body = (
+        '<p>Dear ' + to_name + ',</p>'
+        '<p>A new review has been posted on your Agora FM profile.</p>'
+        '<div class="s">'
+        '<div class="lbl">Reviewer</div><div class="val">' + reviewer_name + ', ' + reviewer_org + '</div><hr>'
+        '<div class="lbl">Rating</div><div class="val" style="color:#F18F01;font-size:1.1rem;">' + stars + ' &nbsp;' + str(rating) + '/5</div><hr>'
+        '<div class="lbl">Review Title</div><div class="val">' + title + '</div>'
+        '</div>'
+        '<p style="font-size:0.8rem;color:rgba(227,229,232,0.5);">You can respond to this review from your <a href="https://agora-fm-production.up.railway.app/provider_profile.html?provider=' + supplier_id + '">provider profile</a>.</p>'
+    )
+    send_email(to_email, 'New Review Posted -- ' + str(rating) + '/5 Stars -- Agora FM', _ew(body))
+
+def email_new_enquiry(to_email, to_name, cust_name, cust_org, cust_email, cust_phone, service, notes):
+    body = (
+        '<p>Dear ' + to_name + ',</p>'
+        '<p>You have received a new service enquiry via Agora FM.</p>'
+        '<div class="s">'
+        '<div class="lbl">Customer Name</div><div class="val">' + cust_name + '</div><hr>'
+        '<div class="lbl">Organisation</div><div class="val">' + cust_org + '</div><hr>'
+        '<div class="lbl">Email</div><div class="val">' + cust_email + '</div><hr>'
+        '<div class="lbl">Phone</div><div class="val">' + (cust_phone or 'Not provided') + '</div><hr>'
+        '<div class="lbl">Service Required</div><div class="val">' + service + '</div>'
+        + ('<hr><div class="lbl">Notes</div><div class="val" style="font-weight:400;color:rgba(227,229,232,0.7);">' + notes + '</div>' if notes else '') +
+        '</div>'
+        '<p style="font-size:0.8rem;color:rgba(227,229,232,0.5);">Reply directly to the customer at <a href="mailto:' + cust_email + '">' + cust_email + '</a>.</p>'
+    )
+    send_email(to_email, 'New Enquiry -- ' + service + ' -- Agora FM', _ew(body))
 
 # ── Database mode detection ──────────────────────────────────────────────────
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
@@ -291,19 +431,17 @@ def create_order():
     _save_basket([])
     order = query('SELECT * FROM orders WHERE id=?', (oid,), one=True)
     order['items'] = json.loads(order['items'])
-    # ── Email notifications ──────────────────────────────────────────────
     try:
         cust_name = session.get('name', 'Customer')
         email_order_confirmation(order, session['email'], cust_name)
-        # Notify each unique supplier
         sup_ids = list(set(i.get('supplierId','') for i in order['items'] if i.get('supplierId')))
         for sid in sup_ids:
             sup = query('SELECT email, contact_first, contact_last, company_name FROM suppliers WHERE id=?', (sid,), one=True)
             if sup:
-                sup_name = sup.get('company_name') or f"{sup.get('contact_first','')} {sup.get('contact_last','')}".strip()
+                sup_name = sup.get('company_name') or (sup.get('contact_first','') + ' ' + sup.get('contact_last','')).strip()
                 email_new_order_supplier(order, sup['email'], sup_name)
     except Exception as e:
-        print(f'[Email] Order notification error: {e}')
+        print('[Email] Order notification error: ' + str(e))
     return jsonify(ok=True, order=order)
 
 @app.route('/api/orders')
@@ -468,7 +606,6 @@ def post_review(sid):
          session.get('org_name',''), rating,
          d['title'].strip(), d['body'].strip(),
          d.get('service_used',''), now()))
-    # ── Email supplier ────────────────────────────────────────────────────
     try:
         sup = query('SELECT email, company_name FROM suppliers WHERE id=?', (sid,), one=True)
         if sup:
@@ -476,7 +613,7 @@ def post_review(sid):
                 session.get('name','Anonymous'), session.get('org_name',''),
                 rating, d['title'].strip(), sid)
     except Exception as e:
-        print(f'[Email] Review notification error: {e}')
+        print('[Email] Review notification error: ' + str(e))
     return jsonify(ok=True, id=rid)
 
 @app.route('/api/reviews/<rid>/respond', methods=['POST'])
@@ -500,25 +637,22 @@ def respond_review(rid):
 @app.route('/api/enquiry', methods=['POST'])
 def submit_enquiry():
     d = request.json or {}
-    supplier_id  = d.get('supplier_id', '')
-    service      = d.get('service', 'General Enquiry')
-    cust_name    = d.get('name', '').strip()
-    cust_org     = d.get('org', '').strip()
-    cust_email   = d.get('email', '').strip()
-    cust_phone   = d.get('phone', '').strip()
-    notes        = d.get('notes', '').strip()
+    supplier_id = d.get('supplier_id', '')
+    service     = d.get('service', 'General Enquiry')
+    cust_name   = d.get('name', '').strip()
+    cust_org    = d.get('org', '').strip()
+    cust_email  = d.get('email', '').strip()
+    cust_phone  = d.get('phone', '').strip()
+    notes       = d.get('notes', '').strip()
     if not supplier_id or not cust_email:
         return jsonify(ok=False, error='Missing required fields.')
-    # Look up supplier
-    sup = query('SELECT email, company_name, contact_first FROM suppliers WHERE id=?', (supplier_id,), one=True)
+    sup = query('SELECT email, company_name FROM suppliers WHERE id=?', (supplier_id,), one=True)
     if not sup:
         return jsonify(ok=False, error='Supplier not found.')
-    # Send email to supplier
     try:
-        sup_name = sup.get('company_name') or sup.get('contact_first', 'Team')
-        email_new_enquiry(sup['email'], sup_name, cust_name, cust_org, cust_email, cust_phone, service, notes)
+        email_new_enquiry(sup['email'], sup['company_name'], cust_name, cust_org, cust_email, cust_phone, service, notes)
     except Exception as e:
-        print(f'[Email] Enquiry notification error: {e}')
+        print('[Email] Enquiry error: ' + str(e))
     return jsonify(ok=True, message='Enquiry sent successfully.')
 
 # ── DB INIT ─────────────────────────────────────────────────────────────────
