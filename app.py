@@ -14,7 +14,7 @@ VAT_RATE        = 0.20
 
 # ── Resend email ─────────────────────────────────────────────────────────────
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
-EMAIL_FROM     = 'Agora FM <onboarding@resend.dev>'
+EMAIL_FROM     = 'Agora FM <noreply@agorafm.co.uk>'
 EMAIL_ENABLED  = bool(RESEND_API_KEY)
 
 def send_email(to, subject, html_body):
