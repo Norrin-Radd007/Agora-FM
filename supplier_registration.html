@@ -632,6 +632,28 @@ window.AgoraDB = AgoraDB;
         </div>
       </div>
 
+      <!-- Coverage regions -->
+      <div style="margin-top:18px;">
+        <label class="form-label">Regions You Cover *</label>
+        <div style="font-size:0.76rem;color:var(--grey-dim);font-weight:300;margin-bottom:10px;">
+          Tick every region where you can realistically deliver this service. Customers searching by postcode will only see you listed for the regions selected below — this keeps your enquiries relevant and stops customers in areas you don't cover from contacting you.
+        </div>
+        <div class="check-grid" id="coverageRegionsGrid">
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="Scotland"> Scotland</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="Northern Ireland"> Northern Ireland</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="Wales"> Wales</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="North East"> North East</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="North West"> North West</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="Yorkshire & Humber"> Yorkshire &amp; Humber</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="East Midlands"> East Midlands</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="West Midlands"> West Midlands</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="East of England"> East of England</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="London"> London</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="South East"> South East</label>
+          <label class="check-box"><input type="checkbox" class="coverage-region-cb" value="South West"> South West</label>
+        </div>
+      </div>
+
       <div class="form-divider"></div>
 
       <!-- STEP 4: Payment, Bank & Account -->
@@ -842,6 +864,9 @@ async function handleSupplierRegister(){
   if(document.querySelectorAll('.svc-cat:checked').length===0){
     showBanner('No services selected','Please tick at least one FM service you supply.');return;
   }
+  if(document.querySelectorAll('.coverage-region-cb:checked').length===0){
+    showBanner('No coverage regions selected','Please tick at least one region you cover — this is how customers find suppliers near them.');return;
+  }
   if(!document.getElementById('terms').checked){
     showBanner('Terms required','Please read and accept the Supplier Terms & Conditions.');return;
   }
@@ -849,9 +874,11 @@ async function handleSupplierRegister(){
     showBanner('Accuracy confirmation required','Please confirm that all information provided is accurate.');return;
   }
 
-  var cats=[], accreds=[];
+  var cats=[], accreds=[], coverageRegions=[];
   document.querySelectorAll('.svc-cat:checked').forEach(function(cb){cats.push(cb.value);});
-  document.querySelectorAll('.check-box input:checked').forEach(function(cb){accreds.push(cb.value);});
+  document.querySelectorAll('.check-box input:checked').forEach(function(cb){
+    if(cb.classList.contains('coverage-region-cb')){coverageRegions.push(cb.value);}else{accreds.push(cb.value);}
+  });
 
   var btn=document.querySelector('.form-submit');
   if(btn){btn.textContent='Submitting…';btn.disabled=true;}
@@ -868,6 +895,7 @@ async function handleSupplierRegister(){
     email:        document.getElementById('loginEmail').value.trim(),
     password:     document.getElementById('loginPassword').value,
     coverage:     document.getElementById('coverage').value,
+    coverageRegions: coverageRegions,
     categories:   cats,
     accreditations: accreds,
     plInsurance:  document.getElementById('plInsurance').value,
