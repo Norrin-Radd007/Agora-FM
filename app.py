@@ -306,13 +306,14 @@ def register_supplier():
     sid = 'sup_' + uid()
     execute('''INSERT INTO suppliers
         (id,company_name,company_reg,reg_address,main_tel,website,contact_first,contact_last,
-         contact_role,email,password_hash,coverage,categories,accreditations,pl_insurance,
+         contact_role,email,password_hash,coverage,coverage_regions,categories,accreditations,pl_insurance,
          el_insurance,bank_name,sort_code,account_num,company_desc,verified,created_at)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
         sid, d.get('companyName','').strip(), d.get('companyReg','').strip(),
         d.get('regAddress','').strip(), d.get('mainTel','').strip(), d.get('website','').strip(),
         d.get('contactFirst','').strip(), d.get('contactLast','').strip(), d.get('contactRole','').strip(),
         em, hash_pw(d.get('password','')), d.get('coverage',''),
+        json.dumps(d.get('coverageRegions',[])),
         json.dumps(d.get('categories',[])), json.dumps(d.get('accreditations',[])),
         d.get('plInsurance',''), d.get('elInsurance',''), d.get('bankName','').strip(),
         d.get('sortCode','').strip(), d.get('accountNum','').strip(), d.get('companyDesc','').strip(),
@@ -327,8 +328,9 @@ def register_supplier():
 def get_suppliers():
     rows = query('SELECT * FROM suppliers WHERE verified=1 ORDER BY company_name')
     for r in rows:
-        r['categories']     = json.loads(r.get('categories') or '[]')
-        r['accreditations'] = json.loads(r.get('accreditations') or '[]')
+        r['categories']        = json.loads(r.get('categories') or '[]')
+        r['accreditations']    = json.loads(r.get('accreditations') or '[]')
+        r['coverage_regions']  = json.loads(r.get('coverage_regions') or '[]')
         for k in ('password_hash','bank_name','sort_code','account_num'): r.pop(k, None)
     return jsonify(rows)
 
@@ -353,8 +355,9 @@ def get_supplier_services(sid):
 def get_supplier(sid):
     r = query('SELECT * FROM suppliers WHERE id=?', (sid,), one=True)
     if not r: return jsonify(error='Not found'), 404
-    r['categories']     = json.loads(r.get('categories') or '[]')
-    r['accreditations'] = json.loads(r.get('accreditations') or '[]')
+    r['categories']       = json.loads(r.get('categories') or '[]')
+    r['accreditations']   = json.loads(r.get('accreditations') or '[]')
+    r['coverage_regions'] = json.loads(r.get('coverage_regions') or '[]')
     for k in ('password_hash','bank_name','sort_code','account_num'): r.pop(k, None)
     return jsonify(r)
 
@@ -665,6 +668,7 @@ CREATE TABLE IF NOT EXISTS suppliers(
     id TEXT PRIMARY KEY, company_name TEXT, company_reg TEXT, reg_address TEXT,
     main_tel TEXT, website TEXT, contact_first TEXT, contact_last TEXT,
     contact_role TEXT, email TEXT UNIQUE, password_hash TEXT, coverage TEXT,
+    coverage_regions TEXT DEFAULT '[]',
     categories TEXT, accreditations TEXT, pl_insurance TEXT, el_insurance TEXT,
     bank_name TEXT, sort_code TEXT, account_num TEXT, company_desc TEXT,
     verified INTEGER DEFAULT 0, created_at TEXT);
@@ -725,27 +729,27 @@ def _seed(db=None):
     except: pass
 
     seed = [
-        ('sup_001','Apollo Fire Technicians Ltd','04821033','12 Barbican Centre, London EC2Y 8NB','020 7123 4567','www.apollofire.co.uk','James','Hartley','Operations Director','enquiries@apollofire.co.uk',h('Apollo123!'),'National (England & Wales)','["Fire"]','["BAFE","CHAS Premium","ISO 9001","SafeContractor"]','£5 million','£10 million','Apollo Fire Technicians Ltd','20-41-18','80123456','BAFE-certified fire protection specialists with 20+ years of commercial experience.',1),
-        ('sup_002','AquaSafe Testing Ltd','07234891','4 Waterside Court, Leeds LS1 4GL','0333 123 9876','www.aquasafe-testing.co.uk','Sarah','Chen','Technical Director','info@aquasafe-testing.co.uk',h('Aqua456!'),'National (England)','["Water"]','["UKAS Accredited","Legionella Control","ISO 9001","CHAS"]','£5 million','£10 million','AquaSafe Testing Ltd','30-98-12','12345678','UKAS-accredited Legionella and water hygiene specialists.',1),
-        ('sup_003','Volt Electrical Compliance Ltd','09871234','Unit 7 Aston Cross Business Village Birmingham B6 5RQ','0121 456 7890','www.voltcompliance.co.uk','Marcus','Williams','Managing Director','contracts@voltcompliance.co.uk',h('Volt789!'),'National (England & Wales)','["Electricity"]','["NICEIC","ECA Member","CHAS","ISO 9001"]','£5 million','£10 million','Volt Electrical Compliance Ltd','40-12-34','87654321','NICEIC-approved electrical testing and compliance specialists.',1),
-        ('sup_004','BritHeat Gas Services Ltd','06543210','88 Wellington Street Leeds LS1 2EQ','0113 345 6789','www.britheat.co.uk','David','Okafor','Commercial Manager','service@britheat.co.uk',h('BritHeat1!'),'Regional (multi-county)','["Gas"]','["Gas Safe","OFTEC","CHAS","ISO 9001"]','£2 million','£5 million','BritHeat Gas Services Ltd','60-23-45','11223344','Gas Safe registered commercial boiler and gas compliance specialists.',1),
-        ('sup_005','PureAir HVAC Solutions Ltd','11223344','22 Kings Road Reading RG1 3AR','020 3456 7890','www.pureairhvac.co.uk','Priya','Sharma','Technical Sales Director','hello@pureairhvac.co.uk',h('PureAir2!'),'National (England)','["HVAC"]','["REFCOM","F-Gas Certified","CHAS","SafeContractor"]','£5 million','£10 million','PureAir HVAC Solutions Ltd','20-33-99','55667788','F-Gas certified HVAC and air conditioning specialists.',1),
+        ('sup_001','Apollo Fire Technicians Ltd','04821033','12 Barbican Centre, London EC2Y 8NB','020 7123 4567','www.apollofire.co.uk','James','Hartley','Operations Director','enquiries@apollofire.co.uk',h('Apollo123!'),'National (England & Wales)','["London","South East","East of England","South West","West Midlands","East Midlands","Wales"]','["Fire"]','["BAFE","CHAS Premium","ISO 9001","SafeContractor"]','£5 million','£10 million','Apollo Fire Technicians Ltd','20-41-18','80123456','BAFE-certified fire protection specialists with 20+ years of commercial experience.',1),
+        ('sup_002','AquaSafe Testing Ltd','07234891','4 Waterside Court, Leeds LS1 4GL','0333 123 9876','www.aquasafe-testing.co.uk','Sarah','Chen','Technical Director','info@aquasafe-testing.co.uk',h('Aqua456!'),'National (England)','["Yorkshire & Humber","North East","North West","East Midlands","West Midlands","East of England","London"]','["Water"]','["UKAS Accredited","Legionella Control","ISO 9001","CHAS"]','£5 million','£10 million','AquaSafe Testing Ltd','30-98-12','12345678','UKAS-accredited Legionella and water hygiene specialists.',1),
+        ('sup_003','Volt Electrical Compliance Ltd','09871234','Unit 7 Aston Cross Business Village Birmingham B6 5RQ','0121 456 7890','www.voltcompliance.co.uk','Marcus','Williams','Managing Director','contracts@voltcompliance.co.uk',h('Volt789!'),'National (England & Wales)','["West Midlands","East Midlands","Wales","South West","North West","London"]','["Electricity"]','["NICEIC","ECA Member","CHAS","ISO 9001"]','£5 million','£10 million','Volt Electrical Compliance Ltd','40-12-34','87654321','NICEIC-approved electrical testing and compliance specialists.',1),
+        ('sup_004','BritHeat Gas Services Ltd','06543210','88 Wellington Street Leeds LS1 2EQ','0113 345 6789','www.britheat.co.uk','David','Okafor','Commercial Manager','service@britheat.co.uk',h('BritHeat1!'),'Regional (multi-county)','["Yorkshire & Humber","North East","East Midlands"]','["Gas"]','["Gas Safe","OFTEC","CHAS","ISO 9001"]','£2 million','£5 million','BritHeat Gas Services Ltd','60-23-45','11223344','Gas Safe registered commercial boiler and gas compliance specialists.',1),
+        ('sup_005','PureAir HVAC Solutions Ltd','11223344','22 Kings Road Reading RG1 3AR','020 3456 7890','www.pureairhvac.co.uk','Priya','Sharma','Technical Sales Director','hello@pureairhvac.co.uk',h('PureAir2!'),'National (England)','["South East","London","South West","East of England","West Midlands"]','["HVAC"]','["REFCOM","F-Gas Certified","CHAS","SafeContractor"]','£5 million','£10 million','PureAir HVAC Solutions Ltd','20-33-99','55667788','F-Gas certified HVAC and air conditioning specialists.',1),
     ]
     # 5 additional suppliers for remaining compliance categories
     extra = [
-        ('sup_006','ClearLift Services Ltd','08234567','Unit 4 Lenton Business Centre Nottingham NG7 2BY','0115 987 3456','www.clearlift.co.uk','Paul','Dixon','Managing Director','service@clearlift.co.uk',h('ClearLift1!'),'National (England & Wales)','["Lifts & Lifting Equipment"]','["LEIA Member","LOLER Certified","ISO 9001","CHAS"]','£5 million','£10 million','ClearLift Services Ltd','60-44-21','22334455','LEIA-member lift maintenance and LOLER inspection specialists with national coverage.',1),
-        ('sup_007','SafeAir Asbestos Consultancy Ltd','05678901','15 Temple Row Birmingham B2 5LG','0121 233 4567','www.safeair-asbestos.co.uk','Helen','Marsh','Technical Director','surveys@safeair-asbestos.co.uk',h('SafeAir1!'),'National (England & Wales)','["Asbestos"]','["UKAS Accredited","BOHS P402","ISO 17025","CHAS"]','£5 million','£10 million','SafeAir Asbestos Consultancy Ltd','40-55-33','33445566','UKAS-accredited asbestos management survey and consultancy specialists.',1),
-        ('sup_008','CoolEdge Climate Ltd','06789012','7 Rutherford Way Cheltenham GL51 9TU','01242 512 890','www.cooledgeclimate.co.uk','Adam','Foster','Operations Manager','info@cooledgeclimate.co.uk',h('CoolEdge1!'),'National (England)','["Air Conditioning"]','["REFCOM","F-Gas Certified","SafeContractor","CHAS"]','£5 million','£5 million','CoolEdge Climate Ltd','30-77-44','44556677','F-Gas certified air conditioning maintenance specialists covering split, multi-split and VRF systems.',1),
-        ('sup_009','PressureSafe Engineering Ltd','07890123','33 Sovereign Way Tonbridge TN9 1RH','01732 360 450','www.pressuresafe.co.uk','Kevin','Obi','Chief Engineer','inspect@pressuresafe.co.uk',h('PressureSafe1!'),'National (England & Wales)','["Pressure Vessels"]','["PSSR Certified","ISO 9001","CHAS","SafeContractor"]','£5 million','£10 million','PressureSafe Engineering Ltd','50-66-77','55667788','PSSR-competent pressure vessel inspection and chiller maintenance specialists.',1),
-        ('sup_010','RiskFirst Consultancy Ltd','09012345','20 St James Street London SW1A 1ES','020 7930 1234','www.riskfirst.co.uk','Natasha','Okonkwo','Head of Consulting','hello@riskfirst.co.uk',h('RiskFirst1!'),'National','["Risk Assessments"]','["NEBOSH","IOSH Member","ISO 45001","SafeContractor"]','£5 million','£10 million','RiskFirst Consultancy Ltd','20-99-11','66778899','NEBOSH and IOSH-qualified risk assessment consultancy for commercial and mixed-use estates.',1),
+        ('sup_006','ClearLift Services Ltd','08234567','Unit 4 Lenton Business Centre Nottingham NG7 2BY','0115 987 3456','www.clearlift.co.uk','Paul','Dixon','Managing Director','service@clearlift.co.uk',h('ClearLift1!'),'National (England & Wales)','["East Midlands","West Midlands","Yorkshire & Humber","East of England","Wales","London"]','["Lifts & Lifting Equipment"]','["LEIA Member","LOLER Certified","ISO 9001","CHAS"]','£5 million','£10 million','ClearLift Services Ltd','60-44-21','22334455','LEIA-member lift maintenance and LOLER inspection specialists with national coverage.',1),
+        ('sup_007','SafeAir Asbestos Consultancy Ltd','05678901','15 Temple Row Birmingham B2 5LG','0121 233 4567','www.safeair-asbestos.co.uk','Helen','Marsh','Technical Director','surveys@safeair-asbestos.co.uk',h('SafeAir1!'),'National (England & Wales)','["West Midlands","Wales","East Midlands","North West","South West"]','["Asbestos"]','["UKAS Accredited","BOHS P402","ISO 17025","CHAS"]','£5 million','£10 million','SafeAir Asbestos Consultancy Ltd','40-55-33','33445566','UKAS-accredited asbestos management survey and consultancy specialists.',1),
+        ('sup_008','CoolEdge Climate Ltd','06789012','7 Rutherford Way Cheltenham GL51 9TU','01242 512 890','www.cooledgeclimate.co.uk','Adam','Foster','Operations Manager','info@cooledgeclimate.co.uk',h('CoolEdge1!'),'National (England)','["South West","South East","West Midlands","London"]','["Air Conditioning"]','["REFCOM","F-Gas Certified","SafeContractor","CHAS"]','£5 million','£5 million','CoolEdge Climate Ltd','30-77-44','44556677','F-Gas certified air conditioning maintenance specialists covering split, multi-split and VRF systems.',1),
+        ('sup_009','PressureSafe Engineering Ltd','07890123','33 Sovereign Way Tonbridge TN9 1RH','01732 360 450','www.pressuresafe.co.uk','Kevin','Obi','Chief Engineer','inspect@pressuresafe.co.uk',h('PressureSafe1!'),'National (England & Wales)','["South East","London","South West","East of England"]','["Pressure Vessels"]','["PSSR Certified","ISO 9001","CHAS","SafeContractor"]','£5 million','£10 million','PressureSafe Engineering Ltd','50-66-77','55667788','PSSR-competent pressure vessel inspection and chiller maintenance specialists.',1),
+        ('sup_010','RiskFirst Consultancy Ltd','09012345','20 St James Street London SW1A 1ES','020 7930 1234','www.riskfirst.co.uk','Natasha','Okonkwo','Head of Consulting','hello@riskfirst.co.uk',h('RiskFirst1!'),'National','["London","South East","South West","East of England","West Midlands","East Midlands","North West","Yorkshire & Humber","North East","Wales","Scotland"]','["Risk Assessments"]','["NEBOSH","IOSH Member","ISO 45001","SafeContractor"]','£5 million','£10 million','RiskFirst Consultancy Ltd','20-99-11','66778899','NEBOSH and IOSH-qualified risk assessment consultancy for commercial and mixed-use estates.',1),
     ]
     # Insert original 5 suppliers FIRST (services reference them)
     for s in seed:
         try:
             _x('''INSERT INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
-                contact_first,contact_last,contact_role,email,password_hash,coverage,categories,
+                contact_first,contact_last,contact_role,email,password_hash,coverage,coverage_regions,categories,
                 accreditations,pl_insurance,el_insurance,bank_name,sort_code,account_num,company_desc,verified,created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''', s+(t,))
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''', s+(t,))
         except Exception as e:
             print(f'  Seed warning (sup): {e}')
 
@@ -753,11 +757,23 @@ def _seed(db=None):
     for s in extra:
         try:
             _x('''INSERT INTO suppliers(id,company_name,company_reg,reg_address,main_tel,website,
-                contact_first,contact_last,contact_role,email,password_hash,coverage,categories,
+                contact_first,contact_last,contact_role,email,password_hash,coverage,coverage_regions,categories,
                 accreditations,pl_insurance,el_insurance,bank_name,sort_code,account_num,company_desc,verified,created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''', s+(t,))
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (id) DO NOTHING''', s+(t,))
         except Exception as e:
             print(f'  Seed warning (extra): {e}')
+
+    # Backfill coverage_regions on rows that already existed before this version
+    # (ON CONFLICT DO NOTHING above skips the INSERT entirely for pre-existing suppliers,
+    # so older deployments need their coverage_regions set explicitly here).
+    region_backfill = {s[0]: s[12] for s in (seed + extra)}
+    for sid, regions_json in region_backfill.items():
+        try:
+            _x('''UPDATE suppliers SET coverage_regions=?
+                  WHERE id=? AND (coverage_regions IS NULL OR coverage_regions='[]' OR coverage_regions='')''',
+               (regions_json, sid))
+        except Exception as e:
+            print(f'  Backfill warning (coverage_regions {sid}): {e}')
 
     # Services — 2 per supplier (10 suppliers = 20 services)
     services = [
@@ -873,6 +889,28 @@ def _seed(db=None):
         except: pass
 
 
+def _migrate(db):
+    """Add columns that may be missing on databases created before this version."""
+    if USE_POSTGRES:
+        cur = db.cursor()
+        try:
+            cur.execute("ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS coverage_regions TEXT DEFAULT '[]'")
+            db.commit()
+        except Exception as e:
+            print(f'  Migration warning (coverage_regions): {e}')
+            try: db.rollback()
+            except: pass
+    else:
+        cur = db.cursor()
+        cur.execute("PRAGMA table_info(suppliers)")
+        cols = [r[1] for r in cur.fetchall()]
+        if 'coverage_regions' not in cols:
+            try:
+                cur.execute("ALTER TABLE suppliers ADD COLUMN coverage_regions TEXT DEFAULT '[]'")
+                db.commit()
+            except Exception as e:
+                print(f'  Migration warning (coverage_regions): {e}')
+
 def init_db():
     if USE_POSTGRES:
         db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
@@ -881,12 +919,16 @@ def init_db():
             stmt = stmt.strip()
             if stmt:
                 cur.execute(stmt)
-        db.commit(); db.close()
+        db.commit()
+        _migrate(db)
+        db.close()
     else:
         import sqlite3 as _sq3
         db = _sq3.connect(DB_PATH)
         db.executescript(SCHEMA)
-        db.commit(); db.close()
+        db.commit()
+        _migrate(db)
+        db.close()
 
 # ── Startup (runs under gunicorn AND python app.py) ──────────────────────────
 print('=' * 52)
