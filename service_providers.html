@@ -51,6 +51,40 @@
   .cat-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
   .cat-count { background: rgba(241,143,1,.15); color: var(--orange); border-radius: 10px; padding: 1px 7px; font-size: .65rem; }
 
+  /* Location filter bar */
+  .location-filter-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .location-filter-bar .loc-icon { font-size: 0.95rem; opacity: 0.7; }
+  .location-filter-bar input {
+    flex: 1; min-width: 240px; max-width: 420px;
+    background: rgba(15,34,57,0.6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 14px;
+    color: var(--grey);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.82rem;
+  }
+  .location-filter-bar input::placeholder { color: rgba(227,229,232,0.35); }
+  .location-filter-bar input:focus { outline: none; border-color: var(--orange); }
+  .location-filter-bar .loc-btn {
+    background: var(--orange); border: none; color: var(--navy);
+    padding: 9px 18px; border-radius: var(--radius);
+    font-family: 'Barlow Condensed', sans-serif; font-size: 0.78rem;
+    font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; transition: background .15s; white-space: nowrap;
+  }
+  .location-filter-bar .loc-btn:hover { background: var(--orange-hover); }
+  .location-filter-bar .loc-status {
+    font-size: 0.76rem; color: var(--grey-dim); display: flex; align-items: center; gap: 10px;
+  }
+  .location-filter-bar .loc-status .loc-clear {
+    color: var(--orange); cursor: pointer; text-decoration: underline; font-weight: 600;
+  }
+  .location-filter-bar .loc-status.no-match { color: #e9994f; }
+
   /* ── Three-panel body — KEY FIX: use a fixed viewport height minus nav/header ── */
   .services-body {
     display: flex;
@@ -225,6 +259,121 @@ var AgoraDB = (function () {
            COMMISSION_RATE: 0.05, VAT_RATE: 0.20 };
 })();
 window.AgoraDB = AgoraDB;
+
+</script>
+  <script>
+/**
+ * AGORA FM — UK Region Lookup (agora-geo.js)
+ * Maps a UK postcode area / town / freeform address string to one of
+ * 11 standard UK regions, using postcode-area prefixes. No external
+ * API or key required.
+ */
+var AgoraGeo = (function () {
+
+  var REGIONS = [
+    'Scotland','Northern Ireland','Wales','North East','North West',
+    'Yorkshire & Humber','East Midlands','West Midlands','East of England',
+    'London','South East','South West'
+  ];
+
+  var POSTCODE_AREA_MAP = {
+    AB:'Scotland', DD:'Scotland', DG:'Scotland', EH:'Scotland', FK:'Scotland',
+    G:'Scotland', HS:'Scotland', IV:'Scotland', KA:'Scotland', KW:'Scotland',
+    KY:'Scotland', ML:'Scotland', PA:'Scotland', PH:'Scotland', TD:'Scotland',
+    ZE:'Scotland',
+    BT:'Northern Ireland',
+    CF:'Wales', LD:'Wales', LL:'Wales', NP:'Wales', SA:'Wales', SY:'Wales',
+    DH:'North East', DL:'North East', NE:'North East', SR:'North East', TS:'North East',
+    BB:'North West', BL:'North West', CA:'North West', CH:'North West', CW:'North West',
+    FY:'North West', L:'North West', LA:'North West', M:'North West', OL:'North West',
+    PR:'North West', SK:'North West', WA:'North West', WN:'North West',
+    BD:'Yorkshire & Humber', DN:'Yorkshire & Humber', HD:'Yorkshire & Humber',
+    HG:'Yorkshire & Humber', HU:'Yorkshire & Humber', HX:'Yorkshire & Humber',
+    LS:'Yorkshire & Humber', S:'Yorkshire & Humber', WF:'Yorkshire & Humber',
+    YO:'Yorkshire & Humber',
+    DE:'East Midlands', LE:'East Midlands', LN:'East Midlands', NG:'East Midlands',
+    NN:'East Midlands',
+    B:'West Midlands', CV:'West Midlands', DY:'West Midlands', HR:'West Midlands',
+    ST:'West Midlands', TF:'West Midlands', WR:'West Midlands', WS:'West Midlands',
+    WV:'West Midlands',
+    AL:'East of England', CB:'East of England', CM:'East of England',
+    CO:'East of England', IP:'East of England', LU:'East of England',
+    NR:'East of England', PE:'East of England', SG:'East of England',
+    SS:'East of England',
+    E:'London', EC:'London', N:'London', NW:'London', SE:'London',
+    SW:'London', W:'London', WC:'London', BR:'London', CR:'London',
+    DA:'London', EN:'London', HA:'London', IG:'London', KT:'London',
+    RM:'London', SM:'London', TW:'London', UB:'London', WD:'London',
+    BN:'South East', GU:'South East', ME:'South East', MK:'South East',
+    OX:'South East', PO:'South East', RG:'South East', RH:'South East',
+    SL:'South East', SO:'South East', TN:'South East',
+    BA:'South West', BH:'South West', BS:'South West', DT:'South West',
+    EX:'South West', GL:'South West', PL:'South West', SN:'South West',
+    SP:'South West', TA:'South West', TQ:'South West', TR:'South West'
+  };
+
+  var TOWN_MAP = {
+    'glasgow':'Scotland','edinburgh':'Scotland','aberdeen':'Scotland','dundee':'Scotland',
+    'inverness':'Scotland','stirling':'Scotland','perth':'Scotland','paisley':'Scotland',
+    'belfast':'Northern Ireland','derry':'Northern Ireland','londonderry':'Northern Ireland',
+    'cardiff':'Wales','swansea':'Wales','newport':'Wales','wrexham':'Wales','bangor':'Wales',
+    'newcastle':'North East','sunderland':'North East','durham':'North East',
+    'middlesbrough':'North East','gateshead':'North East','darlington':'North East',
+    'manchester':'North West','liverpool':'North West','preston':'North West',
+    'blackpool':'North West','bolton':'North West','carlisle':'North West',
+    'chester':'North West','warrington':'North West','lancaster':'North West',
+    'stockport':'North West','wigan':'North West',
+    'leeds':'Yorkshire & Humber','sheffield':'Yorkshire & Humber','bradford':'Yorkshire & Humber',
+    'hull':'Yorkshire & Humber','york':'Yorkshire & Humber','wakefield':'Yorkshire & Humber',
+    'huddersfield':'Yorkshire & Humber','doncaster':'Yorkshire & Humber',
+    'nottingham':'East Midlands','leicester':'East Midlands','derby':'East Midlands',
+    'lincoln':'East Midlands','northampton':'East Midlands',
+    'birmingham':'West Midlands','coventry':'West Midlands','wolverhampton':'West Midlands',
+    'stoke':'West Midlands','worcester':'West Midlands','hereford':'West Midlands',
+    'cambridge':'East of England','norwich':'East of England','ipswich':'East of England',
+    'colchester':'East of England','chelmsford':'East of England','luton':'East of England',
+    'peterborough':'East of England','southend':'East of England',
+    'london':'London','croydon':'London','romford':'London','harrow':'London',
+    'kingston':'London','bromley':'London',
+    'brighton':'South East','reading':'South East','oxford':'South East',
+    'southampton':'South East','portsmouth':'South East','milton keynes':'South East',
+    'guildford':'South East','maidstone':'South East','slough':'South East',
+    'crawley':'South East','tonbridge':'South East','windsor':'South East',
+    'bristol':'South West','plymouth':'South West','exeter':'South West',
+    'bournemouth':'South West','bath':'South West','gloucester':'South West',
+    'swindon':'South West','taunton':'South West','truro':'South West'
+  };
+
+  function extractPostcodeArea(text) {
+    if (!text) return null;
+    var re = /\b([A-Z]{1,2})[0-9][0-9A-Z]?\s*[0-9][A-Z]{2}\b/i;
+    var m = text.match(re);
+    if (m) return m[1].toUpperCase();
+    var re2 = /\b([A-Z]{1,2})[0-9][0-9A-Z]?\b/i;
+    var m2 = text.trim().match(re2);
+    if (m2 && text.trim().length <= 5) return m2[1].toUpperCase();
+    return null;
+  }
+
+  function lookupByTown(text) {
+    var t = (text || '').toLowerCase();
+    var towns = Object.keys(TOWN_MAP);
+    for (var i = 0; i < towns.length; i++) {
+      if (t.indexOf(towns[i]) !== -1) return TOWN_MAP[towns[i]];
+    }
+    return null;
+  }
+
+  function lookupRegion(input) {
+    if (!input) return null;
+    var area = extractPostcodeArea(input);
+    if (area && POSTCODE_AREA_MAP[area]) return POSTCODE_AREA_MAP[area];
+    return lookupByTown(input);
+  }
+
+  return { REGIONS: REGIONS, lookupRegion: lookupRegion, extractPostcodeArea: extractPostcodeArea };
+})();
+window.AgoraGeo = AgoraGeo;
 
 </script>
   <script>
@@ -671,6 +820,12 @@ window.AgoraDB = AgoraDB;
   <div class="services-header-top">
     <a href="index.html" class="back-btn">← Home</a>
     <div class="page-title">FM <span>Services</span> Marketplace</div>
+  </div>
+  <div class="location-filter-bar" id="location-filter-bar">
+    <span class="loc-icon">📍</span>
+    <input type="text" id="locationInput" placeholder="Enter your postcode or town to find providers covering your area…" />
+    <button class="loc-btn" onclick="applyLocationFilter()">Find Providers</button>
+    <div class="loc-status" id="locationStatus"></div>
   </div>
   <div class="cat-tabs" id="cat-tabs"></div>
 </div>
@@ -1349,7 +1504,12 @@ let currentItem = null;
 function initServices() {
   if (inited) return;
   inited = true;
-  renderVerifiedProviders();
+  loadSupplierCoverage().then(function(){
+    renderVerifiedProviders();
+    // Re-apply filter if input already had a value (e.g. back-navigation)
+    var input = document.getElementById('locationInput');
+    if (input && input.value.trim()) applyLocationFilter();
+  });
   const catNames = Object.keys(CATEGORIES);
   const tabsEl = document.getElementById('cat-tabs');
   catNames.forEach((cat, i) => {
@@ -1360,7 +1520,54 @@ function initServices() {
     btn.onclick = () => selectCategory(cat);
     tabsEl.appendChild(btn);
   });
+  var locInput = document.getElementById('locationInput');
+  if (locInput) {
+    locInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') applyLocationFilter(); });
+  }
   // Show verified providers by default — user clicks a category tab to browse
+}
+
+// ── Location filtering ──────────────────────────────────────────────────
+function applyLocationFilter() {
+  var input = document.getElementById('locationInput');
+  var statusEl = document.getElementById('locationStatus');
+  if (!input || !statusEl) return;
+  var raw = input.value.trim();
+  if (!raw) { clearLocationFilter(); return; }
+
+  var region = AgoraGeo.lookupRegion(raw);
+  if (!region) {
+    statusEl.innerHTML = 'Sorry, we couldn\'t recognise "' + raw + '" as a UK postcode or town. Try a postcode (e.g. "G1 1AA") or a town name.';
+    statusEl.classList.add('no-match');
+    return;
+  }
+  statusEl.classList.remove('no-match');
+
+  var shown = 0, hidden = 0;
+  VERIFIED_PROVIDERS.forEach(function(p) {
+    var card = document.getElementById('provider-card-' + p.id);
+    if (!card) return;
+    var regions = supplierCoverageMap[p.id] || [];
+    var covers = regions.length === 0 ? true : regions.indexOf(region) !== -1; // no data yet = don't hide
+    card.style.display = covers ? '' : 'none';
+    covers ? shown++ : hidden++;
+  });
+
+  statusEl.innerHTML = 'Showing <strong style="color:var(--orange);">' + shown + '</strong> provider' + (shown === 1 ? '' : 's') +
+    ' covering <strong style="color:var(--orange);">' + region + '</strong>' +
+    (hidden > 0 ? ' &middot; ' + hidden + ' hidden (outside your area)' : '') +
+    ' &middot; <span class="loc-clear" onclick="clearLocationFilter()">Clear</span>';
+}
+
+function clearLocationFilter() {
+  var input = document.getElementById('locationInput');
+  var statusEl = document.getElementById('locationStatus');
+  if (input) input.value = '';
+  if (statusEl) { statusEl.innerHTML = ''; statusEl.classList.remove('no-match'); }
+  VERIFIED_PROVIDERS.forEach(function(p) {
+    var card = document.getElementById('provider-card-' + p.id);
+    if (card) card.style.display = '';
+  });
 }
 
 function selectCategory(cat) {
@@ -1458,6 +1665,14 @@ document.addEventListener('DOMContentLoaded', initServices);
   }
 
 // ── Verified Providers ────────────────────────────────────────────────────
+var supplierCoverageMap = {}; // id -> array of regions, populated from live API
+
+function loadSupplierCoverage() {
+  return fetch('/api/suppliers').then(function(r){ return r.json(); }).then(function(list){
+    (list || []).forEach(function(s){ supplierCoverageMap[s.id] = s.coverage_regions || []; });
+  }).catch(function(){ /* fall back to no coverage data — filter will no-op */ });
+}
+
 function renderVerifiedProviders() {
   var container = document.getElementById('verified-providers-section');
   if (!container) { console.error('verified-providers-section not found'); return; }
@@ -1470,6 +1685,7 @@ function renderVerifiedProviders() {
     }).join('');
     var card = document.createElement('div');
     card.className = 'company-card';
+    card.id = 'provider-card-' + p.id;
     card.style.cssText = 'cursor:pointer;border-left:3px solid var(--orange);';
     card.innerHTML =
       '<div class="card-header">' +
