@@ -199,6 +199,13 @@ window.AgoraDB = AgoraDB;
         regBtn.textContent = s.type === 'supplier' ? 'My Dashboard' : 'My Dashboard';
         regBtn.href = s.type === 'supplier' ? 'supplier_dashboard.html' : 'dashboard.html';
         regBtn.onclick = null;
+        // If this page has the logged-out "Register As Customer/Supplier" dropdown
+        // (currently only index.html), remove it — logged-in users just get one dashboard link.
+        var regWrap = regBtn.closest && regBtn.closest('.nav-reg-wrap');
+        if (regWrap) {
+          var dd = regWrap.querySelector('.nav-dropdown');
+          if (dd) dd.remove();
+        }
       }
     }
   }
@@ -255,8 +262,34 @@ window.AgoraDB = AgoraDB;
              '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
              JSON.stringify(obj, null, 2) + '</pre>';
     }
+
+    function documentsSection(docs) {
+      docs = docs || [];
+      var out = '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
+      if (docs.length === 0) {
+        out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(227,229,232,0.4);margin-bottom:20px;">No documents uploaded yet.</div>';
+        return out;
+      }
+      out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
+      docs.forEach(function(d, i) {
+        var typeLabel = d.doc_type === 'pl_insurance' ? '📄 PL Insurance' : '🏆 Accreditation';
+        var sizeKb = d.file_size ? (d.file_size/1024).toFixed(0) + 'KB' : '';
+        out += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;font-size:0.75rem;' +
+          (i < docs.length-1 ? 'border-bottom:1px solid rgba(62,107,137,0.15);' : '') + '">' +
+          '<span style="color:#F18F01;white-space:nowrap;">' + typeLabel + '</span>' +
+          '<span style="color:rgba(227,229,232,0.4);white-space:nowrap;">' + d.supplier_id + '</span>' +
+          '<span style="flex:1;color:#E3E5E8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
+          '<span style="color:rgba(227,229,232,0.3);white-space:nowrap;">' + sizeKb + '</span>' +
+          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#F18F01;text-decoration:none;border:1px solid rgba(241,143,1,0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
+          '</div>';
+      });
+      out += '</div>';
+      return out;
+    }
+
     html += section('Session', data.session);
     html += section('Basket', data.basket);
+    html += documentsSection(data.documents);
     html += section('Customers (' + (data.customers||[]).length + ')', data.customers);
     html += section('Suppliers (' + (data.suppliers||[]).length + ')', data.suppliers);
     html += section('Orders (' + (data.orders||[]).length + ')', data.orders);
