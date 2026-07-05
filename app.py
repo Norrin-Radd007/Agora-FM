@@ -7,6 +7,7 @@ Database: Uses PostgreSQL on Railway (DATABASE_URL env var) or SQLite locally.
 """
 import os, json, hashlib, secrets, datetime, io
 from flask import Flask, request, jsonify, session, send_from_directory, send_file, g
+from werkzeug.utils import secure_filename
 
 WEASYPRINT_OK   = False   # Removed — do not re-enable
 COMMISSION_RATE = 0.05
@@ -175,6 +176,7 @@ DB_PATH  = os.path.join(BASE_DIR, 'agora.db')   # SQLite only (local dev)
 app = Flask(__name__, static_folder=BASE_DIR, static_url_path='')
 app.secret_key = 'agora-fm-demo-secret-key-2026'
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['MAX_CONTENT_LENGTH'] = 12 * 1024 * 1024  # hard ceiling above the 10MB per-document limit below
 
 # ── DB helpers ──────────────────────────────────────────────────────────────
 def get_db():
@@ -227,6 +229,16 @@ def execute(sql, params=()):
 def hash_pw(p): return hashlib.sha256(p.encode()).hexdigest()
 def uid():      return secrets.token_hex(5)
 def now():      return datetime.datetime.utcnow().isoformat()
+
+def _bin(data):
+    """Wrap raw bytes for insertion into a BYTEA/BLOB column on either backend."""
+    if USE_POSTGRES:
+        return psycopg2.Binary(data)
+    return data
+
+# Document uploads: keep this well under Railway/Flask's request size ceiling.
+MAX_DOCUMENT_BYTES = 10 * 1024 * 1024  # 10MB per file
+ALLOWED_DOCUMENT_MIME = {'application/pdf', 'image/jpeg', 'image/png', 'image/heic'}
 
 # ── Static files ────────────────────────────────────────────────────────────
 @app.route('/')
@@ -323,6 +335,69 @@ def register_supplier():
                    name=d.get('contactFirst','').strip()+' '+d.get('contactLast','').strip(),
                    org=d.get('companyName','').strip())
     return jsonify(ok=True, id=sid)
+
+# ── SUPPLIER DOCUMENTS (PL insurance certs, accreditation certs) ────────────
+@app.errorhandler(413)
+def _too_large(e):
+    return jsonify(ok=False, error='File is too large — please upload a file under 10MB.'), 413
+
+@app.route('/api/suppliers/documents', methods=['POST'])
+def upload_supplier_document():
+    if 'user_id' not in session or session.get('user_type') != 'supplier':
+        return jsonify(ok=False, error='Must be logged in as a supplier to upload documents.'), 401
+
+    f = request.files.get('file')
+    if not f or not f.filename:
+        return jsonify(ok=False, error='No file was received.'), 400
+
+    doc_type = (request.form.get('doc_type') or '').strip()
+    if doc_type not in ('pl_insurance', 'accreditation'):
+        return jsonify(ok=False, error='Invalid document type.'), 400
+
+    data = f.read()
+    if len(data) == 0:
+        return jsonify(ok=False, error='That file appears to be empty.'), 400
+    if len(data) > MAX_DOCUMENT_BYTES:
+        return jsonify(ok=False, error='File is too large — please upload a file under 10MB.'), 400
+    mime = f.mimetype or 'application/octet-stream'
+    if mime not in ALLOWED_DOCUMENT_MIME:
+        return jsonify(ok=False, error='Please upload a PDF, JPG or PNG file.'), 400
+
+    doc_id   = 'doc_' + uid()
+    filename = secure_filename(f.filename) or 'document'
+    label    = (request.form.get('label') or '').strip()
+
+    execute('''INSERT INTO supplier_documents
+        (id,supplier_id,doc_type,label,filename,mime_type,file_size,file_data,uploaded_at)
+        VALUES(?,?,?,?,?,?,?,?,?)''', (
+        doc_id, session['user_id'], doc_type, label, filename, mime, len(data), _bin(data), now()
+    ))
+    return jsonify(ok=True, id=doc_id, filename=filename, doc_type=doc_type)
+
+@app.route('/api/suppliers/<sid>/documents')
+def list_supplier_documents(sid):
+    rows = query('''SELECT id,doc_type,label,filename,mime_type,file_size,uploaded_at
+        FROM supplier_documents WHERE supplier_id=? ORDER BY uploaded_at''', (sid,))
+    return jsonify(rows)
+
+@app.route('/api/suppliers/documents/<doc_id>')
+def download_supplier_document(doc_id):
+    row = query('SELECT * FROM supplier_documents WHERE id=?', (doc_id,), one=True)
+    if not row:
+        return jsonify(error='Not found'), 404
+    data = bytes(row['file_data'])
+    return send_file(io.BytesIO(data), mimetype=row['mime_type'],
+                      as_attachment=False, download_name=row['filename'])
+
+@app.route('/api/suppliers/documents/<doc_id>', methods=['DELETE'])
+def delete_supplier_document(doc_id):
+    if 'user_id' not in session or session.get('user_type') != 'supplier':
+        return jsonify(ok=False, error='Must be logged in as a supplier.'), 401
+    row = query('SELECT supplier_id FROM supplier_documents WHERE id=?', (doc_id,), one=True)
+    if not row or row['supplier_id'] != session['user_id']:
+        return jsonify(ok=False, error='Not found.'), 404
+    execute('DELETE FROM supplier_documents WHERE id=?', (doc_id,))
+    return jsonify(ok=True)
 
 @app.route('/api/suppliers')
 def get_suppliers():
@@ -567,9 +642,12 @@ def admin_dump():
     custs = query('SELECT id,org_name,email,first_name,last_name,created_at FROM customers')
     sups  = query('SELECT id,company_name,email,contact_first,contact_last,verified,created_at FROM suppliers')
     ords  = query('SELECT id,customer_email,customer_org,total,payment_method,status,created_at FROM orders ORDER BY created_at DESC')
+    docs  = query('''SELECT id,supplier_id,doc_type,label,filename,mime_type,file_size,uploaded_at
+                      FROM supplier_documents ORDER BY uploaded_at DESC''')
     b     = _get_basket()
     rev   = sum(r['total'] for r in ords)
-    return jsonify(customers=custs, suppliers=sups, orders=ords, basket=b, session=_sess() if 'user_id' in session else {},
+    return jsonify(customers=custs, suppliers=sups, orders=ords, documents=docs, basket=b,
+                   session=_sess() if 'user_id' in session else {},
                    stats=dict(customers=len(custs), suppliers=len(sups), orders=len(ords),
                                revenue=round(rev,2), commission=round(rev*COMMISSION_RATE,2)))
 
@@ -577,7 +655,7 @@ def admin_dump():
 def admin_reset():
     db = get_db()
     cur = db.cursor()
-    for t in ('customers','suppliers','orders','baskets','reviews'):
+    for t in ('customers','suppliers','orders','baskets','reviews','supplier_documents'):
         cur.execute(f'DELETE FROM {t}')
     db.commit()
     session.clear(); _seed(db)
@@ -700,6 +778,16 @@ CREATE TABLE IF NOT EXISTS reviews(
     supplier_response TEXT,
     supplier_response_at TEXT,
     created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS supplier_documents(
+    id TEXT PRIMARY KEY,
+    supplier_id TEXT NOT NULL,
+    doc_type TEXT NOT NULL,
+    label TEXT,
+    filename TEXT,
+    mime_type TEXT,
+    file_size INTEGER,
+    file_data BYTEA,
+    uploaded_at TEXT NOT NULL);
 '''
 
 def _seed(db=None):
