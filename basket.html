@@ -21,30 +21,30 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 2.6rem;
       letter-spacing: 1px;
-      color: var(--grey);
+      color: var(--ink);
       margin-bottom: 6px;
     }
-    .basket-count-sub { font-size: 0.85rem; color: var(--grey-dim); font-weight: 300; }
+    .basket-count-sub { font-size: 0.85rem; color: var(--ink-dim); font-weight: 300; }
 
     /* Empty state */
     .basket-empty {
       text-align: center;
       padding: 90px 20px;
-      border: 1px dashed rgba(62,107,137,0.3);
+      border: 1px dashed rgba(26,26,26,0.3);
       border-radius: var(--radius);
-      background: rgba(17,34,64,0.3);
+      background: #FFFFFF;
     }
     .basket-empty-icon { font-size: 2.6rem; margin-bottom: 18px; opacity: 0.5; }
     .basket-empty h3 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.6rem;
       letter-spacing: 1px;
-      color: var(--grey);
+      color: var(--ink);
       margin-bottom: 8px;
     }
     .basket-empty p {
       font-size: 0.88rem;
-      color: var(--grey-dim);
+      color: var(--ink-dim);
       margin: 0 auto 26px;
       max-width: 360px;
       line-height: 1.6;
@@ -60,21 +60,21 @@
       grid-template-columns: auto 1fr auto auto auto;
       align-items: center;
       gap: 18px;
-      background: rgba(17,34,64,0.6);
-      border: 1px solid rgba(62,107,137,0.25);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.25);
       border-radius: var(--radius);
       padding: 16px 18px;
       transition: border-color 0.2s;
     }
-    .basket-item-card:hover { border-color: rgba(62,107,137,0.45); }
+    .basket-item-card:hover { border-color: rgba(26,26,26,0.45); }
     .item-cat-tag {
       font-size: 0.62rem;
       font-weight: 700;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: var(--orange);
-      background: rgba(241,143,1,0.1);
-      border: 1px solid rgba(241,143,1,0.25);
+      color: var(--accent-text);
+      background: rgba(241, 143, 1, 0.1);
+      border: 1px solid rgba(241, 143, 1, 0.25);
       padding: 4px 9px;
       border-radius: var(--radius);
       white-space: nowrap;
@@ -83,36 +83,36 @@
     .item-name {
       font-size: 0.95rem;
       font-weight: 600;
-      color: var(--grey);
+      color: var(--ink);
       margin-bottom: 3px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .item-supplier { font-size: 0.78rem; color: var(--steel-light); margin-bottom: 3px; }
-    .item-unit-price { font-size: 0.75rem; color: var(--grey-dim); }
+    .item-supplier { font-size: 0.78rem; color: var(--ink-2); margin-bottom: 3px; }
+    .item-unit-price { font-size: 0.75rem; color: var(--ink-dim); }
     .item-qty {
       display: flex;
       align-items: center;
-      border: 1px solid rgba(62,107,137,0.3);
+      border: 1px solid rgba(26,26,26,0.3);
       border-radius: var(--radius);
       overflow: hidden;
     }
     .item-qty button {
       width: 28px; height: 30px;
-      background: rgba(10,26,47,0.6);
+      background: #FFFFFF;
       border: none;
-      color: var(--grey-dim);
+      color: var(--ink-dim);
       font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .item-qty button:hover { background: rgba(241,143,1,0.15); color: var(--orange); }
+    .item-qty button:hover { background: rgba(241, 143, 1, 0.15); color: var(--accent-text); }
     .item-qty input {
       width: 38px; height: 30px;
       border: none;
-      border-left: 1px solid rgba(62,107,137,0.3);
-      border-right: 1px solid rgba(62,107,137,0.3);
-      background: rgba(10,26,47,0.8);
-      color: var(--grey);
+      border-left: 1px solid rgba(26,26,26,0.3);
+      border-right: 1px solid rgba(26,26,26,0.3);
+      background: #FFFFFF;
+      color: var(--ink);
       text-align: center;
       font-size: 0.82rem;
       outline: none;
@@ -121,44 +121,44 @@
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 700;
       font-size: 1rem;
-      color: var(--orange);
+      color: var(--accent-text);
       min-width: 72px;
       text-align: right;
     }
     .item-remove {
       background: none;
       border: none;
-      color: rgba(227,229,232,0.25);
+      color: rgba(26,26,26,0.68);
       cursor: pointer;
       font-size: 0.95rem;
       padding: 4px 6px;
       transition: color 0.15s;
     }
-    .item-remove:hover { color: #e74c3c; }
+    .item-remove:hover { color: #C0392B; }
 
     /* Summary */
     .basket-summary { position: sticky; top: calc(var(--nav-height) + 38px + 20px); }
     .summary-row {
       display: flex; justify-content: space-between;
-      font-size: 0.82rem; color: var(--grey-dim);
+      font-size: 0.82rem; color: var(--ink-dim);
       margin-bottom: 10px;
     }
-    .summary-row.commission-row { color: rgba(241,143,1,0.7); font-size: 0.76rem; }
+    .summary-row.commission-row { color: rgba(166,88,0,0.9); font-size: 0.76rem; }
     .summary-total {
       display: flex; justify-content: space-between;
       align-items: baseline;
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.5rem;
       letter-spacing: 1px;
-      color: var(--grey);
-      border-top: 1px solid rgba(62,107,137,0.2);
+      color: var(--ink);
+      border-top: 1px solid rgba(26,26,26,0.2);
       padding-top: 14px;
       margin-top: 4px;
     }
-    .summary-total span:last-child { color: var(--orange); }
+    .summary-total span:last-child { color: var(--accent-text); }
     .commission-note {
       font-size: 0.7rem;
-      color: rgba(241,143,1,0.55);
+      color: rgba(166,88,0,0.9);
       line-height: 1.5;
       margin-top: 12px;
     }
@@ -291,7 +291,7 @@ window.AgoraDB = AgoraDB;
     var link = document.createElement('a');
     link.id = 'admin-db-link';
     link.href = '#';
-    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(166,88,0,0.9);text-decoration:none;letter-spacing:1px;margin-left:16px;';
     link.textContent = '⚙ View DB';
     link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
     footer.appendChild(link);
@@ -303,14 +303,14 @@ window.AgoraDB = AgoraDB;
     var data = await AgoraDB.admin.dump();
     var overlay = document.createElement('div');
     overlay.id = 'admin-panel-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,242,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#1A1A1A;';
     var fmt = function(n){ return '£' + (n||0).toFixed(2); };
     var html = '<div style="max-width:1000px;margin:0 auto;">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
-    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241, 143, 1, 0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#A65800;">AGORA FM — DATABASE VIEWER</span>';
     html += '<div style="display:flex;gap:12px;">';
-    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
-    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);border-radius:2px;color:#C0392B;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.3);border-radius:2px;color:#A65800;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
     html += '</div></div>';
 
     if (data.stats) {
@@ -318,37 +318,37 @@ window.AgoraDB = AgoraDB;
       [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
        ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
        ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
-        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
-        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+        html += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#A65800;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(26,26,26,0.68);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
       });
       html += '</div>';
     }
 
     function section(title, obj) {
-      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
-             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+      return '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
              JSON.stringify(obj, null, 2) + '</pre>';
     }
 
     function documentsSection(docs) {
       docs = docs || [];
-      var out = '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
+      var out = '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
       if (docs.length === 0) {
-        out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(227,229,232,0.4);margin-bottom:20px;">No documents uploaded yet.</div>';
+        out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(26,26,26,0.68);margin-bottom:20px;">No documents uploaded yet.</div>';
         return out;
       }
-      out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
+      out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
       docs.forEach(function(d, i) {
         var typeLabel = d.doc_type === 'pl_insurance' ? '📄 PL Insurance' : '🏆 Accreditation';
         var sizeKb = d.file_size ? (d.file_size/1024).toFixed(0) + 'KB' : '';
         out += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;font-size:0.75rem;' +
-          (i < docs.length-1 ? 'border-bottom:1px solid rgba(62,107,137,0.15);' : '') + '">' +
-          '<span style="color:#F18F01;white-space:nowrap;">' + typeLabel + '</span>' +
-          '<span style="color:rgba(227,229,232,0.4);white-space:nowrap;">' + d.supplier_id + '</span>' +
-          '<span style="flex:1;color:#E3E5E8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
-          '<span style="color:rgba(227,229,232,0.3);white-space:nowrap;">' + sizeKb + '</span>' +
-          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#F18F01;text-decoration:none;border:1px solid rgba(241,143,1,0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
+          (i < docs.length-1 ? 'border-bottom:1px solid rgba(26,26,26,0.15);' : '') + '">' +
+          '<span style="color:#A65800;white-space:nowrap;">' + typeLabel + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + d.supplier_id + '</span>' +
+          '<span style="flex:1;color:#1A1A1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + sizeKb + '</span>' +
+          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#A65800;text-decoration:none;border:1px solid rgba(241, 143, 1, 0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
           '</div>';
       });
       out += '</div>';
@@ -404,14 +404,14 @@ window.AgoraDB = AgoraDB;
       '<a id="agora-basket-btn" href="basket.html" style="',
         'position:relative;display:inline-flex;align-items:center;gap:6px;',
         'padding:7px 14px;background:transparent;',
-        'border:1px solid rgba(62,107,137,0.4);border-radius:2px;',
-        'color:rgba(227,229,232,0.6);font-family:\'Barlow Condensed\',sans-serif;',
+        'border:1px solid rgba(26,26,26,0.4);border-radius:2px;',
+        'color:rgba(26,26,26,0.68);font-family:\'Barlow Condensed\',sans-serif;',
         'font-size:0.78rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;',
         'cursor:pointer;transition:all 0.2s;white-space:nowrap;text-decoration:none;',
       '">',
         '🛒 Basket',
         '<span id="agora-basket-badge" style="',
-          'display:none;background:#F18F01;color:#0A1A2F;',
+          'display:none;background:#111111;color:#FAF8F2;',
           'font-size:0.6rem;font-weight:700;padding:1px 5px;',
           'border-radius:8px;min-width:16px;text-align:center;',
           'font-family:\'Barlow Condensed\',sans-serif;',
@@ -423,8 +423,8 @@ window.AgoraDB = AgoraDB;
 
     var btn = document.getElementById('agora-basket-btn');
     if (btn) {
-      btn.addEventListener('mouseover', function(){ this.style.borderColor='#F18F01'; this.style.color='#F18F01'; });
-      btn.addEventListener('mouseout',  function(){ this.style.borderColor='rgba(62,107,137,0.4)'; this.style.color='rgba(227,229,232,0.6)'; });
+      btn.addEventListener('mouseover', function(){ this.style.borderColor='#f18f01'; this.style.color='#A65800'; });
+      btn.addEventListener('mouseout',  function(){ this.style.borderColor='rgba(26,26,26,0.4)'; this.style.color='rgba(26,26,26,0.68)'; });
     }
   }
 
@@ -447,15 +447,15 @@ window.AgoraDB = AgoraDB;
     toast.id = 'agora-basket-toast';
     toast.style.cssText =
       'position:fixed;bottom:24px;right:24px;z-index:800;max-width:320px;' +
-      'background:rgba(10,26,47,0.98);border:1px solid rgba(241,143,1,0.4);' +
-      'border-radius:2px;padding:14px 16px;box-shadow:0 12px 32px rgba(0,0,0,0.5);' +
+      'background:rgba(250,248,242,0.98);border:1px solid rgba(241, 143, 1, 0.4);' +
+      'border-radius:2px;padding:14px 16px;box-shadow:0 12px 32px rgba(0, 0, 0, 0.175);' +
       'display:flex;align-items:center;gap:14px;animation:fadeUp 0.2s ease both;';
     toast.innerHTML =
       '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:0.68rem;color:#5cb85c;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">✓ Added to Basket</div>' +
-        '<div style="font-size:0.82rem;color:#E3E5E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ((item && item.name) || 'Service') + '</div>' +
+        '<div style="font-size:0.68rem;color:#1E7B34;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">✓ Added to Basket</div>' +
+        '<div style="font-size:0.82rem;color:#1A1A1A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ((item && item.name) || 'Service') + '</div>' +
       '</div>' +
-      '<a href="basket.html" style="flex-shrink:0;padding:7px 12px;background:#F18F01;color:#0A1A2F;' +
+      '<a href="basket.html" style="flex-shrink:0;padding:7px 12px;background:#111111;color:#FAF8F2;' +
       'font-family:\'Barlow Condensed\',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:1.5px;' +
       'text-transform:uppercase;text-decoration:none;border-radius:2px;">View</a>';
     document.body.appendChild(toast);

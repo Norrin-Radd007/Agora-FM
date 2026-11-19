@@ -22,16 +22,16 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 2.4rem;
       letter-spacing: 1px;
-      color: var(--grey);
+      color: var(--ink);
       margin-bottom: 6px;
     }
-    .page-sub { font-size: 0.85rem; color: var(--grey-dim); font-weight: 300; }
+    .page-sub { font-size: 0.85rem; color: var(--ink-dim); font-weight: 300; }
 
     /* Success banner */
     .success-banner {
       display: none;
       background: rgba(2,122,72,0.12);
-      border: 1px solid rgba(108,233,166,0.3);
+      border: 1px solid rgba(30,123,52,0.3);
       border-radius: var(--radius);
       padding: 14px 18px;
       align-items: center;
@@ -45,29 +45,29 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    .success-title { font-size: 0.9rem; font-weight: 600; color: #6CE9A6; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; text-transform: uppercase; }
-    .success-sub { font-size: 0.82rem; color: rgba(108,233,166,0.7); margin-top: 3px; }
+    .success-title { font-size: 0.9rem; font-weight: 600; color: #1E7B34; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+    .success-sub { font-size: 0.82rem; color: rgba(30,123,52,0.9); margin-top: 3px; }
 
     /* Payment mode toggle */
     .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
     .pay-mode-btn {
       padding: 18px 20px;
       border-radius: var(--radius);
-      border: 1px solid rgba(62,107,137,0.3);
+      border: 1px solid rgba(26,26,26,0.3);
       cursor: pointer;
       text-align: left;
-      background: rgba(17,34,64,0.5);
+      background: #FFFFFF;
       transition: all 0.15s;
     }
-    .pay-mode-btn:hover { border-color: rgba(241,143,1,0.4); }
+    .pay-mode-btn:hover { border-color: rgba(241, 143, 1, 0.4); }
     .pay-mode-btn.active {
-      border-color: var(--orange);
-      background: rgba(241,143,1,0.08);
-      box-shadow: 0 0 0 3px rgba(241,143,1,0.1);
+      border-color: var(--accent);
+      background: rgba(241, 143, 1, 0.08);
+      box-shadow: 0 0 0 3px rgba(241, 143, 1, 0.1);
     }
     .pay-mode-icon { font-size: 22px; margin-bottom: 8px; }
-    .pay-mode-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--grey); margin-bottom: 3px; }
-    .pay-mode-desc { font-size: 0.78rem; color: var(--grey-dim); font-weight: 300; }
+    .pay-mode-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink); margin-bottom: 3px; }
+    .pay-mode-desc { font-size: 0.78rem; color: var(--ink-dim); font-weight: 300; }
 
     /* Panel */
     .panel { display: none; }
@@ -75,8 +75,8 @@
 
     /* Cards */
     .pay-card {
-      background: rgba(17,34,64,0.55);
-      border: 1px solid rgba(62,107,137,0.25);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.25);
       border-radius: var(--radius);
       padding: 22px 24px;
       margin-bottom: 16px;
@@ -84,81 +84,81 @@
     .pay-card-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 16px; padding-bottom: 12px;
-      border-bottom: 1px solid rgba(62,107,137,0.2);
+      border-bottom: 1px solid rgba(26,26,26,0.2);
     }
     .pay-card-title {
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.85rem; font-weight: 700;
       letter-spacing: 1.5px; text-transform: uppercase;
-      color: var(--grey);
+      color: var(--ink);
     }
-    .lock-tag { font-size: 0.65rem; color: rgba(227,229,232,0.4); background: rgba(62,107,137,0.15); border: 1px solid rgba(62,107,137,0.2); padding: 2px 8px; border-radius: var(--radius); letter-spacing: 0.5px; }
-    .editable-tag { font-size: 0.65rem; color: var(--orange); background: rgba(241,143,1,0.1); border: 1px solid rgba(241,143,1,0.3); padding: 2px 8px; border-radius: var(--radius); letter-spacing: 0.5px; }
+    .lock-tag { font-size: 0.65rem; color: rgba(26,26,26,0.68); background: rgba(26,26,26,0.06); border: 1px solid rgba(26,26,26,0.2); padding: 2px 8px; border-radius: var(--radius); letter-spacing: 0.5px; }
+    .editable-tag { font-size: 0.65rem; color: var(--accent-text); background: rgba(241, 143, 1, 0.1); border: 1px solid rgba(241, 143, 1, 0.3); padding: 2px 8px; border-radius: var(--radius); letter-spacing: 0.5px; }
 
     /* Form fields in dark theme */
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
     .field-row.single { grid-template-columns: 1fr; }
     .field-row.triple { grid-template-columns: 1fr 1fr 1fr; }
     .field { display: flex; flex-direction: column; gap: 6px; }
-    .field label { font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.5); text-transform: uppercase; letter-spacing: 1.5px; }
+    .field label { font-size: 0.62rem; font-weight: 600; color: rgba(26,26,26,0.68); text-transform: uppercase; letter-spacing: 1.5px; }
     .field input, .field select {
       padding: 10px 12px;
       border-radius: var(--radius);
-      border: 1px solid rgba(62,107,137,0.3);
-      background: rgba(10,26,47,0.8);
-      color: var(--grey);
+      border: 1px solid rgba(26,26,26,0.3);
+      background: #FFFFFF;
+      color: var(--ink);
       font-size: 0.88rem;
       font-family: 'Barlow', sans-serif;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .field input::placeholder { color: rgba(227,229,232,0.2); }
-    .field input:focus, .field select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(241,143,1,0.1); }
-    .field input:disabled { background: rgba(10,26,47,0.4); color: rgba(227,229,232,0.35); cursor: not-allowed; border-color: rgba(62,107,137,0.12); }
-    .field select option { background: #0D2040; }
+    .field input::placeholder { color: rgba(26,26,26,0.68); }
+    .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(241, 143, 1, 0.1); }
+    .field input:disabled { background: #FFFFFF; color: rgba(26,26,26,0.68); cursor: not-allowed; border-color: rgba(26,26,26,0.12); }
+    .field select option { background: #FFFFFF; }
 
     /* Cost table */
     .table-wrap { overflow-x: auto; }
     .cost-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 580px; }
-    .cost-table th { text-align: left; font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.4); text-transform: uppercase; letter-spacing: 1px; padding: 8px 10px; border-bottom: 1px solid rgba(62,107,137,0.2); }
-    .cost-table td { padding: 10px; border-bottom: 1px solid rgba(62,107,137,0.1); color: var(--grey); vertical-align: middle; }
+    .cost-table th { text-align: left; font-size: 0.62rem; font-weight: 600; color: rgba(26,26,26,0.68); text-transform: uppercase; letter-spacing: 1px; padding: 8px 10px; border-bottom: 1px solid rgba(26,26,26,0.2); }
+    .cost-table td { padding: 10px; border-bottom: 1px solid rgba(26,26,26,0.1); color: var(--ink); vertical-align: middle; }
     .cost-table tr:last-child td { border-bottom: none; }
-    .cost-table input[type=number] { width: 80px; padding: 6px 8px; border: 1px solid rgba(62,107,137,0.3); border-radius: var(--radius); background: rgba(10,26,47,0.8); color: var(--grey); font-size: 0.82rem; font-family: 'Barlow', sans-serif; outline: none; }
-    .cost-table input[type=number]:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(241,143,1,0.1); }
-    .total-cell { font-weight: 700; color: var(--orange); font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; }
+    .cost-table input[type=number] { width: 80px; padding: 6px 8px; border: 1px solid rgba(26,26,26,0.3); border-radius: var(--radius); background: #FFFFFF; color: var(--ink); font-size: 0.82rem; font-family: 'Barlow', sans-serif; outline: none; }
+    .cost-table input[type=number]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(241, 143, 1, 0.1); }
+    .total-cell { font-weight: 700; color: var(--accent-text); font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; }
 
     /* Desc box */
-    .desc-box { background: rgba(10,26,47,0.5); border-left: 3px solid var(--orange); padding: 12px 14px; font-size: 0.85rem; color: var(--grey-dim); line-height: 1.65; }
-    .desc-box strong { color: var(--orange); font-weight: 600; }
+    .desc-box { background: #FFFFFF; border-left: 3px solid var(--accent); padding: 12px 14px; font-size: 0.85rem; color: var(--ink-dim); line-height: 1.65; }
+    .desc-box strong { color: var(--accent-text); font-weight: 600; }
 
     /* Signatures */
     .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .sig-box { border: 1px solid rgba(62,107,137,0.2); border-radius: var(--radius); padding: 16px; background: rgba(10,26,47,0.4); }
-    .sig-label { font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.4); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
-    .sig-input { width: 100%; background: transparent; border: none; border-bottom: 1px dashed rgba(62,107,137,0.5); color: var(--grey); font-size: 1.1rem; font-style: italic; font-family: Georgia, serif; padding: 4px 2px 8px; margin-bottom: 8px; outline: none; transition: border-color 0.2s; }
-    .sig-input:focus { border-bottom-color: var(--orange); }
-    .sig-date { font-size: 0.68rem; color: rgba(227,229,232,0.3); }
+    .sig-box { border: 1px solid rgba(26,26,26,0.2); border-radius: var(--radius); padding: 16px; background: #FFFFFF; }
+    .sig-label { font-size: 0.62rem; font-weight: 600; color: rgba(26,26,26,0.68); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+    .sig-input { width: 100%; background: transparent; border: none; border-bottom: 1px dashed rgba(26,26,26,0.5); color: var(--ink); font-size: 1.1rem; font-style: italic; font-family: Georgia, serif; padding: 4px 2px 8px; margin-bottom: 8px; outline: none; transition: border-color 0.2s; }
+    .sig-input:focus { border-bottom-color: var(--accent); }
+    .sig-date { font-size: 0.68rem; color: rgba(26,26,26,0.68); }
 
     /* Action row */
     .action-row { display: flex; gap: 12px; margin-top: 22px; }
     .action-btn { flex: 1; padding: 14px 20px; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 0.92rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; border: none; }
-    .action-btn-primary { background: var(--orange); color: var(--navy); }
-    .action-btn-primary:hover { background: var(--orange-hover); box-shadow: 0 6px 24px rgba(241,143,1,0.35); transform: translateY(-1px); }
-    .action-btn-outline { background: transparent; color: var(--grey); border: 1px solid rgba(62,107,137,0.4); }
-    .action-btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+    .action-btn-primary { background: var(--btn); color: var(--on-btn); }
+    .action-btn-primary:hover { background: var(--btn-hover); box-shadow: 0 6px 24px rgba(241, 143, 1, 0.35); transform: translateY(-1px); }
+    .action-btn-outline { background: transparent; color: var(--ink); border: 1px solid rgba(26,26,26,0.4); }
+    .action-btn-outline:hover { border-color: var(--accent); color: var(--accent-text); }
 
     /* Renewal note */
-    .renewal-note { font-size: 0.78rem; color: var(--grey-dim); display: flex; gap: 8px; margin-top: 14px; padding: 10px 14px; background: rgba(62,107,137,0.08); border: 1px solid rgba(62,107,137,0.15); border-radius: var(--radius); line-height: 1.5; }
+    .renewal-note { font-size: 0.78rem; color: var(--ink-dim); display: flex; gap: 8px; margin-top: 14px; padding: 10px 14px; background: rgba(26,26,26,0.032); border: 1px solid rgba(26,26,26,0.15); border-radius: var(--radius); line-height: 1.5; }
 
     /* PO badge */
-    .po-badge { display: inline-block; font-size: 0.62rem; font-weight: 700; background: rgba(241,143,1,0.1); color: var(--orange); padding: 3px 12px; border-radius: var(--radius); letter-spacing: 2px; margin-bottom: 14px; border: 1px solid rgba(241,143,1,0.3); text-transform: uppercase; }
+    .po-badge { display: inline-block; font-size: 0.62rem; font-weight: 700; background: rgba(241, 143, 1, 0.1); color: var(--accent-text); padding: 3px 12px; border-radius: var(--radius); letter-spacing: 2px; margin-bottom: 14px; border: 1px solid rgba(241, 143, 1, 0.3); text-transform: uppercase; }
 
     /* Section label */
-    .section-label { font-size: 0.62rem; font-weight: 600; color: rgba(227,229,232,0.35); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
+    .section-label { font-size: 0.62rem; font-weight: 600; color: rgba(26,26,26,0.68); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
 
     /* Page footer */
-    .page-rule { height: 1px; background: rgba(62,107,137,0.15); margin: 32px 0 18px; }
-    .page-foot { text-align: center; font-size: 0.75rem; color: rgba(227,229,232,0.25); font-weight: 300; }
+    .page-rule { height: 1px; background: rgba(26,26,26,0.06); margin: 32px 0 18px; }
+    .page-foot { text-align: center; font-size: 0.75rem; color: rgba(26,26,26,0.68); font-weight: 300; }
 
     @media (max-width: 600px) {
       .mode-grid, .field-row, .sig-grid, .action-row { grid-template-columns: 1fr; }
@@ -284,7 +284,7 @@ window.AgoraDB = AgoraDB;
     var link = document.createElement('a');
     link.id = 'admin-db-link';
     link.href = '#';
-    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(166,88,0,0.9);text-decoration:none;letter-spacing:1px;margin-left:16px;';
     link.textContent = '⚙ View DB';
     link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
     footer.appendChild(link);
@@ -296,14 +296,14 @@ window.AgoraDB = AgoraDB;
     var data = await AgoraDB.admin.dump();
     var overlay = document.createElement('div');
     overlay.id = 'admin-panel-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,242,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#1A1A1A;';
     var fmt = function(n){ return '£' + (n||0).toFixed(2); };
     var html = '<div style="max-width:1000px;margin:0 auto;">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
-    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241, 143, 1, 0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#A65800;">AGORA FM — DATABASE VIEWER</span>';
     html += '<div style="display:flex;gap:12px;">';
-    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
-    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);border-radius:2px;color:#C0392B;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.3);border-radius:2px;color:#A65800;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
     html += '</div></div>';
 
     if (data.stats) {
@@ -311,37 +311,37 @@ window.AgoraDB = AgoraDB;
       [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
        ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
        ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
-        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
-        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+        html += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#A65800;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(26,26,26,0.68);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
       });
       html += '</div>';
     }
 
     function section(title, obj) {
-      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
-             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+      return '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
              JSON.stringify(obj, null, 2) + '</pre>';
     }
 
     function documentsSection(docs) {
       docs = docs || [];
-      var out = '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
+      var out = '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
       if (docs.length === 0) {
-        out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(227,229,232,0.4);margin-bottom:20px;">No documents uploaded yet.</div>';
+        out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(26,26,26,0.68);margin-bottom:20px;">No documents uploaded yet.</div>';
         return out;
       }
-      out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
+      out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
       docs.forEach(function(d, i) {
         var typeLabel = d.doc_type === 'pl_insurance' ? '📄 PL Insurance' : '🏆 Accreditation';
         var sizeKb = d.file_size ? (d.file_size/1024).toFixed(0) + 'KB' : '';
         out += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;font-size:0.75rem;' +
-          (i < docs.length-1 ? 'border-bottom:1px solid rgba(62,107,137,0.15);' : '') + '">' +
-          '<span style="color:#F18F01;white-space:nowrap;">' + typeLabel + '</span>' +
-          '<span style="color:rgba(227,229,232,0.4);white-space:nowrap;">' + d.supplier_id + '</span>' +
-          '<span style="flex:1;color:#E3E5E8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
-          '<span style="color:rgba(227,229,232,0.3);white-space:nowrap;">' + sizeKb + '</span>' +
-          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#F18F01;text-decoration:none;border:1px solid rgba(241,143,1,0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
+          (i < docs.length-1 ? 'border-bottom:1px solid rgba(26,26,26,0.15);' : '') + '">' +
+          '<span style="color:#A65800;white-space:nowrap;">' + typeLabel + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + d.supplier_id + '</span>' +
+          '<span style="flex:1;color:#1A1A1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + sizeKb + '</span>' +
+          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#A65800;text-decoration:none;border:1px solid rgba(241, 143, 1, 0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
           '</div>';
       });
       out += '</div>';
@@ -409,22 +409,22 @@ window.AgoraDB = AgoraDB;
       var line = parseFloat(item.price) * (item.qty||1);
       var vat  = line * 0.20;
       var tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + item.name + '<br><small style="color:rgba(85,137,168,0.8);font-size:0.72rem;">' + (item.supplierName||'') + '</small></td>' +
+      tr.innerHTML = '<td>' + item.name + '<br><small style="color:rgba(90,87,80,0.85);font-size:0.72rem;">' + (item.supplierName||'') + '</small></td>' +
         '<td>' + (item.qty||1) + '</td><td>' + fmt(item.price) + '</td>' +
         '<td>' + fmt(line) + '</td><td>' + fmt(vat) + '</td>' +
-        '<td style="color:rgba(241,143,1,0.7);">' + fmt(line*0.05) + '</td>' +
+        '<td style="color:rgba(166,88,0,0.9);">' + fmt(line*0.05) + '</td>' +
         '<td class="total-cell">' + fmt(line+vat) + '</td>';
       tbody.appendChild(tr);
     });
     var tfoot = document.getElementById('basket-summary-tfoot');
     if (tfoot) {
-      tfoot.innerHTML = '<tr style="border-top:2px solid rgba(62,107,137,0.3);">' +
-        '<td colspan="3" style="font-weight:600;color:#E3E5E8;">TOTALS</td>' +
-        '<td style="font-weight:600;color:#E3E5E8;">' + fmt(b.subtotal) + '</td>' +
-        '<td style="color:#E3E5E8;">' + fmt(b.vat) + '</td>' +
-        '<td style="color:rgba(241,143,1,0.7);">' + fmt(b.commission) + '</td>' +
+      tfoot.innerHTML = '<tr style="border-top:2px solid rgba(26,26,26,0.3);">' +
+        '<td colspan="3" style="font-weight:600;color:#1A1A1A;">TOTALS</td>' +
+        '<td style="font-weight:600;color:#1A1A1A;">' + fmt(b.subtotal) + '</td>' +
+        '<td style="color:#1A1A1A;">' + fmt(b.vat) + '</td>' +
+        '<td style="color:rgba(166,88,0,0.9);">' + fmt(b.commission) + '</td>' +
         '<td class="total-cell" style="font-size:1.05rem;">' + fmt(b.total) + '</td></tr>' +
-        '<tr><td colspan="7" style="font-size:0.72rem;color:rgba(241,143,1,0.6);padding-top:6px;">5% Agora FM commission (' + fmt(b.commission) + ') is charged to the service provider, not the customer.</td></tr>';
+        '<tr><td colspan="7" style="font-size:0.72rem;color:rgba(166,88,0,0.9);padding-top:6px;">5% Agora FM commission (' + fmt(b.commission) + ') is charged to the service provider, not the customer.</td></tr>';
     }
   }
 
@@ -451,14 +451,14 @@ window.AgoraDB = AgoraDB;
     var btn = document.getElementById('handshake-btn');
     if (btn) {
       btn.disabled = true;
-      btn.style.background = btn.style.borderColor = '#5cb85c';
+      btn.style.background = btn.style.borderColor = '#1E7B34';
       btn.style.color = '#fff';
       btn.textContent = '✓ Handshake Accepted — ' + new Date().toLocaleTimeString('en-GB');
     }
     var hs = document.getElementById('handshake-section');
     if (hs) {
       var msg = document.createElement('div');
-      msg.style.cssText = 'margin-top:12px;padding:10px 14px;background:rgba(92,184,92,0.1);border:1px solid rgba(92,184,92,0.3);border-radius:2px;font-size:0.75rem;color:#5cb85c;line-height:1.7;';
+      msg.style.cssText = 'margin-top:12px;padding:10px 14px;background:rgba(30,123,52,0.1);border:1px solid rgba(30,123,52,0.3);border-radius:2px;font-size:0.75rem;color:#1E7B34;line-height:1.7;';
       msg.innerHTML = '<strong>Handshake recorded at ' + new Date().toLocaleTimeString('en-GB') + '</strong><br>' +
         '✓ Agora FM Terms &amp; Conditions agreed &nbsp;·&nbsp; ✓ Supplier terms accepted &nbsp;·&nbsp; ✓ 5% commission accepted';
       hs.appendChild(msg);
@@ -575,7 +575,7 @@ window.AgoraDB = AgoraDB;
       <span class="eyebrow-line"></span>
       <span class="eyebrow-text">Secure Transaction</span>
     </div>
-    <div class="page-headline">Payment &amp; <span style="color:var(--orange);">Purchase Order</span></div>
+    <div class="page-headline">Payment &amp; <span style="color:var(--accent-text);">Purchase Order</span></div>
     <p class="page-sub">Complete your FM service transaction — pay by card or generate a supplier-specific purchase order.</p>
   </div>
 
@@ -592,29 +592,29 @@ window.AgoraDB = AgoraDB;
 
   <!-- HANDSHAKE SECTION -->
   <div id="handshake-section" style="margin-bottom:28px;">
-    <div style="background:rgba(241,143,1,0.06);border:1px solid rgba(241,143,1,0.3);border-radius:2px;padding:24px 28px;">
+    <div style="background:rgba(241, 143, 1, 0.06);border:1px solid rgba(241, 143, 1, 0.3);border-radius:2px;padding:24px 28px;">
       <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;">
         <div style="flex:1;min-width:260px;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#E3E5E8;margin-bottom:8px;">🤝 Agora FM Handshake</div>
-          <p style="font-size:0.82rem;color:rgba(227,229,232,0.6);line-height:1.65;font-weight:300;">Before proceeding, confirm your agreement by clicking the Handshake button:</p>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#1A1A1A;margin-bottom:8px;">🤝 Agora FM Handshake</div>
+          <p style="font-size:0.82rem;color:rgba(26,26,26,0.68);line-height:1.65;font-weight:300;">Before proceeding, confirm your agreement by clicking the Handshake button:</p>
           <ul style="margin:10px 0 0;padding:0;list-style:none;">
-            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>You agree to the Agora FM Terms &amp; Conditions</li>
-            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>You agree to the selected supplier terms of service</li>
-            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>You accept the 5% Agora FM commission (charged to the supplier)</li>
-            <li style="font-size:0.78rem;color:rgba(227,229,232,0.6);padding:3px 0;display:flex;gap:8px;"><span style="color:#F18F01;">✓</span>Your agreement will be timestamped and stored in the database</li>
+            <li style="font-size:0.78rem;color:rgba(26,26,26,0.68);padding:3px 0;display:flex;gap:8px;"><span style="color:#A65800;">✓</span>You agree to the Agora FM Terms &amp; Conditions</li>
+            <li style="font-size:0.78rem;color:rgba(26,26,26,0.68);padding:3px 0;display:flex;gap:8px;"><span style="color:#A65800;">✓</span>You agree to the selected supplier terms of service</li>
+            <li style="font-size:0.78rem;color:rgba(26,26,26,0.68);padding:3px 0;display:flex;gap:8px;"><span style="color:#A65800;">✓</span>You accept the 5% Agora FM commission (charged to the supplier)</li>
+            <li style="font-size:0.78rem;color:rgba(26,26,26,0.68);padding:3px 0;display:flex;gap:8px;"><span style="color:#A65800;">✓</span>Your agreement will be timestamped and stored in the database</li>
           </ul>
         </div>
         <div style="flex-shrink:0;display:flex;align-items:center;">
-          <button id="handshake-btn" onclick="doHandshake()" style="padding:18px 28px;background:rgba(241,143,1,0.12);border:2px solid #F18F01;border-radius:2px;color:#F18F01;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onmouseover="if(!this.disabled){this.style.background='#F18F01';this.style.color='#0A1A2F';}" onmouseout="if(!this.disabled){this.style.background='rgba(241,143,1,0.12)';this.style.color='#F18F01';}">🤝 Click to Handshake</button>
+          <button id="handshake-btn" onclick="doHandshake()" style="padding:18px 28px;background:rgba(241, 143, 1, 0.12);border:2px solid #f18f01;border-radius:2px;color:#A65800;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onmouseover="if(!this.disabled){this.style.background='#111111';this.style.color='#FAF8F2';}" onmouseout="if(!this.disabled){this.style.background='rgba(241, 143, 1, 0.12)';this.style.color='#A65800';}">🤝 Click to Handshake</button>
         </div>
       </div>
     </div>
   </div>
 
   <div id="payment-methods-section" style="position:relative;">
-  <div id="payment-lock-overlay" style="display:none;position:absolute;inset:0;background:rgba(10,26,47,0.75);z-index:10;border-radius:2px;flex-direction:column;align-items:center;justify-content:center;gap:12px;backdrop-filter:blur(3px);">
+  <div id="payment-lock-overlay" style="display:none;position:absolute;inset:0;background:rgba(250,248,242,0.8);z-index:10;border-radius:2px;flex-direction:column;align-items:center;justify-content:center;gap:12px;backdrop-filter:blur(3px);">
     <div style="font-size:2rem;">🔒</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;letter-spacing:2px;text-transform:uppercase;color:rgba(227,229,232,0.7);">Complete Handshake to unlock payment</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;letter-spacing:2px;text-transform:uppercase;color:rgba(26,26,26,0.7);">Complete Handshake to unlock payment</div>
   </div>
 
   <!-- Payment Method Toggle -->
@@ -897,9 +897,9 @@ window.AgoraDB = AgoraDB;
     window._handshakeDone = true;
     window._handshakeTs = new Date().toISOString();
     var btn = document.getElementById('handshake-btn');
-    if (btn) { btn.disabled=true; btn.style.background='#5cb85c'; btn.style.borderColor='#5cb85c'; btn.style.color='#fff'; btn.textContent='✓ Handshake Accepted — '+new Date().toLocaleTimeString('en-GB'); }
+    if (btn) { btn.disabled=true; btn.style.background='#1E7B34'; btn.style.borderColor='#1E7B34'; btn.style.color='#fff'; btn.textContent='✓ Handshake Accepted — '+new Date().toLocaleTimeString('en-GB'); }
     var hs = document.getElementById('handshake-section');
-    if (hs) { var m=document.createElement('div'); m.style.cssText='margin-top:12px;padding:10px 14px;background:rgba(92,184,92,0.1);border:1px solid rgba(92,184,92,0.3);border-radius:2px;font-size:0.75rem;color:#5cb85c;line-height:1.7;'; m.innerHTML='<strong>Handshake recorded at '+new Date().toLocaleTimeString('en-GB')+'</strong><br>✓ Terms agreed &nbsp;·&nbsp; ✓ 5% commission accepted'; hs.appendChild(m); }
+    if (hs) { var m=document.createElement('div'); m.style.cssText='margin-top:12px;padding:10px 14px;background:rgba(30,123,52,0.1);border:1px solid rgba(30,123,52,0.3);border-radius:2px;font-size:0.75rem;color:#1E7B34;line-height:1.7;'; m.innerHTML='<strong>Handshake recorded at '+new Date().toLocaleTimeString('en-GB')+'</strong><br>✓ Terms agreed &nbsp;·&nbsp; ✓ 5% commission accepted'; hs.appendChild(m); }
     document.querySelectorAll('#payment-lock-overlay').forEach(function(o){ o.style.display='none'; });
     var pm=document.getElementById('payment-methods-section'); if(pm) pm.scrollIntoView({behavior:'smooth',block:'start'});
   }

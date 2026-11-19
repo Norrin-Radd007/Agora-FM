@@ -125,7 +125,7 @@ window.AgoraDB = AgoraDB;
     var link = document.createElement('a');
     link.id = 'admin-db-link';
     link.href = '#';
-    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(166,88,0,0.9);text-decoration:none;letter-spacing:1px;margin-left:16px;';
     link.textContent = '⚙ View DB';
     link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
     footer.appendChild(link);
@@ -137,14 +137,14 @@ window.AgoraDB = AgoraDB;
     var data = await AgoraDB.admin.dump();
     var overlay = document.createElement('div');
     overlay.id = 'admin-panel-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,242,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#1A1A1A;';
     var fmt = function(n){ return '£' + (n||0).toFixed(2); };
     var html = '<div style="max-width:1000px;margin:0 auto;">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
-    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241, 143, 1, 0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#A65800;">AGORA FM — DATABASE VIEWER</span>';
     html += '<div style="display:flex;gap:12px;">';
-    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
-    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);border-radius:2px;color:#C0392B;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.3);border-radius:2px;color:#A65800;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
     html += '</div></div>';
 
     if (data.stats) {
@@ -152,37 +152,37 @@ window.AgoraDB = AgoraDB;
       [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
        ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
        ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
-        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
-        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+        html += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#A65800;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(26,26,26,0.68);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
       });
       html += '</div>';
     }
 
     function section(title, obj) {
-      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
-             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+      return '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
              JSON.stringify(obj, null, 2) + '</pre>';
     }
 
     function documentsSection(docs) {
       docs = docs || [];
-      var out = '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
+      var out = '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
       if (docs.length === 0) {
-        out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(227,229,232,0.4);margin-bottom:20px;">No documents uploaded yet.</div>';
+        out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(26,26,26,0.68);margin-bottom:20px;">No documents uploaded yet.</div>';
         return out;
       }
-      out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
+      out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
       docs.forEach(function(d, i) {
         var typeLabel = d.doc_type === 'pl_insurance' ? '📄 PL Insurance' : '🏆 Accreditation';
         var sizeKb = d.file_size ? (d.file_size/1024).toFixed(0) + 'KB' : '';
         out += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;font-size:0.75rem;' +
-          (i < docs.length-1 ? 'border-bottom:1px solid rgba(62,107,137,0.15);' : '') + '">' +
-          '<span style="color:#F18F01;white-space:nowrap;">' + typeLabel + '</span>' +
-          '<span style="color:rgba(227,229,232,0.4);white-space:nowrap;">' + d.supplier_id + '</span>' +
-          '<span style="flex:1;color:#E3E5E8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
-          '<span style="color:rgba(227,229,232,0.3);white-space:nowrap;">' + sizeKb + '</span>' +
-          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#F18F01;text-decoration:none;border:1px solid rgba(241,143,1,0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
+          (i < docs.length-1 ? 'border-bottom:1px solid rgba(26,26,26,0.15);' : '') + '">' +
+          '<span style="color:#A65800;white-space:nowrap;">' + typeLabel + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + d.supplier_id + '</span>' +
+          '<span style="flex:1;color:#1A1A1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + sizeKb + '</span>' +
+          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#A65800;text-decoration:none;border:1px solid rgba(241, 143, 1, 0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
           '</div>';
       });
       out += '</div>';
@@ -239,14 +239,14 @@ window.AgoraDB = AgoraDB;
       '<a id="agora-basket-btn" href="basket.html" style="',
         'position:relative;display:inline-flex;align-items:center;gap:6px;',
         'padding:7px 14px;background:transparent;',
-        'border:1px solid rgba(62,107,137,0.4);border-radius:2px;',
-        'color:rgba(227,229,232,0.6);font-family:\'Barlow Condensed\',sans-serif;',
+        'border:1px solid rgba(26,26,26,0.4);border-radius:2px;',
+        'color:rgba(26,26,26,0.68);font-family:\'Barlow Condensed\',sans-serif;',
         'font-size:0.78rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;',
         'cursor:pointer;transition:all 0.2s;white-space:nowrap;text-decoration:none;',
       '">',
         '🛒 Basket',
         '<span id="agora-basket-badge" style="',
-          'display:none;background:#F18F01;color:#0A1A2F;',
+          'display:none;background:#111111;color:#FAF8F2;',
           'font-size:0.6rem;font-weight:700;padding:1px 5px;',
           'border-radius:8px;min-width:16px;text-align:center;',
           'font-family:\'Barlow Condensed\',sans-serif;',
@@ -258,8 +258,8 @@ window.AgoraDB = AgoraDB;
 
     var btn = document.getElementById('agora-basket-btn');
     if (btn) {
-      btn.addEventListener('mouseover', function(){ this.style.borderColor='#F18F01'; this.style.color='#F18F01'; });
-      btn.addEventListener('mouseout',  function(){ this.style.borderColor='rgba(62,107,137,0.4)'; this.style.color='rgba(227,229,232,0.6)'; });
+      btn.addEventListener('mouseover', function(){ this.style.borderColor='#f18f01'; this.style.color='#A65800'; });
+      btn.addEventListener('mouseout',  function(){ this.style.borderColor='rgba(26,26,26,0.4)'; this.style.color='rgba(26,26,26,0.68)'; });
     }
   }
 
@@ -282,15 +282,15 @@ window.AgoraDB = AgoraDB;
     toast.id = 'agora-basket-toast';
     toast.style.cssText =
       'position:fixed;bottom:24px;right:24px;z-index:800;max-width:320px;' +
-      'background:rgba(10,26,47,0.98);border:1px solid rgba(241,143,1,0.4);' +
-      'border-radius:2px;padding:14px 16px;box-shadow:0 12px 32px rgba(0,0,0,0.5);' +
+      'background:rgba(250,248,242,0.98);border:1px solid rgba(241, 143, 1, 0.4);' +
+      'border-radius:2px;padding:14px 16px;box-shadow:0 12px 32px rgba(0, 0, 0, 0.175);' +
       'display:flex;align-items:center;gap:14px;animation:fadeUp 0.2s ease both;';
     toast.innerHTML =
       '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:0.68rem;color:#5cb85c;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">✓ Added to Basket</div>' +
-        '<div style="font-size:0.82rem;color:#E3E5E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ((item && item.name) || 'Service') + '</div>' +
+        '<div style="font-size:0.68rem;color:#1E7B34;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">✓ Added to Basket</div>' +
+        '<div style="font-size:0.82rem;color:#1A1A1A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ((item && item.name) || 'Service') + '</div>' +
       '</div>' +
-      '<a href="basket.html" style="flex-shrink:0;padding:7px 12px;background:#F18F01;color:#0A1A2F;' +
+      '<a href="basket.html" style="flex-shrink:0;padding:7px 12px;background:#111111;color:#FAF8F2;' +
       'font-family:\'Barlow Condensed\',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:1.5px;' +
       'text-transform:uppercase;text-decoration:none;border-radius:2px;">View</a>';
     document.body.appendChild(toast);
@@ -325,89 +325,89 @@ window.AgoraDB = AgoraDB;
 </script>
   <style>
     .page-content{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:32px 24px 80px;}
-    .back-link{display:inline-flex;align-items:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--steel-light);text-decoration:none;margin-bottom:24px;transition:color 0.2s;}
-    .back-link:hover{color:var(--orange);}
+    .back-link{display:inline-flex;align-items:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-2);text-decoration:none;margin-bottom:24px;transition:color 0.2s;}
+    .back-link:hover{color:var(--accent-text);}
     .profile-grid{display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start;}
-    .profile-hero{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
-    .profile-hero-top{background:linear-gradient(135deg,rgba(10,26,47,0.9) 0%,rgba(17,34,64,0.7) 100%);border-bottom:1px solid rgba(62,107,137,0.2);padding:28px 28px 24px;display:flex;align-items:flex-start;gap:20px;}
-    .provider-logo{width:70px;height:70px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--orange);flex-shrink:0;}
-    .provider-name{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:1px;color:var(--grey);line-height:1;margin-bottom:6px;}
-    .provider-tagline{font-size:0.85rem;color:var(--grey-dim);font-weight:300;margin-bottom:12px;}
+    .profile-hero{background:#FFFFFF;border:1px solid rgba(26,26,26,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+    .profile-hero-top{background:var(--surface);border-bottom:1px solid rgba(26,26,26,0.2);padding:28px 28px 24px;display:flex;align-items:flex-start;gap:20px;}
+    .provider-logo{width:70px;height:70px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.3);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--accent-text);flex-shrink:0;}
+    .provider-name{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:1px;color:var(--ink);line-height:1;margin-bottom:6px;}
+    .provider-tagline{font-size:0.85rem;color:var(--ink-dim);font-weight:300;margin-bottom:12px;}
     .provider-meta{display:flex;gap:16px;flex-wrap:wrap;}
-    .provider-meta-item{font-size:0.72rem;color:var(--grey-dim);display:flex;align-items:center;gap:5px;}
-    .verified-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(92,184,92,0.1);border:1px solid rgba(92,184,92,0.3);border-radius:var(--radius);padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#5cb85c;margin-top:8px;}
+    .provider-meta-item{font-size:0.72rem;color:var(--ink-dim);display:flex;align-items:center;gap:5px;}
+    .verified-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(30,123,52,0.1);border:1px solid rgba(30,123,52,0.3);border-radius:var(--radius);padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1E7B34;margin-top:8px;}
     .profile-hero-body{padding:20px 28px;}
     .rating-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
-    .rating-stars{color:var(--orange);font-size:1.1rem;letter-spacing:3px;}
-    .rating-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--orange);letter-spacing:1px;line-height:1;}
-    .rating-count{font-size:0.75rem;color:var(--grey-dim);}
+    .rating-stars{color:var(--accent-text);font-size:1.1rem;letter-spacing:3px;}
+    .rating-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent-text);letter-spacing:1px;line-height:1;}
+    .rating-count{font-size:0.75rem;color:var(--ink-dim);}
     .accred-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
     .accred-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--radius);font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-    .accred-badge.gold{background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.35);color:var(--orange);}
-    .accred-badge.blue{background:rgba(85,137,168,0.12);border:1px solid rgba(85,137,168,0.3);color:var(--steel-light);}
-    .accred-badge.green{background:rgba(92,184,92,0.1);border:1px solid rgba(92,184,92,0.3);color:#5cb85c;}
-    .panel{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
-    .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(62,107,137,0.15);background:rgba(10,26,47,0.4);}
-    .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grey);}
+    .accred-badge.gold{background:rgba(241, 143, 1, 0.12);border:1px solid rgba(241, 143, 1, 0.35);color:var(--accent-text);}
+    .accred-badge.blue{background:rgba(90,87,80,0.12);border:1px solid rgba(90,87,80,0.3);color:var(--ink-2);}
+    .accred-badge.green{background:rgba(30,123,52,0.1);border:1px solid rgba(30,123,52,0.3);color:#1E7B34;}
+    .panel{background:#FFFFFF;border:1px solid rgba(26,26,26,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+    .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(26,26,26,0.15);background:#FFFFFF;}
+    .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ink);}
     .panel-body{padding:20px;}
     .panel-body.no-pad{padding:0;}
     /* Service stepper */
-    .service-item{padding:18px 20px;border-bottom:1px solid rgba(62,107,137,0.1);}
+    .service-item{padding:18px 20px;border-bottom:1px solid rgba(26,26,26,0.1);}
     .service-item:last-child{border-bottom:none;}
     .service-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
-    .service-name{font-size:0.9rem;font-weight:600;color:var(--grey);margin-bottom:4px;}
-    .service-desc{font-size:0.75rem;color:var(--grey-dim);font-weight:300;line-height:1.5;}
+    .service-name{font-size:0.9rem;font-weight:600;color:var(--ink);margin-bottom:4px;}
+    .service-desc{font-size:0.75rem;color:var(--ink-dim);font-weight:300;line-height:1.5;}
     .service-price-block{text-align:right;flex-shrink:0;}
-    .service-price{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--orange);}
-    .service-unit{font-size:0.65rem;color:var(--grey-dim);margin-top:2px;}
+    .service-price{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--accent-text);}
+    .service-unit{font-size:0.65rem;color:var(--ink-dim);margin-top:2px;}
     .service-stepper{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-    .stepper-wrap{display:flex;align-items:center;gap:0;border:1px solid rgba(62,107,137,0.3);border-radius:var(--radius);overflow:hidden;}
-    .stepper-btn{width:32px;height:32px;background:rgba(62,107,137,0.15);border:none;color:var(--grey);font-size:1rem;cursor:pointer;transition:all 0.15s;font-family:'Barlow Condensed',sans-serif;font-weight:700;}
-    .stepper-btn:hover{background:rgba(241,143,1,0.2);color:var(--orange);}
-    .stepper-val{width:48px;text-align:center;background:transparent;border:none;border-left:1px solid rgba(62,107,137,0.3);border-right:1px solid rgba(62,107,137,0.3);color:var(--grey);font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:600;padding:4px 0;}
-    .stepper-total{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;color:var(--orange);min-width:70px;}
-    .stepper-unit-lbl{font-size:0.68rem;color:var(--grey-dim);}
-    .tc-section{margin-top:10px;padding:10px 12px;background:rgba(10,26,47,0.4);border:1px solid rgba(62,107,137,0.15);border-radius:var(--radius);}
-    .tc-check-label{display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;color:var(--grey-dim);cursor:pointer;line-height:1.5;}
-    .tc-check-label input{accent-color:var(--orange);margin-top:2px;flex-shrink:0;}
-    .tc-link{color:var(--orange);cursor:pointer;text-decoration:underline;}
-    .btn-add-basket{padding:9px 18px;background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.4);border-radius:var(--radius);color:var(--orange);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
-    .btn-add-basket:hover:not(:disabled){background:var(--orange);color:var(--navy);}
+    .stepper-wrap{display:flex;align-items:center;gap:0;border:1px solid rgba(26,26,26,0.3);border-radius:var(--radius);overflow:hidden;}
+    .stepper-btn{width:32px;height:32px;background:rgba(26,26,26,0.06);border:none;color:var(--ink);font-size:1rem;cursor:pointer;transition:all 0.15s;font-family:'Barlow Condensed',sans-serif;font-weight:700;}
+    .stepper-btn:hover{background:rgba(241, 143, 1, 0.2);color:var(--accent-text);}
+    .stepper-val{width:48px;text-align:center;background:transparent;border:none;border-left:1px solid rgba(26,26,26,0.3);border-right:1px solid rgba(26,26,26,0.3);color:var(--ink);font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:600;padding:4px 0;}
+    .stepper-total{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;color:var(--accent-text);min-width:70px;}
+    .stepper-unit-lbl{font-size:0.68rem;color:var(--ink-dim);}
+    .tc-section{margin-top:10px;padding:10px 12px;background:#FFFFFF;border:1px solid rgba(26,26,26,0.15);border-radius:var(--radius);}
+    .tc-check-label{display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;color:var(--ink-dim);cursor:pointer;line-height:1.5;}
+    .tc-check-label input{accent-color:var(--accent);margin-top:2px;flex-shrink:0;}
+    .tc-link{color:var(--accent-text);cursor:pointer;text-decoration:underline;}
+    .btn-add-basket{padding:9px 18px;background:rgba(241, 143, 1, 0.12);border:1px solid rgba(241, 143, 1, 0.4);border-radius:var(--radius);color:var(--accent-text);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+    .btn-add-basket:hover:not(:disabled){background:var(--btn);color:var(--on-btn);}
     .btn-add-basket:disabled{opacity:0.3;cursor:not-allowed;}
-    .btn-add-basket.added{background:rgba(92,184,92,0.15);border-color:rgba(92,184,92,0.4);color:#5cb85c;}
+    .btn-add-basket.added{background:rgba(30,123,52,0.15);border-color:rgba(30,123,52,0.4);color:#1E7B34;}
     /* Reviews */
-    .review-card{padding:18px 20px;border-bottom:1px solid rgba(62,107,137,0.08);}
+    .review-card{padding:18px 20px;border-bottom:1px solid rgba(26,26,26,0.08);}
     .review-card:last-child{border-bottom:none;}
     .review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-    .review-stars{color:var(--orange);font-size:0.82rem;letter-spacing:2px;}
-    .review-date{font-size:0.68rem;color:rgba(227,229,232,0.3);}
-    .review-text{font-size:0.82rem;color:var(--grey-dim);line-height:1.65;font-style:italic;font-weight:300;margin-bottom:8px;}
-    .review-author{font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel-light);font-weight:600;}
-    .review-role{font-size:0.68rem;color:rgba(227,229,232,0.3);margin-top:2px;}
+    .review-stars{color:var(--accent-text);font-size:0.82rem;letter-spacing:2px;}
+    .review-date{font-size:0.68rem;color:rgba(26,26,26,0.68);}
+    .review-text{font-size:0.82rem;color:var(--ink-dim);line-height:1.65;font-style:italic;font-weight:300;margin-bottom:8px;}
+    .review-author{font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-2);font-weight:600;}
+    .review-role{font-size:0.68rem;color:rgba(26,26,26,0.68);margin-top:2px;}
     .enquiry-sidebar{position:sticky;top:90px;}
-    .enquiry-panel{background:rgba(17,34,64,0.6);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
-    .enquiry-header{background:rgba(10,26,47,0.6);border-bottom:1px solid rgba(62,107,137,0.2);padding:18px 22px;}
-    .enquiry-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--grey);margin-bottom:2px;}
-    .enquiry-sub{font-size:0.75rem;color:var(--grey-dim);font-weight:300;}
+    .enquiry-panel{background:#FFFFFF;border:1px solid rgba(26,26,26,0.2);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+    .enquiry-header{background:#FFFFFF;border-bottom:1px solid rgba(26,26,26,0.2);padding:18px 22px;}
+    .enquiry-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--ink);margin-bottom:2px;}
+    .enquiry-sub{font-size:0.75rem;color:var(--ink-dim);font-weight:300;}
     .enquiry-body{padding:22px;}
-    .form-submit{width:100%;padding:14px;background:var(--orange);border:none;border-radius:var(--radius);color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
-    .form-submit:hover{background:var(--orange-hover);}
-    .success-banner{display:none;background:rgba(2,122,72,0.12);border:1px solid rgba(108,233,166,0.3);border-radius:var(--radius);padding:12px 16px;align-items:center;gap:10px;margin-bottom:14px;}
+    .form-submit{width:100%;padding:14px;background:var(--btn);border:none;border-radius:var(--radius);color:var(--on-btn);font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+    .form-submit:hover{background:var(--btn-hover);}
+    .success-banner{display:none;background:rgba(2,122,72,0.12);border:1px solid rgba(30,123,52,0.3);border-radius:var(--radius);padding:12px 16px;align-items:center;gap:10px;margin-bottom:14px;}
     .success-banner.show{display:flex;}
     .success-icon-circle{width:24px;height:24px;border-radius:50%;background:#027A48;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .success-title{font-size:0.85rem;font-weight:600;color:#6CE9A6;}
-    .success-sub{font-size:0.75rem;color:rgba(108,233,166,0.7);margin-top:2px;}
-    .contact-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(62,107,137,0.1);}
+    .success-title{font-size:0.85rem;font-weight:600;color:#1E7B34;}
+    .success-sub{font-size:0.75rem;color:rgba(30,123,52,0.9);margin-top:2px;}
+    .contact-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(26,26,26,0.1);}
     .contact-row:last-child{border-bottom:none;}
     .contact-icon{font-size:0.9rem;width:24px;flex-shrink:0;}
-    .contact-val{font-size:0.82rem;color:var(--grey-dim);}
-    .contact-val a{color:var(--steel-light);text-decoration:none;}
-    .contact-val a:hover{color:var(--orange);}
+    .contact-val{font-size:0.82rem;color:var(--ink-dim);}
+    .contact-val a{color:var(--ink-2);text-decoration:none;}
+    .contact-val a:hover{color:var(--accent-text);}
     .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
-    .stat-box{background:rgba(10,26,47,0.5);border:1px solid rgba(62,107,137,0.15);border-radius:var(--radius);padding:14px 12px;text-align:center;}
-    .stat-box-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--orange);letter-spacing:1px;line-height:1;}
-    .stat-box-label{font-size:0.62rem;color:var(--grey-dim);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
-    .loading-state{padding:60px;text-align:center;color:var(--grey-dim);font-size:0.85rem;}
+    .stat-box{background:#FFFFFF;border:1px solid rgba(26,26,26,0.15);border-radius:var(--radius);padding:14px 12px;text-align:center;}
+    .stat-box-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--accent-text);letter-spacing:1px;line-height:1;}
+    .stat-box-label{font-size:0.62rem;color:var(--ink-dim);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+    .loading-state{padding:60px;text-align:center;color:var(--ink-dim);font-size:0.85rem;}
     @media(max-width:900px){.profile-grid{grid-template-columns:1fr}.enquiry-sidebar{position:static}}
     @media(max-width:600px){.provider-meta{flex-direction:column;gap:6px}}
   </style>
@@ -473,7 +473,7 @@ window.AgoraDB = AgoraDB;
               <div><div class="rating-stars">★★★★★</div><div class="rating-count" id="provReviews">— reviews</div></div>
             </div>
             <div class="accred-row" id="provAccreds"></div>
-            <p style="font-size:0.85rem;color:var(--grey-dim);line-height:1.7;font-weight:300;" id="provDesc">—</p>
+            <p style="font-size:0.85rem;color:var(--ink-dim);line-height:1.7;font-weight:300;" id="provDesc">—</p>
           </div>
         </div>
 
@@ -487,7 +487,7 @@ window.AgoraDB = AgoraDB;
         <div class="panel">
           <div class="panel-header">
             <span class="panel-title">Services &amp; Pricing</span>
-            <span style="font-size:0.68rem;color:var(--grey-dim);">All prices exc. VAT · Select qty and add to basket</span>
+            <span style="font-size:0.68rem;color:var(--ink-dim);">All prices exc. VAT · Select qty and add to basket</span>
           </div>
           <div class="panel-body no-pad" id="servicesContainer">
             <div class="loading-state" style="padding:30px;">Loading services…</div>
@@ -499,10 +499,10 @@ window.AgoraDB = AgoraDB;
           <div class="panel-header"><span class="panel-title">Coverage &amp; Response</span></div>
           <div class="panel-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Coverage Area</div><div class="prov-coverage" style="font-size:0.85rem;color:var(--grey);">—</div></div>
-              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Emergency Response</div><div style="font-size:0.85rem;color:var(--orange);">24/7 Available</div><div style="font-size:0.75rem;color:var(--grey-dim);margin-top:4px;font-weight:300;">4-hour emergency response SLA</div></div>
-              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Insurance</div><div style="font-size:0.82rem;color:var(--grey-dim);line-height:1.6;font-weight:300;"><span class="prov-pl">—</span> PL · <span class="prov-el">—</span> EL</div></div>
-              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);font-weight:600;margin-bottom:8px;">Registration</div><div style="font-size:0.85rem;color:var(--grey);" id="provReg">—</div></div>
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-dim);font-weight:600;margin-bottom:8px;">Coverage Area</div><div class="prov-coverage" style="font-size:0.85rem;color:var(--ink);">—</div></div>
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-dim);font-weight:600;margin-bottom:8px;">Emergency Response</div><div style="font-size:0.85rem;color:var(--accent-text);">24/7 Available</div><div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;font-weight:300;">4-hour emergency response SLA</div></div>
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-dim);font-weight:600;margin-bottom:8px;">Insurance</div><div style="font-size:0.82rem;color:var(--ink-dim);line-height:1.6;font-weight:300;"><span class="prov-pl">—</span> PL · <span class="prov-el">—</span> EL</div></div>
+              <div><div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-dim);font-weight:600;margin-bottom:8px;">Registration</div><div style="font-size:0.85rem;color:var(--ink);" id="provReg">—</div></div>
             </div>
           </div>
         </div>
@@ -511,16 +511,16 @@ window.AgoraDB = AgoraDB;
         <div class="panel">
           <div class="panel-header">
             <span class="panel-title">Client Reviews</span>
-            <span style="font-size:0.68rem;color:var(--grey-dim);" id="reviewSummary">Loading…</span>
+            <span style="font-size:0.68rem;color:var(--ink-dim);" id="reviewSummary">Loading…</span>
           </div>
 
           <!-- Rating summary bar -->
-          <div id="ratingsSummaryBar" style="padding:16px 20px;border-bottom:1px solid rgba(62,107,137,0.1);display:none;">
+          <div id="ratingsSummaryBar" style="padding:16px 20px;border-bottom:1px solid rgba(26,26,26,0.1);display:none;">
             <div style="display:flex;align-items:center;gap:20px;">
               <div style="text-align:center;">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--orange);line-height:1;" id="avgRatingBig">—</div>
-                <div style="color:var(--orange);font-size:1rem;letter-spacing:2px;" id="avgStarsBig">★★★★★</div>
-                <div style="font-size:0.68rem;color:var(--grey-dim);margin-top:4px;" id="totalReviewCount">— reviews</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--accent-text);line-height:1;" id="avgRatingBig">—</div>
+                <div style="color:var(--accent-text);font-size:1rem;letter-spacing:2px;" id="avgStarsBig">★★★★★</div>
+                <div style="font-size:0.68rem;color:var(--ink-dim);margin-top:4px;" id="totalReviewCount">— reviews</div>
               </div>
               <div style="flex:1;" id="ratingBars"></div>
             </div>
@@ -528,20 +528,20 @@ window.AgoraDB = AgoraDB;
 
           <!-- Review cards -->
           <div class="panel-body no-pad" id="reviewsContainer">
-            <div style="padding:24px;text-align:center;color:var(--grey-dim);font-size:0.8rem;">Loading reviews…</div>
+            <div style="padding:24px;text-align:center;color:var(--ink-dim);font-size:0.8rem;">Loading reviews…</div>
           </div>
 
           <!-- Leave a review form -->
-          <div id="leaveReviewSection" style="display:none;border-top:2px solid rgba(62,107,137,0.15);padding:20px;">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--grey);margin-bottom:14px;">LEAVE A REVIEW</div>
+          <div id="leaveReviewSection" style="display:none;border-top:2px solid rgba(26,26,26,0.15);padding:20px;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--ink);margin-bottom:14px;">LEAVE A REVIEW</div>
             <div style="margin-bottom:12px;">
-              <div style="font-size:0.72rem;color:var(--grey-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Your Rating *</div>
+              <div style="font-size:0.72rem;color:var(--ink-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Your Rating *</div>
               <div id="starPicker" style="display:flex;gap:6px;cursor:pointer;">
-                <span class="star-pick" data-v="1" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
-                <span class="star-pick" data-v="2" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
-                <span class="star-pick" data-v="3" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
-                <span class="star-pick" data-v="4" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
-                <span class="star-pick" data-v="5" style="font-size:1.6rem;color:rgba(241,143,1,0.25);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="1" style="font-size:1.6rem;color:rgba(166,88,0,0.9);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="2" style="font-size:1.6rem;color:rgba(166,88,0,0.9);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="3" style="font-size:1.6rem;color:rgba(166,88,0,0.9);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="4" style="font-size:1.6rem;color:rgba(166,88,0,0.9);transition:color 0.15s;">★</span>
+                <span class="star-pick" data-v="5" style="font-size:1.6rem;color:rgba(166,88,0,0.9);transition:color 0.15s;">★</span>
               </div>
               <input type="hidden" id="reviewRating" value="0">
             </div>
@@ -557,14 +557,14 @@ window.AgoraDB = AgoraDB;
               <label class="form-label">Your Review *</label>
               <textarea class="form-textarea" id="reviewBody" placeholder="Tell others about your experience with this provider…" style="min-height:80px;"></textarea>
             </div>
-            <button onclick="submitReview()" style="padding:11px 24px;background:var(--orange);border:none;border-radius:2px;color:#0A1A2F;font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;">Submit Review →</button>
+            <button onclick="submitReview()" style="padding:11px 24px;background:var(--btn);border:none;border-radius:2px;color:#FAF8F2;font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;">Submit Review →</button>
             <div id="reviewFormMsg" style="margin-top:10px;font-size:0.78rem;display:none;"></div>
           </div>
 
           <!-- Login prompt for non-logged-in users -->
-          <div id="reviewLoginPrompt" style="display:none;border-top:2px solid rgba(62,107,137,0.15);padding:16px 20px;">
-            <p style="font-size:0.78rem;color:var(--grey-dim);margin:0 0 10px;">
-              <a href="index.html" style="color:var(--orange);text-decoration:none;">Sign in</a> to leave a review for this provider.
+          <div id="reviewLoginPrompt" style="display:none;border-top:2px solid rgba(26,26,26,0.15);padding:16px 20px;">
+            <p style="font-size:0.78rem;color:var(--ink-dim);margin:0 0 10px;">
+              <a href="index.html" style="color:var(--accent-text);text-decoration:none;">Sign in</a> to leave a review for this provider.
             </p>
           </div>
         </div>
@@ -612,7 +612,7 @@ window.AgoraDB = AgoraDB;
           <div class="panel-header"><span class="panel-title">Verified Credentials</span></div>
           <div class="panel-body">
             <div id="sidebarAccreds" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-            <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(62,107,137,0.12);display:flex;align-items:center;gap:8px;font-size:0.7rem;color:rgba(227,229,232,0.3);">
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(26,26,26,0.12);display:flex;align-items:center;gap:8px;font-size:0.7rem;color:rgba(26,26,26,0.68);">
               <span>✓</span> All credentials verified by Agora FM
             </div>
           </div>
@@ -978,38 +978,38 @@ function renderReviews(reviews, average, count) {
       var cnt = reviews.filter(function(r){ return r.rating === i; }).length;
       var pct = count > 0 ? Math.round((cnt / count) * 100) : 0;
       barsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">' +
-        '<span style="font-size:0.68rem;color:var(--grey-dim);min-width:10px;">' + i + '</span>' +
-        '<span style="color:var(--orange);font-size:0.65rem;">★</span>' +
-        '<div style="flex:1;height:6px;background:rgba(62,107,137,0.2);border-radius:3px;">' +
-          '<div style="width:' + pct + '%;height:100%;background:var(--orange);border-radius:3px;"></div>' +
+        '<span style="font-size:0.68rem;color:var(--ink-dim);min-width:10px;">' + i + '</span>' +
+        '<span style="color:var(--accent-text);font-size:0.65rem;">★</span>' +
+        '<div style="flex:1;height:6px;background:rgba(26,26,26,0.08);border-radius:3px;">' +
+          '<div style="width:' + pct + '%;height:100%;background:var(--btn);border-radius:3px;"></div>' +
         '</div>' +
-        '<span style="font-size:0.68rem;color:var(--grey-dim);min-width:24px;text-align:right;">' + cnt + '</span></div>';
+        '<span style="font-size:0.68rem;color:var(--ink-dim);min-width:24px;text-align:right;">' + cnt + '</span></div>';
     }
     document.getElementById('ratingBars').innerHTML = barsHtml;
   }
 
   if (reviews.length === 0) {
-    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--grey-dim);font-size:0.8rem;">No reviews yet. Be the first to review this provider.</div>';
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--ink-dim);font-size:0.8rem;">No reviews yet. Be the first to review this provider.</div>';
     return;
   }
 
   container.innerHTML = reviews.map(function(r) {
     var date     = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB',{month:'long',year:'numeric'}) : '';
-    var verified = r.verified_purchase ? '<span style="font-size:0.65rem;color:#5cb85c;margin-left:8px;">✓ Verified Purchase</span>' : '';
-    var svcTag   = r.service_used ? '<span style="font-size:0.65rem;color:var(--steel-light);background:rgba(62,107,137,0.12);padding:2px 7px;border-radius:2px;margin-left:8px;">' + r.service_used + '</span>' : '';
+    var verified = r.verified_purchase ? '<span style="font-size:0.65rem;color:#1E7B34;margin-left:8px;">✓ Verified Purchase</span>' : '';
+    var svcTag   = r.service_used ? '<span style="font-size:0.65rem;color:var(--ink-2);background:rgba(26,26,26,0.048);padding:2px 7px;border-radius:2px;margin-left:8px;">' + r.service_used + '</span>' : '';
     var response = r.supplier_response ?
-      '<div style="margin-top:12px;padding:10px 14px;background:rgba(241,143,1,0.05);border-left:2px solid rgba(241,143,1,0.3);">' +
-        '<div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:5px;font-weight:600;">Provider Response</div>' +
-        '<p style="font-size:0.78rem;color:var(--grey-dim);margin:0;line-height:1.6;">' + r.supplier_response + '</p></div>' : '';
+      '<div style="margin-top:12px;padding:10px 14px;background:rgba(241, 143, 1, 0.05);border-left:2px solid rgba(241, 143, 1, 0.3);">' +
+        '<div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--accent-text);margin-bottom:5px;font-weight:600;">Provider Response</div>' +
+        '<p style="font-size:0.78rem;color:var(--ink-dim);margin:0;line-height:1.6;">' + r.supplier_response + '</p></div>' : '';
     return '<div class="review-card">' +
       '<div class="review-header">' +
         '<div style="display:flex;align-items:center;gap:4px;">' +
-          '<span style="color:var(--orange);font-size:0.9rem;letter-spacing:2px;">' + starsStr(r.rating) + '</span>' +
+          '<span style="color:var(--accent-text);font-size:0.9rem;letter-spacing:2px;">' + starsStr(r.rating) + '</span>' +
           verified + svcTag +
         '</div>' +
         '<div class="review-date">' + date + '</div>' +
       '</div>' +
-      '<div style="font-size:0.82rem;font-weight:600;color:var(--grey);margin-bottom:6px;">' + r.title + '</div>' +
+      '<div style="font-size:0.82rem;font-weight:600;color:var(--ink);margin-bottom:6px;">' + r.title + '</div>' +
       '<p class="review-text">&ldquo;' + r.body + '&rdquo;</p>' +
       '<div class="review-author">' + r.customer_name + '</div>' +
       '<div class="review-role">' + r.customer_org + '</div>' +
@@ -1029,15 +1029,15 @@ function initStarPicker() {
   stars.forEach(function(star) {
     star.addEventListener('mouseover', function() {
       var v = parseInt(this.dataset.v);
-      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= v ? '#F18F01' : 'rgba(241,143,1,0.25)'; });
+      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= v ? '#A65800' : 'rgba(166,88,0,0.9)'; });
     });
     star.addEventListener('mouseout', function() {
-      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= _selectedRating ? '#F18F01' : 'rgba(241,143,1,0.25)'; });
+      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= _selectedRating ? '#A65800' : 'rgba(166,88,0,0.9)'; });
     });
     star.addEventListener('click', function() {
       _selectedRating = parseInt(this.dataset.v);
       document.getElementById('reviewRating').value = _selectedRating;
-      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= _selectedRating ? '#F18F01' : 'rgba(241,143,1,0.25)'; });
+      stars.forEach(function(s){ s.style.color = parseInt(s.dataset.v) <= _selectedRating ? '#A65800' : 'rgba(166,88,0,0.9)'; });
     });
   });
 }
@@ -1063,7 +1063,7 @@ async function submitReview() {
       document.getElementById('reviewBody').value  = '';
       document.getElementById('reviewRating').value = '0';
       _selectedRating = 0;
-      document.querySelectorAll('.star-pick').forEach(function(s){ s.style.color='rgba(241,143,1,0.25)'; });
+      document.querySelectorAll('.star-pick').forEach(function(s){ s.style.color='rgba(166,88,0,0.9)'; });
       await loadReviews(_currentSupplierId);
     } else {
       showReviewMsg(data.error || 'Could not submit review.', 'error');
@@ -1076,7 +1076,7 @@ function showReviewMsg(text, type) {
   if (!el) return;
   el.textContent = text;
   el.style.display = 'block';
-  el.style.color = type === 'success' ? '#5cb85c' : '#e74c3c';
+  el.style.color = type === 'success' ? '#1E7B34' : '#C0392B';
 }
 </script>
 </body>

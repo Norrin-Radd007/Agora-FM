@@ -32,8 +32,8 @@
       position: absolute;
       top: 40px; right: 40px;
       width: 40px; height: 40px;
-      border-top: 2px solid rgba(241,143,1,0.4);
-      border-right: 2px solid rgba(241,143,1,0.4);
+      border-top: 2px solid rgba(241, 143, 1, 0.4);
+      border-right: 2px solid rgba(241, 143, 1, 0.4);
       animation: fadeUp 0.8s ease 0.5s both;
     }
     .hero-eyebrow { animation: fadeUp 0.6s ease 0s both; }
@@ -54,13 +54,13 @@
       padding: 4px 10px;
       border-radius: 1px;
       text-transform: uppercase;
-      color: rgba(227,229,232,0.4);
-      border: 1px solid rgba(62,107,137,0.15);
+      color: rgba(26,26,26,0.68);
+      border: 1px solid rgba(26,26,26,0.15);
       transition: all 0.2s;
     }
     .service-tag:hover {
-      color: var(--orange);
-      border-color: rgba(241,143,1,0.3);
+      color: var(--accent-text);
+      border-color: rgba(241, 143, 1, 0.3);
       cursor: pointer;
     }
     .auth-panel {
@@ -74,7 +74,7 @@
     }
     @media (max-width: 900px) {
       .page-main { grid-template-columns: 1fr; }
-      .auth-panel { width: 100%; border-left: none; border-top: 1px solid rgba(62,107,137,0.2); padding: 40px 32px; }
+      .auth-panel { width: 100%; border-left: none; border-top: 1px solid rgba(26,26,26,0.2); padding: 40px 32px; }
       .hero { padding: 40px 32px 80px; }
     }
   </style>
@@ -197,7 +197,7 @@ window.AgoraDB = AgoraDB;
     var link = document.createElement('a');
     link.id = 'admin-db-link';
     link.href = '#';
-    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(166,88,0,0.9);text-decoration:none;letter-spacing:1px;margin-left:16px;';
     link.textContent = '⚙ View DB';
     link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
     footer.appendChild(link);
@@ -209,14 +209,14 @@ window.AgoraDB = AgoraDB;
     var data = await AgoraDB.admin.dump();
     var overlay = document.createElement('div');
     overlay.id = 'admin-panel-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,242,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#1A1A1A;';
     var fmt = function(n){ return '£' + (n||0).toFixed(2); };
     var html = '<div style="max-width:1000px;margin:0 auto;">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
-    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241, 143, 1, 0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#A65800;">AGORA FM — DATABASE VIEWER</span>';
     html += '<div style="display:flex;gap:12px;">';
-    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
-    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);border-radius:2px;color:#C0392B;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.3);border-radius:2px;color:#A65800;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
     html += '</div></div>';
 
     if (data.stats) {
@@ -224,37 +224,37 @@ window.AgoraDB = AgoraDB;
       [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
        ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
        ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
-        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
-        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+        html += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#A65800;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(26,26,26,0.68);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
       });
       html += '</div>';
     }
 
     function section(title, obj) {
-      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
-             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+      return '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
              JSON.stringify(obj, null, 2) + '</pre>';
     }
 
     function documentsSection(docs) {
       docs = docs || [];
-      var out = '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
+      var out = '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
       if (docs.length === 0) {
-        out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(227,229,232,0.4);margin-bottom:20px;">No documents uploaded yet.</div>';
+        out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(26,26,26,0.68);margin-bottom:20px;">No documents uploaded yet.</div>';
         return out;
       }
-      out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
+      out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
       docs.forEach(function(d, i) {
         var typeLabel = d.doc_type === 'pl_insurance' ? '📄 PL Insurance' : '🏆 Accreditation';
         var sizeKb = d.file_size ? (d.file_size/1024).toFixed(0) + 'KB' : '';
         out += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;font-size:0.75rem;' +
-          (i < docs.length-1 ? 'border-bottom:1px solid rgba(62,107,137,0.15);' : '') + '">' +
-          '<span style="color:#F18F01;white-space:nowrap;">' + typeLabel + '</span>' +
-          '<span style="color:rgba(227,229,232,0.4);white-space:nowrap;">' + d.supplier_id + '</span>' +
-          '<span style="flex:1;color:#E3E5E8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
-          '<span style="color:rgba(227,229,232,0.3);white-space:nowrap;">' + sizeKb + '</span>' +
-          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#F18F01;text-decoration:none;border:1px solid rgba(241,143,1,0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
+          (i < docs.length-1 ? 'border-bottom:1px solid rgba(26,26,26,0.15);' : '') + '">' +
+          '<span style="color:#A65800;white-space:nowrap;">' + typeLabel + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + d.supplier_id + '</span>' +
+          '<span style="flex:1;color:#1A1A1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + sizeKb + '</span>' +
+          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#A65800;text-decoration:none;border:1px solid rgba(241, 143, 1, 0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
           '</div>';
       });
       out += '</div>';
@@ -447,20 +447,20 @@ window.AgoraDB = AgoraDB;
         🏢&nbsp; I'm a Supplier
       </button>
     </div>
-    <p style="font-size:0.68rem;color:rgba(227,229,232,0.35);text-align:center;margin-top:8px;line-height:1.5;">Looking to commission FM services? Register as a customer.<br>Want to list your services on Agora FM? Register as a supplier.</p>
+    <p style="font-size:0.68rem;color:rgba(26,26,26,0.68);text-align:center;margin-top:8px;line-height:1.5;">Looking to commission FM services? Register as a customer.<br>Want to list your services on Agora FM? Register as a supplier.</p>
 
     <!-- DEMO MODE BANNER -->
-    <div id="demo-banner" style="margin:16px 0 4px;padding:14px 16px;background:rgba(241,143,1,0.07);border:1px solid rgba(241,143,1,0.25);border-radius:2px;">
+    <div id="demo-banner" style="margin:16px 0 4px;padding:14px 16px;background:rgba(241, 143, 1, 0.07);border:1px solid rgba(241, 143, 1, 0.25);border-radius:2px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#F18F01;box-shadow:0 0 6px #F18F01;animation:demoPulse 1.5s ease-in-out infinite;"></span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#F18F01;">Demo Mode</span>
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f18f01;box-shadow:0 0 6px #f18f01;animation:demoPulse 1.5s ease-in-out infinite;"></span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#A65800;">Demo Mode</span>
       </div>
-      <p style="font-size:0.72rem;color:rgba(227,229,232,0.6);margin:0 0 12px;line-height:1.5;">Explore the platform instantly — no registration needed.</p>
+      <p style="font-size:0.72rem;color:rgba(26,26,26,0.68);margin:0 0 12px;line-height:1.5;">Explore the platform instantly — no registration needed.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="demoLogin('customer')" style="padding:10px 8px;background:rgba(241,143,1,0.12);border:1px solid rgba(241,143,1,0.35);border-radius:2px;color:#F18F01;font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(241,143,1,0.22)'" onmouseout="this.style.background='rgba(241,143,1,0.12)'">
+        <button onclick="demoLogin('customer')" style="padding:10px 8px;background:rgba(241, 143, 1, 0.12);border:1px solid rgba(241, 143, 1, 0.35);border-radius:2px;color:#A65800;font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(241, 143, 1, 0.22)'" onmouseout="this.style.background='rgba(241, 143, 1, 0.12)'">
           👤 Customer Login
         </button>
-        <button onclick="demoLogin('supplier')" style="padding:10px 8px;background:rgba(62,107,137,0.15);border:1px solid rgba(62,107,137,0.4);border-radius:2px;color:rgba(227,229,232,0.8);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(62,107,137,0.28)'" onmouseout="this.style.background='rgba(62,107,137,0.15)'">
+        <button onclick="demoLogin('supplier')" style="padding:10px 8px;background:rgba(26,26,26,0.06);border:1px solid rgba(26,26,26,0.4);border-radius:2px;color:rgba(26,26,26,0.8);font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(26,26,26,0.112)'" onmouseout="this.style.background='rgba(26,26,26,0.06)'">
           🏢 Supplier Login
         </button>
       </div>

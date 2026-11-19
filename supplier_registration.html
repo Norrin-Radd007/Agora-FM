@@ -125,7 +125,7 @@ window.AgoraDB = AgoraDB;
     var link = document.createElement('a');
     link.id = 'admin-db-link';
     link.href = '#';
-    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(166,88,0,0.9);text-decoration:none;letter-spacing:1px;margin-left:16px;';
     link.textContent = '⚙ View DB';
     link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
     footer.appendChild(link);
@@ -137,14 +137,14 @@ window.AgoraDB = AgoraDB;
     var data = await AgoraDB.admin.dump();
     var overlay = document.createElement('div');
     overlay.id = 'admin-panel-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,242,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#1A1A1A;';
     var fmt = function(n){ return '£' + (n||0).toFixed(2); };
     var html = '<div style="max-width:1000px;margin:0 auto;">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
-    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241, 143, 1, 0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#A65800;">AGORA FM — DATABASE VIEWER</span>';
     html += '<div style="display:flex;gap:12px;">';
-    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
-    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);border-radius:2px;color:#C0392B;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.3);border-radius:2px;color:#A65800;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
     html += '</div></div>';
 
     if (data.stats) {
@@ -152,37 +152,37 @@ window.AgoraDB = AgoraDB;
       [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
        ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
        ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
-        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
-        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+        html += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#A65800;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(26,26,26,0.68);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
       });
       html += '</div>';
     }
 
     function section(title, obj) {
-      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
-             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+      return '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
              JSON.stringify(obj, null, 2) + '</pre>';
     }
 
     function documentsSection(docs) {
       docs = docs || [];
-      var out = '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
+      var out = '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
       if (docs.length === 0) {
-        out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(227,229,232,0.4);margin-bottom:20px;">No documents uploaded yet.</div>';
+        out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(26,26,26,0.68);margin-bottom:20px;">No documents uploaded yet.</div>';
         return out;
       }
-      out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
+      out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
       docs.forEach(function(d, i) {
         var typeLabel = d.doc_type === 'pl_insurance' ? '📄 PL Insurance' : '🏆 Accreditation';
         var sizeKb = d.file_size ? (d.file_size/1024).toFixed(0) + 'KB' : '';
         out += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;font-size:0.75rem;' +
-          (i < docs.length-1 ? 'border-bottom:1px solid rgba(62,107,137,0.15);' : '') + '">' +
-          '<span style="color:#F18F01;white-space:nowrap;">' + typeLabel + '</span>' +
-          '<span style="color:rgba(227,229,232,0.4);white-space:nowrap;">' + d.supplier_id + '</span>' +
-          '<span style="flex:1;color:#E3E5E8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
-          '<span style="color:rgba(227,229,232,0.3);white-space:nowrap;">' + sizeKb + '</span>' +
-          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#F18F01;text-decoration:none;border:1px solid rgba(241,143,1,0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
+          (i < docs.length-1 ? 'border-bottom:1px solid rgba(26,26,26,0.15);' : '') + '">' +
+          '<span style="color:#A65800;white-space:nowrap;">' + typeLabel + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + d.supplier_id + '</span>' +
+          '<span style="flex:1;color:#1A1A1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + sizeKb + '</span>' +
+          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#A65800;text-decoration:none;border:1px solid rgba(241, 143, 1, 0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
           '</div>';
       });
       out += '</div>';
@@ -219,139 +219,139 @@ window.AgoraDB = AgoraDB;
   <style>
     .hero{position:relative;z-index:1;padding:70px 80px 50px;display:grid;grid-template-columns:1fr 380px;gap:60px;align-items:center;border-bottom:1px solid var(--border-faint);}
     .hero-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-    .hstat{background:rgba(17,34,64,0.7);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);padding:20px 18px;position:relative;overflow:hidden;}
-    .hstat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),transparent);}
-    .hstat:nth-child(2n)::before{background:linear-gradient(90deg,var(--steel),transparent);}
-    .hstat-num{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;color:var(--grey);line-height:1;}
-    .hstat-label{font-size:0.7rem;color:rgba(227,229,232,0.45);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
-    .commission-bar{background:rgba(241,143,1,0.06);border:1px solid rgba(241,143,1,0.2);border-radius:var(--radius);padding:20px 28px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
-    .comm-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--orange);letter-spacing:2px;line-height:1;flex-shrink:0;}
-    .comm-text h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;}
-    .comm-text p{font-size:0.82rem;color:var(--grey-dim);font-weight:300;line-height:1.5;max-width:600px;}
+    .hstat{background:#FFFFFF;border:1px solid rgba(26,26,26,0.2);border-radius:var(--radius);padding:20px 18px;position:relative;overflow:hidden;}
+    .hstat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);}
+    .hstat:nth-child(2n)::before{background:linear-gradient(90deg,var(--ink-2),transparent);}
+    .hstat-num{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;color:var(--ink);line-height:1;}
+    .hstat-label{font-size:0.7rem;color:rgba(26,26,26,0.68);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+    .commission-bar{background:rgba(241, 143, 1, 0.06);border:1px solid rgba(241, 143, 1, 0.2);border-radius:var(--radius);padding:20px 28px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+    .comm-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--accent-text);letter-spacing:2px;line-height:1;flex-shrink:0;}
+    .comm-text h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink);margin-bottom:4px;}
+    .comm-text p{font-size:0.82rem;color:var(--ink-dim);font-weight:300;line-height:1.5;max-width:600px;}
     .benefits-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
-    .benefit-card{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);border-radius:var(--radius);padding:26px 22px;transition:all 0.25s;}
-    .benefit-card:hover{border-color:rgba(241,143,1,0.3);transform:translateY(-2px);}
-    .benefit-icon{width:38px;height:38px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:14px;}
-    .benefit-card h3{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey);margin-bottom:8px;}
-    .benefit-card p{font-size:0.8rem;color:var(--grey-dim);line-height:1.6;font-weight:300;}
-    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(62,107,137,0.15);border:1px solid rgba(62,107,137,0.15);}
-    .step{background:var(--navy);padding:28px 24px;position:relative;transition:background 0.25s;}
-    .step:hover{background:rgba(17,34,64,0.9);}
-    .step-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(241,143,1,0.12);line-height:1;margin-bottom:12px;}
+    .benefit-card{background:#FFFFFF;border:1px solid rgba(26,26,26,0.2);border-radius:var(--radius);padding:26px 22px;transition:all 0.25s;}
+    .benefit-card:hover{border-color:rgba(241, 143, 1, 0.3);transform:translateY(-2px);}
+    .benefit-icon{width:38px;height:38px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:14px;}
+    .benefit-card h3{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink);margin-bottom:8px;}
+    .benefit-card p{font-size:0.8rem;color:var(--ink-dim);line-height:1.6;font-weight:300;}
+    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(26,26,26,0.06);border:1px solid rgba(26,26,26,0.15);}
+    .step{background:var(--bg);padding:28px 24px;position:relative;transition:background 0.25s;}
+    .step:hover{background:#FFFFFF;}
+    .step-num{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(166,88,0,0.9);line-height:1;margin-bottom:12px;}
     .step-icon{font-size:1.4rem;margin-bottom:12px;}
-    .step h3{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);margin-bottom:6px;}
-    .step p{font-size:0.78rem;color:var(--grey-dim);line-height:1.6;font-weight:300;}
-    .step::after{content:'';position:absolute;top:0;left:0;width:2px;height:0;background:var(--orange);transition:height 0.3s;}
+    .step h3{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);margin-bottom:6px;}
+    .step p{font-size:0.78rem;color:var(--ink-dim);line-height:1.6;font-weight:300;}
+    .step::after{content:'';position:absolute;top:0;left:0;width:2px;height:0;background:var(--accent);transition:height 0.3s;}
     .step:hover::after{height:100%;}
-    .reg-section{position:relative;z-index:1;padding:70px 80px;background:rgba(11,22,44,0.5);}
+    .reg-section{position:relative;z-index:1;padding:70px 80px;background:#FFFFFF;}
     .reg-grid{display:grid;grid-template-columns:1fr 360px;gap:48px;align-items:start;}
-    .form-panel{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.2);padding:40px 36px;border-radius:var(--radius);}
-    .form-step-label{font-size:0.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:600;margin-bottom:6px;}
-    .form-main-title{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:1px;color:var(--grey);margin-bottom:24px;}
-    .form-divider{height:1px;background:rgba(62,107,137,0.15);margin:28px 0 24px;}
+    .form-panel{background:#FFFFFF;border:1px solid rgba(26,26,26,0.2);padding:40px 36px;border-radius:var(--radius);}
+    .form-step-label{font-size:0.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--accent-text);font-weight:600;margin-bottom:6px;}
+    .form-main-title{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:1px;color:var(--ink);margin-bottom:24px;}
+    .form-divider{height:1px;background:rgba(26,26,26,0.06);margin:28px 0 24px;}
     /* Category tabs */
     .cat-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
-    .cat-tab{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--steel-light);cursor:pointer;transition:all 0.2s;}
-    .cat-tab:hover{border-color:var(--steel);color:var(--grey);}
-    .cat-tab.active{border-color:var(--orange);background:rgba(241,143,1,0.1);color:var(--orange);}
+    .cat-tab{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--ink-2);cursor:pointer;transition:all 0.2s;}
+    .cat-tab:hover{border-color:var(--ink-2);color:var(--ink);}
+    .cat-tab.active{border-color:var(--accent);background:rgba(241, 143, 1, 0.1);color:var(--accent-text);}
     .cat-panel{display:none;}
     .cat-panel.active{display:block;}
-    .cat-panel-title{font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grey-dim);margin-bottom:12px;}
+    .cat-panel-title{font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ink-dim);margin-bottom:12px;}
     /* Service checkboxes */
     .svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:4px;}
-    .svc-box{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(62,107,137,0.18);border-radius:var(--radius);cursor:pointer;transition:all 0.15s;font-size:0.75rem;color:rgba(227,229,232,0.6);}
-    .svc-box:hover{border-color:rgba(241,143,1,0.3);background:rgba(241,143,1,0.04);color:var(--grey);}
-    .svc-box input[type=checkbox]{appearance:none;width:13px;height:13px;border:1px solid rgba(62,107,137,0.5);border-radius:var(--radius);background:transparent;cursor:pointer;position:relative;flex-shrink:0;transition:all 0.15s;}
-    .svc-box input:checked{background:var(--orange);border-color:var(--orange);}
-    .svc-box input:checked::after{content:'✓';position:absolute;top:-2px;left:1px;font-size:10px;color:var(--navy);font-weight:bold;}
+    .svc-box{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid rgba(26,26,26,0.18);border-radius:var(--radius);cursor:pointer;transition:all 0.15s;font-size:0.75rem;color:rgba(26,26,26,0.68);}
+    .svc-box:hover{border-color:rgba(241, 143, 1, 0.3);background:rgba(241, 143, 1, 0.04);color:var(--ink);}
+    .svc-box input[type=checkbox]{appearance:none;width:13px;height:13px;border:1px solid rgba(26,26,26,0.5);border-radius:var(--radius);background:transparent;cursor:pointer;position:relative;flex-shrink:0;transition:all 0.15s;}
+    .svc-box input:checked{background:var(--btn);border-color:var(--accent);}
+    .svc-box input:checked::after{content:'✓';position:absolute;top:-2px;left:1px;font-size:10px;color:var(--on-btn);font-weight:bold;}
     /* Accreditation checkboxes */
     .check-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 
     /* Document upload dropzones */
     .doc-dropzone {
-      border: 2px dashed rgba(62,107,137,0.35);
+      border: 2px dashed rgba(26,26,26,0.35);
       border-radius: var(--radius);
       padding: 26px 20px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
-      background: rgba(10,26,47,0.4);
+      background: #FFFFFF;
     }
     .doc-dropzone:hover, .doc-dropzone.drag-over {
-      border-color: var(--orange);
-      background: rgba(241,143,1,0.05);
+      border-color: var(--accent);
+      background: rgba(241, 143, 1, 0.05);
     }
     .doc-dropzone.has-file {
       border-style: solid;
-      border-color: rgba(92,184,92,0.4);
-      background: rgba(92,184,92,0.05);
+      border-color: rgba(30,123,52,0.4);
+      background: rgba(30,123,52,0.05);
     }
     .doc-dropzone-icon { font-size: 1.6rem; margin-bottom: 8px; opacity: 0.6; }
-    .doc-dropzone-text { font-size: 0.85rem; color: var(--grey); margin-bottom: 4px; }
-    .doc-dropzone-hint { font-size: 0.7rem; color: var(--grey-dim); }
+    .doc-dropzone-text { font-size: 0.85rem; color: var(--ink); margin-bottom: 4px; }
+    .doc-dropzone-hint { font-size: 0.7rem; color: var(--ink-dim); }
     .doc-file-chip {
       display: flex; align-items: center; gap: 10px;
-      background: rgba(17,34,64,0.6);
-      border: 1px solid rgba(62,107,137,0.25);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.25);
       border-radius: var(--radius);
       padding: 8px 12px;
       font-size: 0.8rem;
-      color: var(--grey);
+      color: var(--ink);
     }
     .doc-file-chip .doc-file-remove {
-      margin-left: auto; cursor: pointer; color: rgba(227,229,232,0.35);
+      margin-left: auto; cursor: pointer; color: rgba(26,26,26,0.68);
       background: none; border: none; font-size: 0.85rem; padding: 2px 4px;
     }
-    .doc-file-chip .doc-file-remove:hover { color: #e74c3c; }
-    .check-box{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid rgba(62,107,137,0.18);border-radius:var(--radius);cursor:pointer;transition:all 0.15s;font-size:0.75rem;color:rgba(227,229,232,0.6);}
-    .check-box:hover{border-color:rgba(241,143,1,0.3);background:rgba(241,143,1,0.04);color:var(--grey);}
-    .check-box input[type=checkbox]{appearance:none;width:13px;height:13px;border:1px solid rgba(62,107,137,0.5);border-radius:var(--radius);background:transparent;cursor:pointer;position:relative;flex-shrink:0;transition:all 0.15s;}
-    .check-box input:checked{background:var(--orange);border-color:var(--orange);}
-    .check-box input:checked::after{content:'✓';position:absolute;top:-2px;left:1px;font-size:10px;color:var(--navy);font-weight:bold;}
+    .doc-file-chip .doc-file-remove:hover { color: #C0392B; }
+    .check-box{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid rgba(26,26,26,0.18);border-radius:var(--radius);cursor:pointer;transition:all 0.15s;font-size:0.75rem;color:rgba(26,26,26,0.68);}
+    .check-box:hover{border-color:rgba(241, 143, 1, 0.3);background:rgba(241, 143, 1, 0.04);color:var(--ink);}
+    .check-box input[type=checkbox]{appearance:none;width:13px;height:13px;border:1px solid rgba(26,26,26,0.5);border-radius:var(--radius);background:transparent;cursor:pointer;position:relative;flex-shrink:0;transition:all 0.15s;}
+    .check-box input:checked{background:var(--btn);border-color:var(--accent);}
+    .check-box input:checked::after{content:'✓';position:absolute;top:-2px;left:1px;font-size:10px;color:var(--on-btn);font-weight:bold;}
     /* Pricing options */
     .pricing-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-    .pricing-opt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1px solid rgba(62,107,137,0.25);border-radius:var(--radius);cursor:pointer;transition:all 0.2s;text-align:center;}
-    .pricing-opt.selected{border-color:rgba(241,143,1,0.5);background:rgba(241,143,1,0.06);}
+    .pricing-opt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1px solid rgba(26,26,26,0.25);border-radius:var(--radius);cursor:pointer;transition:all 0.2s;text-align:center;}
+    .pricing-opt.selected{border-color:rgba(241, 143, 1, 0.5);background:rgba(241, 143, 1, 0.06);}
     .pricing-opt input[type=radio]{display:none;}
     .pricing-opt-icon{font-size:1.2rem;}
-    .pricing-opt-label{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey);}
-    .pricing-opt-desc{font-size:0.68rem;color:var(--grey-dim);font-weight:300;line-height:1.4;}
+    .pricing-opt-label{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink);}
+    .pricing-opt-desc{font-size:0.68rem;color:var(--ink-dim);font-weight:300;line-height:1.4;}
     /* T&Cs modal */
-    .tc-modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,26,47,0.92);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+    .tc-modal-overlay{display:none;position:fixed;inset:0;background:rgba(250,248,242,0.92);z-index:1000;align-items:center;justify-content:center;padding:20px;}
     .tc-modal-overlay.show{display:flex;}
-    .tc-modal{background:#0D2040;border:1px solid rgba(62,107,137,0.4);border-radius:var(--radius);max-width:720px;width:100%;max-height:80vh;display:flex;flex-direction:column;}
-    .tc-modal-header{padding:20px 24px;border-bottom:1px solid rgba(62,107,137,0.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-    .tc-modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--grey);}
-    .tc-modal-close{background:none;border:none;color:var(--grey-dim);font-size:1.2rem;cursor:pointer;padding:4px 8px;}
-    .tc-modal-close:hover{color:var(--orange);}
+    .tc-modal{background:#FFFFFF;border:1px solid rgba(26,26,26,0.4);border-radius:var(--radius);max-width:720px;width:100%;max-height:80vh;display:flex;flex-direction:column;}
+    .tc-modal-header{padding:20px 24px;border-bottom:1px solid rgba(26,26,26,0.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .tc-modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--ink);}
+    .tc-modal-close{background:none;border:none;color:var(--ink-dim);font-size:1.2rem;cursor:pointer;padding:4px 8px;}
+    .tc-modal-close:hover{color:var(--accent-text);}
     .tc-modal-body{padding:24px;overflow-y:auto;flex:1;}
-    .tc-modal-body h3{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin:20px 0 8px;}
+    .tc-modal-body h3{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent-text);margin:20px 0 8px;}
     .tc-modal-body h3:first-child{margin-top:0;}
-    .tc-modal-body p,.tc-modal-body li{font-size:0.8rem;color:var(--grey-dim);line-height:1.7;font-weight:300;}
+    .tc-modal-body p,.tc-modal-body li{font-size:0.8rem;color:var(--ink-dim);line-height:1.7;font-weight:300;}
     .tc-modal-body ul{padding-left:18px;margin-bottom:8px;}
-    .tc-modal-footer{padding:16px 24px;border-top:1px solid rgba(62,107,137,0.2);display:flex;gap:12px;justify-content:flex-end;flex-shrink:0;}
+    .tc-modal-footer{padding:16px 24px;border-top:1px solid rgba(26,26,26,0.2);display:flex;gap:12px;justify-content:flex-end;flex-shrink:0;}
     /* Form elements */
-    .form-submit{width:100%;padding:15px;background:var(--orange);border:none;border-radius:var(--radius);color:var(--navy);font-family:'Barlow Condensed',sans-serif;font-size:0.92rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:8px;}
-    .form-submit:hover{background:var(--orange-hover);box-shadow:0 8px 28px rgba(241,143,1,0.35);transform:translateY(-1px);}
-    .success-banner{display:none;background:rgba(2,122,72,0.12);border:1px solid rgba(108,233,166,0.3);border-radius:var(--radius);padding:14px 18px;align-items:center;gap:12px;margin-bottom:20px;}
+    .form-submit{width:100%;padding:15px;background:var(--btn);border:none;border-radius:var(--radius);color:var(--on-btn);font-family:'Barlow Condensed',sans-serif;font-size:0.92rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+    .form-submit:hover{background:var(--btn-hover);box-shadow:0 8px 28px rgba(241, 143, 1, 0.35);transform:translateY(-1px);}
+    .success-banner{display:none;background:rgba(2,122,72,0.12);border:1px solid rgba(30,123,52,0.3);border-radius:var(--radius);padding:14px 18px;align-items:center;gap:12px;margin-bottom:20px;}
     .success-banner.show{display:flex;}
     .success-icon-circle{width:28px;height:28px;border-radius:50%;background:#027A48;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .success-title{font-size:0.9rem;font-weight:600;color:#6CE9A6;}
-    .success-sub{font-size:0.8rem;color:rgba(108,233,166,0.7);margin-top:2px;}
+    .success-title{font-size:0.9rem;font-weight:600;color:#1E7B34;}
+    .success-sub{font-size:0.8rem;color:rgba(30,123,52,0.9);margin-top:2px;}
     /* Login sidebar */
-    .login-panel{background:rgba(17,34,64,0.4);border:1px solid rgba(62,107,137,0.18);padding:32px 28px;border-radius:var(--radius);position:sticky;top:90px;}
-    .login-label{font-size:0.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-    .login-label::after{content:'';flex:1;height:1px;background:rgba(241,143,1,0.25);}
+    .login-panel{background:#FFFFFF;border:1px solid rgba(26,26,26,0.18);padding:32px 28px;border-radius:var(--radius);position:sticky;top:90px;}
+    .login-label{font-size:0.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--accent-text);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+    .login-label::after{content:'';flex:1;height:1px;background:rgba(241, 143, 1, 0.25);}
     .login-title{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:2px;margin-bottom:4px;}
-    .login-sub{font-size:0.78rem;color:var(--grey-dim);margin-bottom:24px;font-weight:300;}
-    .info-box{background:rgba(17,34,64,0.5);border:1px solid rgba(62,107,137,0.18);border-radius:var(--radius);padding:20px;margin-top:14px;}
-    .info-box-title{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:12px;}
+    .login-sub{font-size:0.78rem;color:var(--ink-dim);margin-bottom:24px;font-weight:300;}
+    .info-box{background:#FFFFFF;border:1px solid rgba(26,26,26,0.18);border-radius:var(--radius);padding:20px;margin-top:14px;}
+    .info-box-title{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent-text);margin-bottom:12px;}
     .info-item{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
     .info-item:last-child{margin-bottom:0;}
-    .info-check{color:var(--orange);font-size:0.75rem;flex-shrink:0;margin-top:1px;}
-    .info-text{font-size:0.78rem;color:var(--grey-dim);line-height:1.5;font-weight:300;}
-    .tc-link{color:var(--orange);cursor:pointer;text-decoration:underline;font-size:0.78rem;}
-    .tc-link:hover{color:var(--orange-hover);}
+    .info-check{color:var(--accent-text);font-size:0.75rem;flex-shrink:0;margin-top:1px;}
+    .info-text{font-size:0.78rem;color:var(--ink-dim);line-height:1.5;font-weight:300;}
+    .tc-link{color:var(--accent-text);cursor:pointer;text-decoration:underline;font-size:0.78rem;}
+    .tc-link:hover{color:var(--accent-text);}
     @media(max-width:1024px){.hero{padding:50px 40px;grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.benefits-grid{grid-template-columns:1fr 1fr}.reg-grid{grid-template-columns:1fr}.login-panel{position:static}.reg-section{padding:50px 40px}.check-grid{grid-template-columns:1fr 1fr}.svc-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:600px){.hero{padding:32px 20px}.steps{grid-template-columns:1fr}.benefits-grid{grid-template-columns:1fr}.form-panel{padding:24px 18px}.reg-section{padding:32px 20px}.check-grid{grid-template-columns:1fr 1fr}.svc-grid{grid-template-columns:1fr}.pricing-opts{grid-template-columns:1fr}}
   </style>
@@ -417,7 +417,7 @@ window.AgoraDB = AgoraDB;
     <div class="comm-num">5%</div>
     <div class="comm-text">
       <h3>No Upfront Cost. Ever.</h3>
-      <p>Listing on Agora FM is completely free. We charge a <strong style="color:var(--orange);">5% commission</strong> only when a job is completed and payment is received. No monthly fees, no subscription, no risk.</p>
+      <p>Listing on Agora FM is completely free. We charge a <strong style="color:var(--accent-text);">5% commission</strong> only when a job is completed and payment is received. No monthly fees, no subscription, no risk.</p>
     </div>
     <a href="#reg-form" class="btn-primary" style="flex-shrink:0;white-space:nowrap;">List Free →</a>
   </div>
@@ -461,7 +461,7 @@ window.AgoraDB = AgoraDB;
 <div class="reg-section" id="reg-form">
   <div class="section-eyebrow" style="margin-bottom:10px;position:relative;z-index:1;"><span class="eyebrow-line"></span><span class="eyebrow-text">Supplier Registration</span></div>
   <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;margin-bottom:8px;position:relative;z-index:1;">List Your Business</h2>
-  <p style="font-size:0.88rem;color:var(--grey-dim);margin-bottom:36px;font-weight:300;position:relative;z-index:1;">Complete the form below. Takes under 10 minutes. We verify your profile within 24 hours.</p>
+  <p style="font-size:0.88rem;color:var(--ink-dim);margin-bottom:36px;font-weight:300;position:relative;z-index:1;">Complete the form below. Takes under 10 minutes. We verify your profile within 24 hours.</p>
 
   <div id="successBanner" class="success-banner">
     <div class="success-icon-circle"><span style="color:#fff;font-size:0.8rem;">✓</span></div>
@@ -494,7 +494,7 @@ window.AgoraDB = AgoraDB;
 
       <!-- STEP 2: Key Contact -->
       <div class="form-step-label" style="margin-bottom:6px;">Step 2 of 4 — Key Contact</div>
-      <div style="font-size:0.78rem;color:var(--grey-dim);margin-bottom:18px;font-weight:300;">The person responsible for managing your Agora FM account and receiving enquiries.</div>
+      <div style="font-size:0.78rem;color:var(--ink-dim);margin-bottom:18px;font-weight:300;">The person responsible for managing your Agora FM account and receiving enquiries.</div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="contactFirst" type="text" placeholder="First name"/></div>
         <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="contactLast" type="text" placeholder="Last name"/></div>
@@ -512,7 +512,7 @@ window.AgoraDB = AgoraDB;
 
       <!-- STEP 3: Services Supplied & Accreditations -->
       <div class="form-step-label" style="margin-bottom:6px;">Step 3 of 4 — Services Supplied &amp; Accreditations</div>
-      <div style="font-size:0.78rem;color:var(--grey-dim);margin-bottom:16px;font-weight:300;">Select every FM service your company supplies. Tick all that apply — this determines where you appear in customer searches.</div>
+      <div style="font-size:0.78rem;color:var(--ink-dim);margin-bottom:16px;font-weight:300;">Select every FM service your company supplies. Tick all that apply — this determines where you appear in customer searches.</div>
 
       <!-- Service category tabs -->
       <label class="form-label" style="margin-bottom:10px;">FM Services You Supply *</label>
@@ -695,7 +695,7 @@ window.AgoraDB = AgoraDB;
       <!-- PL Insurance document upload -->
       <div style="margin-top:16px;">
         <label class="form-label">Upload Your Public Liability Insurance Certificate *</label>
-        <div style="font-size:0.76rem;color:var(--grey-dim);font-weight:300;margin-bottom:10px;">
+        <div style="font-size:0.76rem;color:var(--ink-dim);font-weight:300;margin-bottom:10px;">
           We need an actual copy on file, not just the amount selected above — this is checked before your profile goes live.
         </div>
         <div class="doc-dropzone" id="plDropzone"
@@ -715,7 +715,7 @@ window.AgoraDB = AgoraDB;
       <!-- Accreditation certificates upload -->
       <div style="margin-top:18px;">
         <label class="form-label">Upload Accreditation Certificates</label>
-        <div style="font-size:0.76rem;color:var(--grey-dim);font-weight:300;margin-bottom:10px;">
+        <div style="font-size:0.76rem;color:var(--ink-dim);font-weight:300;margin-bottom:10px;">
           Add a copy of the certificate for each accreditation you've ticked below (Gas Safe, NICEIC, CHAS, etc.) — optional, but profiles with certificates on file are verified faster. You can drop in several files.
         </div>
         <div class="doc-dropzone" id="accredDropzone"
@@ -746,7 +746,7 @@ window.AgoraDB = AgoraDB;
       <!-- Coverage regions -->
       <div style="margin-top:18px;">
         <label class="form-label">Regions You Cover *</label>
-        <div style="font-size:0.76rem;color:var(--grey-dim);font-weight:300;margin-bottom:10px;">
+        <div style="font-size:0.76rem;color:var(--ink-dim);font-weight:300;margin-bottom:10px;">
           Tick every region where you can realistically deliver this service. Customers searching by postcode will only see you listed for the regions selected below — this keeps your enquiries relevant and stops customers in areas you don't cover from contacting you.
         </div>
         <div class="check-grid" id="coverageRegionsGrid">
@@ -769,7 +769,7 @@ window.AgoraDB = AgoraDB;
 
       <!-- STEP 4: Payment, Bank & Account -->
       <div class="form-step-label" style="margin-bottom:6px;">Step 4 of 4 — Payment Details &amp; Account Setup</div>
-      <div style="font-size:0.78rem;color:var(--grey-dim);margin-bottom:18px;font-weight:300;">Bank details are used to pay you after job completion (minus 5% commission). Encrypted and stored securely.</div>
+      <div style="font-size:0.78rem;color:var(--ink-dim);margin-bottom:18px;font-weight:300;">Bank details are used to pay you after job completion (minus 5% commission). Encrypted and stored securely.</div>
 
       <!-- Pricing structure -->
       <div style="margin-bottom:18px;">
@@ -822,17 +822,17 @@ window.AgoraDB = AgoraDB;
           <strong>Self-certification notice:</strong> Agora FM does not independently verify trade qualifications, accreditations or insurance cover. Suppliers self-certify that the information and documents provided are true, current and belong to their company. Customers are responsible for satisfying themselves of a supplier's suitability before commissioning work. Agora FM accepts no liability for inaccurate, expired or fraudulent supplier declarations.
         </div>
         <label class="check-label" style="margin-bottom:12px;align-items:flex-start;gap:10px;">
-          <input type="checkbox" id="terms" style="margin-top:2px;accent-color:var(--orange);">
-          <span style="font-size:0.78rem;color:var(--grey-dim);line-height:1.5;">I have read and agree to the <span class="tc-link" onclick="openTC()">Agora FM Supplier Terms &amp; Conditions</span> and <a href="#" style="color:var(--orange);">Privacy Policy</a>. I understand and accept the <strong style="color:var(--grey);">5% commission structure</strong> on completed jobs. <span style="color:var(--orange);">*</span></span>
+          <input type="checkbox" id="terms" style="margin-top:2px;accent-color:var(--accent);">
+          <span style="font-size:0.78rem;color:var(--ink-dim);line-height:1.5;">I have read and agree to the <span class="tc-link" onclick="openTC()">Agora FM Supplier Terms &amp; Conditions</span> and <a href="#" style="color:var(--accent-text);">Privacy Policy</a>. I understand and accept the <strong style="color:var(--ink);">5% commission structure</strong> on completed jobs. <span style="color:var(--accent-text);">*</span></span>
         </label>
         <label class="check-label" style="align-items:flex-start;gap:10px;">
-          <input type="checkbox" id="accurate" style="margin-top:2px;accent-color:var(--orange);">
-          <span style="font-size:0.78rem;color:var(--grey-dim);line-height:1.5;">I confirm that all information, accreditations and insurance details provided are accurate and current, and that the documents I have uploaded are genuine and belong to my company. I understand Agora FM does not verify, endorse or guarantee these qualifications — my company is solely responsible for holding valid, in-date accreditations and insurance for the services we provide. <span style="color:var(--orange);">*</span></span>
+          <input type="checkbox" id="accurate" style="margin-top:2px;accent-color:var(--accent);">
+          <span style="font-size:0.78rem;color:var(--ink-dim);line-height:1.5;">I confirm that all information, accreditations and insurance details provided are accurate and current, and that the documents I have uploaded are genuine and belong to my company. I understand Agora FM does not verify, endorse or guarantee these qualifications — my company is solely responsible for holding valid, in-date accreditations and insurance for the services we provide. <span style="color:var(--accent-text);">*</span></span>
         </label>
       </div>
 
       <button class="form-submit" onclick="handleSupplierRegister()">Submit for Verification →</button>
-      <p style="text-align:center;font-size:0.72rem;color:rgba(227,229,232,0.25);margin-top:12px;">Our team will verify your profile within 24 hours and email you once you go live.</p>
+      <p style="text-align:center;font-size:0.72rem;color:rgba(26,26,26,0.68);margin-top:12px;">Our team will verify your profile within 24 hours and email you once you go live.</p>
     </div>
 
     <!-- SIDEBAR -->
@@ -843,7 +843,7 @@ window.AgoraDB = AgoraDB;
         <div class="login-sub">Access your supplier dashboard</div>
         <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="sideEmail" type="email" placeholder="you@yourcompany.co.uk"/></div>
         <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="sidePassword" type="password" placeholder="••••••••••••"/></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:-12px;margin-bottom:16px;"><a href="#" style="font-size:0.72rem;color:var(--steel-light);text-decoration:none;">Forgot password?</a></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:-12px;margin-bottom:16px;"><a href="#" style="font-size:0.72rem;color:var(--ink-2);text-decoration:none;">Forgot password?</a></div>
         <button class="btn-signin" onclick="handleLogin()">Sign In →</button>
         <div class="trust-bar"><span class="trust-icon">🔒</span><p class="trust-text">256-bit SSL encrypted · ISO 27001 certified · GDPR compliant</p></div>
       </div>
@@ -857,8 +857,8 @@ window.AgoraDB = AgoraDB;
       </div>
       <div class="info-box" style="margin-top:12px;">
         <div class="info-box-title">Supplier Support</div>
-        <div class="info-item"><span class="info-check">📧</span><span class="info-text"><a href="mailto:suppliers@agorafm.co.uk" style="color:var(--orange);text-decoration:none;">suppliers@agorafm.co.uk</a></span></div>
-        <div class="info-item"><span class="info-check">📞</span><span class="info-text"><a href="tel:+443300000001" style="color:var(--steel-light);text-decoration:none;">0330 000 0001</a></span></div>
+        <div class="info-item"><span class="info-check">📧</span><span class="info-text"><a href="mailto:suppliers@agorafm.co.uk" style="color:var(--accent-text);text-decoration:none;">suppliers@agorafm.co.uk</a></span></div>
+        <div class="info-item"><span class="info-check">📞</span><span class="info-text"><a href="tel:+443300000001" style="color:var(--ink-2);text-decoration:none;">0330 000 0001</a></span></div>
         <div class="info-item"><span class="info-check">🕐</span><span class="info-text">Mon–Fri 8am–6pm</span></div>
       </div>
     </div>
@@ -873,7 +873,7 @@ window.AgoraDB = AgoraDB;
       <button class="tc-modal-close" onclick="closeTC()">✕</button>
     </div>
     <div class="tc-modal-body">
-      <p style="font-size:0.72rem;color:rgba(227,229,232,0.3);margin-bottom:16px;">Last updated: April 2026 · Version 3.0 · Agora FM Ltd, Registered in England &amp; Wales</p>
+      <p style="font-size:0.72rem;color:rgba(26,26,26,0.68);margin-bottom:16px;">Last updated: April 2026 · Version 3.0 · Agora FM Ltd, Registered in England &amp; Wales</p>
 
       <h3>1. Definitions</h3>
       <p>"Agora FM" means Agora FM Ltd, the operator of the Agora FM platform. "Supplier" means any company or individual registered on the platform to provide FM services. "Customer" means any organisation using the platform to commission FM services. "Platform" means the Agora FM web-based marketplace at agorafm.co.uk and associated applications.</p>
@@ -882,7 +882,7 @@ window.AgoraDB = AgoraDB;
       <p>2.1 All information provided at registration must be accurate, complete and kept up to date. 2.2 Agora FM reserves the right to verify all accreditations, insurance documents and company information prior to activating a supplier profile. 2.3 Profiles found to contain false or misleading information will be suspended immediately and may be permanently removed. 2.4 Suppliers must notify Agora FM within 7 days of any change to their accreditation status or insurance cover.</p>
 
       <h3>3. Commission Structure</h3>
-      <p>3.1 Agora FM charges a commission of <strong style="color:var(--orange);">5% of the gross contract value</strong> on all jobs completed through the platform. 3.2 Commission is deducted at the point of payment settlement and is not charged to the customer. 3.3 The commission rate may be reviewed annually with 90 days' written notice to suppliers. 3.4 No commission is payable on jobs that are cancelled prior to commencement, provided the supplier notifies Agora FM within 48 hours of cancellation.</p>
+      <p>3.1 Agora FM charges a commission of <strong style="color:var(--accent-text);">5% of the gross contract value</strong> on all jobs completed through the platform. 3.2 Commission is deducted at the point of payment settlement and is not charged to the customer. 3.3 The commission rate may be reviewed annually with 90 days' written notice to suppliers. 3.4 No commission is payable on jobs that are cancelled prior to commencement, provided the supplier notifies Agora FM within 48 hours of cancellation.</p>
 
       <h3>4. Payment Terms</h3>
       <p>4.1 Suppliers select their preferred payment terms (30, 60 or 90 days) at registration. 4.2 Payment is processed by Agora FM upon receipt of a confirmed job completion report from both parties. 4.3 Agora FM reserves the right to withhold payment pending resolution of any customer dispute. 4.4 Payments are made via BACS to the bank account details provided at registration. Suppliers are responsible for ensuring bank details are accurate and current.</p>
@@ -1004,7 +1004,7 @@ function renderAccredList(){
     chip.className = 'doc-file-chip';
     chip.innerHTML =
       '📎 <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+f.name+'</span>'+
-      '<span style="color:var(--grey-dim);font-size:0.72rem;">'+(f.size/1024/1024).toFixed(2)+'MB</span>'+
+      '<span style="color:var(--ink-dim);font-size:0.72rem;">'+(f.size/1024/1024).toFixed(2)+'MB</span>'+
       '<button type="button" class="doc-file-remove" onclick="removeAccredFile('+idx+')">✕</button>';
     list.appendChild(chip);
   });

@@ -24,8 +24,8 @@
       gap: 16px;
     }
     .hstat {
-      background: rgba(17,34,64,0.7);
-      border: 1px solid rgba(62,107,137,0.2);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.2);
       border-radius: var(--radius);
       padding: 22px 20px;
       position: relative;
@@ -35,16 +35,16 @@
       content: '';
       position: absolute; top: 0; left: 0; right: 0;
       height: 2px;
-      background: linear-gradient(90deg, var(--orange), transparent);
+      background: linear-gradient(90deg, var(--accent), transparent);
     }
-    .hstat:nth-child(2n)::before { background: linear-gradient(90deg, var(--steel), transparent); }
+    .hstat:nth-child(2n)::before { background: linear-gradient(90deg, var(--ink-2), transparent); }
     .hstat-num {
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 2.2rem; font-weight: 700;
-      color: var(--grey); line-height: 1;
+      color: var(--ink); line-height: 1;
     }
     .hstat-label {
-      font-size: 0.7rem; color: rgba(227,229,232,0.45);
+      font-size: 0.7rem; color: rgba(26,26,26,0.68);
       letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px;
     }
 
@@ -53,19 +53,19 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 1px;
-      background: rgba(62,107,137,0.15);
-      border: 1px solid rgba(62,107,137,0.15);
+      background: rgba(26,26,26,0.06);
+      border: 1px solid rgba(26,26,26,0.15);
     }
     .step {
-      background: var(--navy);
+      background: var(--bg);
       padding: 32px 28px;
       position: relative;
       transition: background 0.25s;
     }
-    .step:hover { background: rgba(17,34,64,0.9); }
+    .step:hover { background: #FFFFFF; }
     .step-num {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 3.5rem; color: rgba(241,143,1,0.15);
+      font-size: 3.5rem; color: rgba(166,88,0,0.9);
       line-height: 1; margin-bottom: 16px;
     }
     .step-icon { font-size: 1.6rem; margin-bottom: 14px; }
@@ -73,21 +73,21 @@
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 1rem; font-weight: 700;
       letter-spacing: 1.5px; text-transform: uppercase;
-      color: var(--grey); margin-bottom: 8px;
+      color: var(--ink); margin-bottom: 8px;
     }
-    .step p { font-size: 0.82rem; color: var(--grey-dim); line-height: 1.6; font-weight: 300; }
+    .step p { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.6; font-weight: 300; }
     .step::after {
       content: ''; position: absolute;
       top: 0; left: 0; width: 2px; height: 0;
-      background: var(--orange); transition: height 0.3s;
+      background: var(--accent); transition: height 0.3s;
     }
     .step:hover::after { height: 100%; }
 
     /* Features grid */
     .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .feat-card {
-      background: rgba(17,34,64,0.5);
-      border: 1px solid rgba(62,107,137,0.2);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.2);
       border-radius: var(--radius);
       padding: 28px 24px;
       transition: all 0.25s;
@@ -95,15 +95,15 @@
     }
     .feat-card::before {
       content: ''; position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(241,143,1,0.04), transparent);
+      background: linear-gradient(135deg, rgba(241, 143, 1, 0.04), transparent);
       opacity: 0; transition: opacity 0.25s;
     }
-    .feat-card:hover { border-color: rgba(241,143,1,0.3); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .feat-card:hover { border-color: rgba(241, 143, 1, 0.3); transform: translateY(-2px); box-shadow: var(--shadow); }
     .feat-card:hover::before { opacity: 1; }
     .feat-icon {
       width: 40px; height: 40px;
-      background: rgba(241,143,1,0.1);
-      border: 1px solid rgba(241,143,1,0.2);
+      background: rgba(241, 143, 1, 0.1);
+      border: 1px solid rgba(241, 143, 1, 0.2);
       border-radius: var(--radius);
       display: flex; align-items: center; justify-content: center;
       font-size: 1.1rem; margin-bottom: 16px;
@@ -112,68 +112,68 @@
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 1rem; font-weight: 700;
       letter-spacing: 1px; text-transform: uppercase;
-      color: var(--grey); margin-bottom: 8px;
+      color: var(--ink); margin-bottom: 8px;
     }
-    .feat-card p { font-size: 0.82rem; color: var(--grey-dim); line-height: 1.6; font-weight: 300; }
+    .feat-card p { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.6; font-weight: 300; }
 
     /* Testimonials */
     .proof-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .proof-card {
-      background: rgba(17,34,64,0.4);
-      border: 1px solid rgba(62,107,137,0.15);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.15);
       padding: 28px 24px;
       border-radius: var(--radius);
     }
-    .stars { color: var(--orange); font-size: 0.9rem; margin-bottom: 12px; letter-spacing: 2px; }
-    .proof-quote { font-size: 0.88rem; color: var(--grey-dim); line-height: 1.7; font-style: italic; font-weight: 300; margin-bottom: 16px; }
-    .proof-author { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--steel-light); font-weight: 600; }
-    .proof-role { font-size: 0.7rem; color: rgba(227,229,232,0.35); margin-top: 3px; }
+    .stars { color: var(--accent-text); font-size: 0.9rem; margin-bottom: 12px; letter-spacing: 2px; }
+    .proof-quote { font-size: 0.88rem; color: var(--ink-dim); line-height: 1.7; font-style: italic; font-weight: 300; margin-bottom: 16px; }
+    .proof-author { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+    .proof-role { font-size: 0.7rem; color: rgba(26,26,26,0.68); margin-top: 3px; }
     .badges { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 40px; align-items: center; }
     .badge {
       display: flex; align-items: center; gap: 8px;
-      background: rgba(62,107,137,0.1);
-      border: 1px solid rgba(62,107,137,0.2);
+      background: rgba(26,26,26,0.04);
+      border: 1px solid rgba(26,26,26,0.2);
       padding: 10px 16px; border-radius: var(--radius);
     }
-    .badge-text { font-size: 0.72rem; color: var(--grey-dim); letter-spacing: 0.5px; }
+    .badge-text { font-size: 0.72rem; color: var(--ink-dim); letter-spacing: 0.5px; }
 
     /* Pricing */
     .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .price-card {
-      background: rgba(17,34,64,0.5);
-      border: 1px solid rgba(62,107,137,0.2);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.2);
       padding: 32px 28px;
       border-radius: var(--radius);
       position: relative;
       transition: all 0.25s;
     }
-    .price-card.featured { border-color: rgba(241,143,1,0.5); background: rgba(17,34,64,0.8); }
+    .price-card.featured { border-color: rgba(241, 143, 1, 0.5); background: #FFFFFF; }
     .price-card.featured::before {
       content: 'MOST POPULAR';
       position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
-      background: var(--orange); color: var(--navy);
+      background: var(--accent); color: #111111;
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.6rem; font-weight: 700; letter-spacing: 2px;
       padding: 4px 14px; white-space: nowrap;
     }
     .price-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-    .price-tier { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--orange); font-weight: 600; margin-bottom: 12px; }
-    .price-amount { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--grey); line-height: 1; margin-bottom: 4px; }
-    .price-period { font-size: 0.75rem; color: var(--grey-dim); margin-bottom: 24px; }
+    .price-tier { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent-text); font-weight: 600; margin-bottom: 12px; }
+    .price-amount { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+    .price-period { font-size: 0.75rem; color: var(--ink-dim); margin-bottom: 24px; }
     .price-features { list-style: none; margin-bottom: 28px; }
     .price-features li {
-      font-size: 0.82rem; color: var(--grey-dim);
+      font-size: 0.82rem; color: var(--ink-dim);
       padding: 7px 0;
-      border-bottom: 1px solid rgba(62,107,137,0.1);
+      border-bottom: 1px solid rgba(26,26,26,0.1);
       display: flex; gap: 10px; align-items: flex-start; font-weight: 300;
     }
-    .price-features li::before { content: '—'; color: var(--orange); font-size: 0.7rem; flex-shrink: 0; margin-top: 1px; }
+    .price-features li::before { content: '—'; color: var(--accent-text); font-size: 0.7rem; flex-shrink: 0; margin-top: 1px; }
 
     /* Registration form layout */
     .reg-section {
       position: relative; z-index: 1;
       padding: 70px 80px;
-      background: rgba(11,22,44,0.5);
+      background: #FFFFFF;
     }
     .reg-grid {
       display: grid;
@@ -182,136 +182,136 @@
       align-items: start;
     }
     .form-panel {
-      background: rgba(17,34,64,0.5);
-      border: 1px solid rgba(62,107,137,0.2);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.2);
       padding: 44px 40px;
       border-radius: var(--radius);
     }
-    .form-step-label { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--orange); font-weight: 600; margin-bottom: 8px; }
-    .form-main-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; color: var(--grey); margin-bottom: 28px; }
+    .form-step-label { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent-text); font-weight: 600; margin-bottom: 8px; }
+    .form-main-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; color: var(--ink); margin-bottom: 28px; }
 
     /* Category selector */
-    .cat-tabs { display: flex; gap: 0; flex-wrap: wrap; border-bottom: 1px solid rgba(62,107,137,0.2); }
+    .cat-tabs { display: flex; gap: 0; flex-wrap: wrap; border-bottom: 1px solid rgba(26,26,26,0.2); }
     .cat-tab {
       padding: 9px 16px;
       font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase;
-      color: rgba(227,229,232,0.45); cursor: pointer;
+      color: rgba(26,26,26,0.68); cursor: pointer;
       border-bottom: 2px solid transparent; margin-bottom: -1px;
       transition: all 0.2s; font-weight: 600; white-space: nowrap;
     }
-    .cat-tab.active, .cat-tab:hover { color: var(--orange); border-bottom-color: var(--orange); }
+    .cat-tab.active, .cat-tab:hover { color: var(--accent-text); border-bottom-color: var(--accent); }
     .cat-panel { display: none; padding: 20px 0 4px; }
     .cat-panel.active { display: block; }
     .sub-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .sub-check {
       display: flex; align-items: flex-start; gap: 9px;
       padding: 8px 10px;
-      border: 1px solid rgba(62,107,137,0.12);
+      border: 1px solid rgba(26,26,26,0.12);
       border-radius: var(--radius);
       cursor: pointer; transition: all 0.15s;
-      font-size: 0.78rem; color: rgba(227,229,232,0.6);
+      font-size: 0.78rem; color: rgba(26,26,26,0.68);
     }
-    .sub-check:hover { border-color: rgba(241,143,1,0.3); background: rgba(241,143,1,0.04); color: var(--grey); }
+    .sub-check:hover { border-color: rgba(241, 143, 1, 0.3); background: rgba(241, 143, 1, 0.04); color: var(--ink); }
     .sub-check input[type="checkbox"] {
       appearance: none; width: 13px; height: 13px;
-      border: 1px solid rgba(62,107,137,0.5);
+      border: 1px solid rgba(26,26,26,0.5);
       border-radius: var(--radius); background: transparent;
       cursor: pointer; position: relative; flex-shrink: 0; margin-top: 1px;
       transition: all 0.15s;
     }
-    .sub-check input:checked { background: var(--orange); border-color: var(--orange); }
-    .sub-check input:checked::after { content: '✓'; position: absolute; top: -2px; left: 1px; font-size: 10px; color: var(--navy); font-weight: bold; }
+    .sub-check input:checked { background: var(--btn); border-color: var(--accent); }
+    .sub-check input:checked::after { content: '✓'; position: absolute; top: -2px; left: 1px; font-size: 10px; color: var(--on-btn); font-weight: bold; }
     .selected-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; min-height: 28px; }
     .sel-tag {
       display: flex; align-items: center; gap: 6px;
-      background: rgba(241,143,1,0.1);
-      border: 1px solid rgba(241,143,1,0.3);
+      background: rgba(241, 143, 1, 0.1);
+      border: 1px solid rgba(241, 143, 1, 0.3);
       padding: 4px 10px; border-radius: var(--radius);
-      font-size: 0.7rem; color: var(--orange);
+      font-size: 0.7rem; color: var(--accent-text);
     }
-    .sel-tag button { background: none; border: none; color: var(--orange); cursor: pointer; font-size: 0.75rem; padding: 0; line-height: 1; }
+    .sel-tag button { background: none; border: none; color: var(--accent-text); cursor: pointer; font-size: 0.75rem; padding: 0; line-height: 1; }
 
     /* Payment options */
     .pay-options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
     .pay-option {
       display: flex; align-items: flex-start; gap: 12px;
       padding: 16px;
-      border: 1px solid rgba(62,107,137,0.25);
+      border: 1px solid rgba(26,26,26,0.25);
       border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
     }
-    .pay-option:hover, .pay-option.selected { border-color: rgba(241,143,1,0.5); background: rgba(241,143,1,0.04); }
+    .pay-option:hover, .pay-option.selected { border-color: rgba(241, 143, 1, 0.5); background: rgba(241, 143, 1, 0.04); }
     .pay-option input[type="radio"] {
       appearance: none; width: 15px; height: 15px;
-      border: 1px solid rgba(62,107,137,0.5); border-radius: 50%;
+      border: 1px solid rgba(26,26,26,0.5); border-radius: 50%;
       background: transparent; cursor: pointer;
       position: relative; flex-shrink: 0; margin-top: 2px; transition: all 0.15s;
     }
-    .pay-option input:checked { border-color: var(--orange); background: rgba(241,143,1,0.15); }
+    .pay-option input:checked { border-color: var(--accent); background: rgba(241, 143, 1, 0.15); }
     .pay-option input:checked::after {
       content: ''; position: absolute; top: 50%; left: 50%;
       transform: translate(-50%,-50%); width: 6px; height: 6px;
-      background: var(--orange); border-radius: 50%;
+      background: var(--accent); border-radius: 50%;
     }
-    .pay-label { font-size: 0.8rem; font-weight: 600; color: var(--grey); margin-bottom: 3px; }
-    .pay-desc { font-size: 0.72rem; color: var(--grey-dim); font-weight: 300; }
+    .pay-label { font-size: 0.8rem; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+    .pay-desc { font-size: 0.72rem; color: var(--ink-dim); font-weight: 300; }
     .form-submit {
       width: 100%; padding: 15px;
-      background: var(--orange); border: none; border-radius: var(--radius);
-      color: var(--navy);
+      background: var(--btn); border: none; border-radius: var(--radius);
+      color: var(--on-btn);
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.92rem; font-weight: 700;
       letter-spacing: 3px; text-transform: uppercase;
       cursor: pointer; transition: all 0.2s; margin-top: 8px;
     }
-    .form-submit:hover { background: var(--orange-hover); box-shadow: 0 8px 28px rgba(241,143,1,0.35); transform: translateY(-1px); }
+    .form-submit:hover { background: var(--btn-hover); box-shadow: 0 8px 28px rgba(241, 143, 1, 0.35); transform: translateY(-1px); }
     .form-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
-    .form-divider::before, .form-divider::after { content: ''; flex: 1; height: 1px; background: rgba(62,107,137,0.2); }
-    .form-divider span { font-size: 0.65rem; color: rgba(227,229,232,0.3); letter-spacing: 2px; text-transform: uppercase; }
+    .form-divider::before, .form-divider::after { content: ''; flex: 1; height: 1px; background: rgba(26,26,26,0.08); }
+    .form-divider span { font-size: 0.65rem; color: rgba(26,26,26,0.68); letter-spacing: 2px; text-transform: uppercase; }
 
     /* Login side panel */
     .login-panel {
-      background: rgba(17,34,64,0.4);
-      border: 1px solid rgba(62,107,137,0.18);
+      background: #FFFFFF;
+      border: 1px solid rgba(26,26,26,0.18);
       padding: 36px 32px;
       border-radius: var(--radius);
       position: sticky; top: 90px;
     }
-    .login-label { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--orange); font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-    .login-label::after { content: ''; flex: 1; height: 1px; background: rgba(241,143,1,0.25); }
+    .login-label { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent-text); font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .login-label::after { content: ''; flex: 1; height: 1px; background: rgba(241, 143, 1, 0.25); }
     .login-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; letter-spacing: 2px; margin-bottom: 4px; }
-    .login-sub { font-size: 0.8rem; color: var(--grey-dim); margin-bottom: 28px; font-weight: 300; }
+    .login-sub { font-size: 0.8rem; color: var(--ink-dim); margin-bottom: 28px; font-weight: 300; }
     .btn-login {
       width: 100%; padding: 13px;
       background: transparent;
-      border: 1px solid rgba(62,107,137,0.4);
+      border: 1px solid rgba(26,26,26,0.4);
       border-radius: var(--radius);
-      color: var(--grey);
+      color: var(--ink);
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.85rem; font-weight: 600;
       letter-spacing: 3px; text-transform: uppercase;
       cursor: pointer; transition: all 0.2s;
     }
-    .btn-login:hover { border-color: var(--orange); color: var(--orange); }
+    .btn-login:hover { border-color: var(--accent); color: var(--accent-text); }
     .provider-link-box {
-      background: rgba(241,143,1,0.06);
-      border: 1px solid rgba(241,143,1,0.2);
+      background: rgba(241, 143, 1, 0.06);
+      border: 1px solid rgba(241, 143, 1, 0.2);
       padding: 16px 18px; border-radius: var(--radius);
       margin-top: 20px;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
-    .plink-text { font-size: 0.78rem; color: var(--grey-dim); line-height: 1.5; }
-    .plink-text strong { color: var(--grey); display: block; margin-bottom: 3px; font-size: 0.8rem; }
+    .plink-text { font-size: 0.78rem; color: var(--ink-dim); line-height: 1.5; }
+    .plink-text strong { color: var(--ink); display: block; margin-bottom: 3px; font-size: 0.8rem; }
     .btn-plink {
       padding: 7px 14px;
-      background: var(--orange); border: none; border-radius: var(--radius);
-      color: var(--navy);
+      background: var(--btn); border: none; border-radius: var(--radius);
+      color: var(--on-btn);
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.7rem; font-weight: 700;
       letter-spacing: 1.5px; text-transform: uppercase;
       cursor: pointer; white-space: nowrap; transition: all 0.2s;
       text-decoration: none; display: inline-block;
     }
-    .btn-plink:hover { background: var(--orange-hover); }
+    .btn-plink:hover { background: var(--btn-hover); }
 
     @media (max-width: 1024px) {
       .hero { padding: 50px 40px; grid-template-columns: 1fr; }
@@ -449,7 +449,7 @@ window.AgoraDB = AgoraDB;
     var link = document.createElement('a');
     link.id = 'admin-db-link';
     link.href = '#';
-    link.style.cssText = 'font-size:0.65rem;color:rgba(241,143,1,0.3);text-decoration:none;letter-spacing:1px;margin-left:16px;';
+    link.style.cssText = 'font-size:0.65rem;color:rgba(166,88,0,0.9);text-decoration:none;letter-spacing:1px;margin-left:16px;';
     link.textContent = '⚙ View DB';
     link.onclick = function(e) { e.preventDefault(); showAdminPanel(); };
     footer.appendChild(link);
@@ -461,14 +461,14 @@ window.AgoraDB = AgoraDB;
     var data = await AgoraDB.admin.dump();
     var overlay = document.createElement('div');
     overlay.id = 'admin-panel-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,26,47,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#E3E5E8;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,242,0.97);z-index:9999;overflow:auto;padding:32px;font-family:monospace;color:#1A1A1A;';
     var fmt = function(n){ return '£' + (n||0).toFixed(2); };
     var html = '<div style="max-width:1000px;margin:0 auto;">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241,143,1,0.3);padding-bottom:16px;">';
-    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#F18F01;">AGORA FM — DATABASE VIEWER</span>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid rgba(241, 143, 1, 0.3);padding-bottom:16px;">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#A65800;">AGORA FM — DATABASE VIEWER</span>';
     html += '<div style="display:flex;gap:12px;">';
-    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:2px;color:#e74c3c;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
-    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241,143,1,0.1);border:1px solid rgba(241,143,1,0.3);border-radius:2px;color:#F18F01;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
+    html += '<button onclick="AgoraDB.admin.reset().then(function(){location.reload()})" style="padding:8px 16px;background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);border-radius:2px;color:#C0392B;font-family:monospace;cursor:pointer;font-size:0.75rem;">⚠ Reset DB</button>';
+    html += '<button onclick="document.getElementById(\'admin-panel-overlay\').remove()" style="padding:8px 16px;background:rgba(241, 143, 1, 0.1);border:1px solid rgba(241, 143, 1, 0.3);border-radius:2px;color:#A65800;font-family:monospace;cursor:pointer;font-size:0.75rem;">✕ Close</button>';
     html += '</div></div>';
 
     if (data.stats) {
@@ -476,37 +476,37 @@ window.AgoraDB = AgoraDB;
       [['Customers', data.stats.customers], ['Suppliers', data.stats.suppliers],
        ['Orders', data.stats.orders], ['Revenue', fmt(data.stats.revenue)],
        ['Commission (5%)', fmt(data.stats.commission)]].forEach(function(s){
-        html += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;text-align:center;">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#F18F01;">' + s[1] + '</div>';
-        html += '<div style="font-size:0.65rem;color:rgba(227,229,232,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
+        html += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;text-align:center;">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;color:#A65800;">' + s[1] + '</div>';
+        html += '<div style="font-size:0.65rem;color:rgba(26,26,26,0.68);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">' + s[0] + '</div></div>';
       });
       html += '</div>';
     }
 
     function section(title, obj) {
-      return '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
-             '<pre style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
+      return '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">' + title + '</h3>' +
+             '<pre style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:12px;border-radius:2px;font-size:0.72rem;overflow:auto;margin-bottom:20px;">' +
              JSON.stringify(obj, null, 2) + '</pre>';
     }
 
     function documentsSection(docs) {
       docs = docs || [];
-      var out = '<h3 style="color:#F18F01;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
+      var out = '<h3 style="color:#A65800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Supplier Documents (' + docs.length + ')</h3>';
       if (docs.length === 0) {
-        out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(227,229,232,0.4);margin-bottom:20px;">No documents uploaded yet.</div>';
+        out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);padding:14px;border-radius:2px;font-size:0.78rem;color:rgba(26,26,26,0.68);margin-bottom:20px;">No documents uploaded yet.</div>';
         return out;
       }
-      out += '<div style="background:rgba(17,34,64,0.8);border:1px solid rgba(62,107,137,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
+      out += '<div style="background:#FFFFFF;border:1px solid rgba(26,26,26,0.3);border-radius:2px;margin-bottom:20px;overflow:hidden;">';
       docs.forEach(function(d, i) {
         var typeLabel = d.doc_type === 'pl_insurance' ? '📄 PL Insurance' : '🏆 Accreditation';
         var sizeKb = d.file_size ? (d.file_size/1024).toFixed(0) + 'KB' : '';
         out += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;font-size:0.75rem;' +
-          (i < docs.length-1 ? 'border-bottom:1px solid rgba(62,107,137,0.15);' : '') + '">' +
-          '<span style="color:#F18F01;white-space:nowrap;">' + typeLabel + '</span>' +
-          '<span style="color:rgba(227,229,232,0.4);white-space:nowrap;">' + d.supplier_id + '</span>' +
-          '<span style="flex:1;color:#E3E5E8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
-          '<span style="color:rgba(227,229,232,0.3);white-space:nowrap;">' + sizeKb + '</span>' +
-          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#F18F01;text-decoration:none;border:1px solid rgba(241,143,1,0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
+          (i < docs.length-1 ? 'border-bottom:1px solid rgba(26,26,26,0.15);' : '') + '">' +
+          '<span style="color:#A65800;white-space:nowrap;">' + typeLabel + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + d.supplier_id + '</span>' +
+          '<span style="flex:1;color:#1A1A1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (d.label || d.filename) + '</span>' +
+          '<span style="color:rgba(26,26,26,0.68);white-space:nowrap;">' + sizeKb + '</span>' +
+          '<a href="/api/suppliers/documents/' + d.id + '" target="_blank" style="color:#A65800;text-decoration:none;border:1px solid rgba(241, 143, 1, 0.35);padding:3px 10px;border-radius:2px;white-space:nowrap;">View →</a>' +
           '</div>';
       });
       out += '</div>';
@@ -750,7 +750,7 @@ window.AgoraDB = AgoraDB;
 <div class="reg-section" id="reg-form">
   <div class="section-eyebrow" style="margin-bottom:12px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Customer Registration</span></div>
   <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;margin-bottom:10px;position:relative;z-index:1;">Create Your Account</h2>
-  <p style="font-size:0.9rem;color:var(--grey-dim);margin-bottom:40px;font-weight:300;position:relative;z-index:1;">Complete the form below to access the full Agora FM platform. Takes under 3 minutes.</p>
+  <p style="font-size:0.9rem;color:var(--ink-dim);margin-bottom:40px;font-weight:300;position:relative;z-index:1;">Complete the form below to access the full Agora FM platform. Takes under 3 minutes.</p>
 
   <div class="reg-grid">
     <div class="form-panel">
@@ -777,7 +777,7 @@ window.AgoraDB = AgoraDB;
         </div>
       </div>
 
-      <div style="border-top:1px solid rgba(62,107,137,0.15);margin:28px 0 24px;"></div>
+      <div style="border-top:1px solid rgba(26,26,26,0.15);margin:28px 0 24px;"></div>
       <div class="form-step-label" style="margin-bottom:16px;">Main Contact Details</div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="firstName" type="text" placeholder="James" /></div>
@@ -792,9 +792,9 @@ window.AgoraDB = AgoraDB;
         <div class="form-group"><label class="form-label">LinkedIn Profile</label><input class="form-input" type="url" placeholder="linkedin.com/in/yourprofile" /></div>
       </div>
 
-      <div style="border-top:1px solid rgba(62,107,137,0.15);margin:28px 0 24px;"></div>
+      <div style="border-top:1px solid rgba(26,26,26,0.15);margin:28px 0 24px;"></div>
       <div class="form-step-label" style="margin-bottom:4px;">Step 2 of 3 — FM Service Requirements</div>
-      <p style="font-size:0.78rem;color:var(--grey-dim);margin-bottom:20px;font-weight:300;">Select the categories and subcategories of FM services you require.</p>
+      <p style="font-size:0.78rem;color:var(--ink-dim);margin-bottom:20px;font-weight:300;">Select the categories and subcategories of FM services you require.</p>
 
       <div class="cat-tabs">
         <div class="cat-tab active" onclick="showCat('fire',this)">🔥 Fire</div>
@@ -895,7 +895,7 @@ window.AgoraDB = AgoraDB;
 
       <div id="selectedTags" class="selected-tags"></div>
 
-      <div style="border-top:1px solid rgba(62,107,137,0.15);margin:24px 0;"></div>
+      <div style="border-top:1px solid rgba(26,26,26,0.15);margin:24px 0;"></div>
       <div class="form-step-label" style="margin-bottom:12px;">Step 3 of 3 — Account &amp; Payment</div>
 
       <div class="form-row">
@@ -924,7 +924,7 @@ window.AgoraDB = AgoraDB;
 
       <label class="check-label" style="margin-bottom:16px;">
         <input type="checkbox" id="terms" />
-        I agree to the <a href="#" style="color:var(--steel-light);">Terms &amp; Conditions</a> and <a href="#" style="color:var(--steel-light);">Privacy Policy</a>
+        I agree to the <a href="#" style="color:var(--ink-2);">Terms &amp; Conditions</a> and <a href="#" style="color:var(--ink-2);">Privacy Policy</a>
       </label>
 
       <button class="form-submit" onclick="handleRegister()">Complete Registration →</button>
