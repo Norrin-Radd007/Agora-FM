@@ -5,7 +5,8 @@ Open: http://localhost:5000
 
 Database: Uses PostgreSQL on Railway (DATABASE_URL env var) or SQLite locally.
 """
-import os, json, hashlib, secrets, datetime, io
+import os, json, hashlib, hmac, secrets, datetime, io
+import urllib.request, urllib.parse, urllib.error
 from flask import Flask, request, jsonify, session, send_from_directory, send_file, g
 from werkzeug.utils import secure_filename
 
@@ -155,6 +156,99 @@ def email_new_enquiry(to_email, to_name, cust_name, cust_org, cust_email, cust_p
     )
     send_email(to_email, 'New Enquiry -- ' + service + ' -- Agora FM', _ew(body))
 
+# ── Backblaze B2 image storage (S3-compatible API) — Session 13 ──────────────
+# Listing images (logos + gallery photos) are stored in a PUBLIC Backblaze B2
+# bucket; the database keeps only each image's storage key and public URL.
+# Uses AWS Signature V4 over plain urllib — no extra dependency (no boto3).
+# Graceful fallback, mirroring EMAIL_ENABLED: if any of the four variables is
+# missing, STORAGE_ENABLED is False and uploads return a clear error instead of
+# crashing. Keys live ONLY in Railway Variables — never in code or chat.
+B2_KEY_ID          = os.environ.get('B2_KEY_ID', '').strip()
+B2_APPLICATION_KEY = os.environ.get('B2_APPLICATION_KEY', '').strip()
+B2_BUCKET_NAME     = os.environ.get('B2_BUCKET_NAME', '').strip()
+B2_ENDPOINT        = (os.environ.get('B2_ENDPOINT', '').strip()
+                      .replace('https://', '').replace('http://', '').rstrip('/'))
+B2_PUBLIC_URL_BASE = os.environ.get('B2_PUBLIC_URL_BASE', '').strip().rstrip('/')  # optional override (e.g. a CDN)
+STORAGE_ENABLED    = bool(B2_KEY_ID and B2_APPLICATION_KEY and B2_BUCKET_NAME and B2_ENDPOINT)
+
+def _b2_region():
+    """B2 S3 endpoints look like s3.<region>.backblazeb2.com — region is the 2nd label."""
+    parts = B2_ENDPOINT.split('.')
+    return parts[1] if len(parts) > 2 and parts[0] == 's3' else 'us-east-1'
+
+def _sigv4_sign(method, host, path, region, key_id, secret, body, content_type=None, when=None):
+    """Return the headers for an AWS SigV4-signed S3 request (path-style URL).
+    `path` must already be URI-encoded (we only ever build keys from safe characters)."""
+    when = when or datetime.datetime.utcnow()
+    amz_date  = when.strftime('%Y%m%dT%H%M%SZ')
+    datestamp = when.strftime('%Y%m%d')
+    payload_hash = hashlib.sha256(body).hexdigest()
+    headers = {'host': host, 'x-amz-content-sha256': payload_hash, 'x-amz-date': amz_date}
+    if content_type:
+        headers['content-type'] = content_type
+    names = sorted(headers)
+    canonical_headers = ''.join(n + ':' + str(headers[n]).strip() + '\n' for n in names)
+    signed_headers = ';'.join(names)
+    canonical_request = '\n'.join([method, path, '', canonical_headers, signed_headers, payload_hash])
+    scope = datestamp + '/' + region + '/s3/aws4_request'
+    string_to_sign = '\n'.join(['AWS4-HMAC-SHA256', amz_date, scope,
+                                hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()])
+    def _h(k, msg): return hmac.new(k, msg.encode('utf-8'), hashlib.sha256).digest()
+    k = _h(('AWS4' + secret).encode('utf-8'), datestamp)
+    k = _h(k, region); k = _h(k, 's3'); k = _h(k, 'aws4_request')
+    signature = hmac.new(k, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
+    headers['Authorization'] = ('AWS4-HMAC-SHA256 Credential=' + key_id + '/' + scope +
+                                ', SignedHeaders=' + signed_headers + ', Signature=' + signature)
+    return headers
+
+def _b2_object_path(storage_key):
+    return '/' + B2_BUCKET_NAME + '/' + urllib.parse.quote(storage_key, safe='/-_.~')
+
+def storage_public_url(storage_key):
+    if B2_PUBLIC_URL_BASE:
+        return B2_PUBLIC_URL_BASE + '/' + urllib.parse.quote(storage_key, safe='/-_.~')
+    return 'https://' + B2_ENDPOINT + _b2_object_path(storage_key)
+
+def _b2_request(method, storage_key, body=b'', content_type=None):
+    path = _b2_object_path(storage_key)
+    headers = _sigv4_sign(method, B2_ENDPOINT, path, _b2_region(),
+                          B2_KEY_ID, B2_APPLICATION_KEY, body, content_type)
+    req = urllib.request.Request('https://' + B2_ENDPOINT + path,
+                                 data=(body if method == 'PUT' else None),
+                                 headers=headers, method=method)
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        return resp.status
+
+def storage_put(storage_key, data, content_type):
+    """Upload bytes to B2. Returns (True, public_url) or (False, error_message). Never raises."""
+    if not STORAGE_ENABLED:
+        print('[Storage] Skipped (B2 not configured): ' + storage_key)
+        return False, 'Image storage is not configured yet.'
+    try:
+        _b2_request('PUT', storage_key, data, content_type)
+        print('[Storage] Uploaded: ' + storage_key)
+        return True, storage_public_url(storage_key)
+    except urllib.error.HTTPError as e:
+        detail = ''
+        try: detail = e.read().decode('utf-8', 'ignore')[:300]
+        except Exception: pass
+        print('[Storage] Upload failed ' + str(e.code) + ': ' + detail)
+        return False, 'Image upload failed (storage error ' + str(e.code) + ').'
+    except Exception as e:
+        print('[Storage] Upload failed: ' + str(e))
+        return False, 'Image upload failed — storage could not be reached.'
+
+def storage_delete(storage_key):
+    """Delete an object from B2. Returns True/False. Never raises."""
+    if not STORAGE_ENABLED:
+        return False
+    try:
+        _b2_request('DELETE', storage_key)
+        return True
+    except Exception as e:
+        print('[Storage] Delete failed for ' + storage_key + ': ' + str(e))
+        return False
+
 # ── Database mode detection ──────────────────────────────────────────────────
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 # Railway provides postgres:// but psycopg2 requires postgresql://
@@ -239,6 +333,48 @@ def _bin(data):
 # Document uploads: keep this well under Railway/Flask's request size ceiling.
 MAX_DOCUMENT_BYTES = 10 * 1024 * 1024  # 10MB per file
 ALLOWED_DOCUMENT_MIME = {'application/pdf', 'image/jpeg', 'image/png', 'image/heic'}
+
+# ── Service listings (Supplier Storefront, Session 13+) ─────────────────────
+# A "listing" is a row in the existing `services` table (decision §14.3-1).
+LISTING_STATUSES = ('draft', 'active')
+PRICING_BASES = (                      # fixed list agreed in §14.1 — do not add free text
+    'Per Unit', 'Per Item', 'Per Asset', 'Per Device', 'Per Extinguisher', 'Per Alarm',
+    'Per Detector', 'Per Visit', 'Per Call Out', 'Per Hour', 'Half Day', 'Full Day',
+    'Per Week', 'Monthly', 'Quarterly', 'Annually', 'Fixed Price', 'Per Site',
+    'Per Building', 'Per Square Metre', 'Per Employee', 'Per Contract', 'Bespoke Quote Required',
+)
+NO_PRICE_BASES = ('Bespoke Quote Required',)   # listings on this basis carry no numeric price
+
+# Listing images (stored in Backblaze B2 — public bucket)
+MAX_IMAGE_BYTES        = 5 * 1024 * 1024   # 5MB per image
+MAX_GALLERY_IMAGES     = 8                 # plus 1 logo per listing
+ALLOWED_IMAGE_MIME     = ('image/jpeg', 'image/png', 'image/webp')
+IMAGE_EXT              = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}
+
+# Listing public documents (customer-visible — separate from admin-only supplier_documents)
+MAX_LISTING_DOC_BYTES  = 10 * 1024 * 1024
+ALLOWED_LISTING_DOC_MIME = ('application/pdf', 'image/jpeg', 'image/png')
+
+def sniff_image_mime(data):
+    """Identify an image by its first bytes rather than trusting the browser-supplied type.
+    Returns one of ALLOWED_IMAGE_MIME, or None. Stops e.g. an HTML/SVG file being
+    renamed to .png and served from the public bucket."""
+    if data[:3] == b'\xff\xd8\xff':
+        return 'image/jpeg'
+    if data[:8] == b'\x89PNG\r\n\x1a\n':
+        return 'image/png'
+    if data[:4] == b'RIFF' and data[8:12] == b'WEBP':
+        return 'image/webp'
+    return None
+
+# Seed services had only a free-text unit_label; map it onto the fixed pricing basis list.
+_UNIT_LABEL_TO_BASIS = {
+    'per visit': 'Per Visit', 'per extinguisher': 'Per Extinguisher', 'per sample': 'Per Item',
+    'per month': 'Monthly', 'per distribution board': 'Per Asset', 'per boiler': 'Per Asset',
+    'per inspection': 'Per Visit', 'per filter bank': 'Per Asset', 'per lift per year': 'Annually',
+    'per survey': 'Per Building', 'per unit per year': 'Annually', 'per vessel': 'Per Asset',
+    'per building': 'Per Building', 'per workstation': 'Per Unit',
+}
 
 # ── Static files ────────────────────────────────────────────────────────────
 @app.route('/')
@@ -422,6 +558,9 @@ def get_supplier_services(sid):
             'unit_label':    r['unit_label'],
             'unit_price':    r['unit_price_pennies'] / 100,
             'unit_price_pennies': r['unit_price_pennies'],
+            'category':      r.get('category'),
+            'status':        r.get('status'),
+            'pricing_basis': r.get('pricing_basis'),
         })
     return jsonify(out)
 
@@ -644,9 +783,17 @@ def admin_dump():
     ords  = query('SELECT id,customer_email,customer_org,total,payment_method,status,created_at FROM orders ORDER BY created_at DESC')
     docs  = query('''SELECT id,supplier_id,doc_type,label,filename,mime_type,file_size,uploaded_at
                       FROM supplier_documents ORDER BY uploaded_at DESC''')
+    limgs = query('''SELECT id,service_id,supplier_id,kind,url,file_size,sort_order,uploaded_at
+                      FROM listing_images ORDER BY uploaded_at DESC''')
+    ldocs = query('''SELECT id,service_id,supplier_id,label,filename,mime_type,file_size,uploaded_at
+                      FROM listing_documents ORDER BY uploaded_at DESC''')
     b     = _get_basket()
-    rev   = sum(r['total'] for r in ords)
+    # float(): Postgres returns NUMERIC as Decimal, and Decimal * float (COMMISSION_RATE) raises
+    # TypeError — this crashed the "View DB" panel whenever any order existed (fixed Session 13).
+    rev   = sum(float(r['total'] or 0) for r in ords)
     return jsonify(customers=custs, suppliers=sups, orders=ords, documents=docs, basket=b,
+                   listing_images=limgs, listing_documents=ldocs,
+                   storage=dict(enabled=STORAGE_ENABLED),
                    session=_sess() if 'user_id' in session else {},
                    stats=dict(customers=len(custs), suppliers=len(sups), orders=len(ords),
                                revenue=round(rev,2), commission=round(rev*COMMISSION_RATE,2)))
@@ -655,11 +802,29 @@ def admin_dump():
 def admin_reset():
     db = get_db()
     cur = db.cursor()
-    for t in ('customers','suppliers','orders','baskets','reviews','supplier_documents'):
+    # NOTE: listing images in Backblaze are not deleted by a reset — only their DB rows.
+    for t in ('customers','suppliers','orders','baskets','reviews','supplier_documents',
+              'listing_images','listing_documents'):
         cur.execute(f'DELETE FROM {t}')
     db.commit()
     session.clear(); _seed(db)
     return jsonify(ok=True, message='Reset and re-seeded.')
+
+# ── Storage status (Backblaze B2) ────────────────────────────────────────────
+@app.route('/api/storage/status')
+def storage_status():
+    """Shows whether Backblaze is configured (never reveals the keys). Add ?test=1 to
+    upload a small fixed text file and confirm the connection end-to-end. The test always
+    writes the same file, so it cannot be used to put anything else into the bucket."""
+    out = dict(enabled=STORAGE_ENABLED, bucket=B2_BUCKET_NAME or None, endpoint=B2_ENDPOINT or None)
+    if request.args.get('test') == '1':
+        if not STORAGE_ENABLED:
+            out.update(test='skipped', message='Add B2_KEY_ID, B2_APPLICATION_KEY, B2_BUCKET_NAME and B2_ENDPOINT in Railway Variables first.')
+        else:
+            ok, res = storage_put('healthcheck/agora-fm-storage-test.txt',
+                                  b'Agora FM storage test - OK', 'text/plain')
+            out.update(test='ok' if ok else 'failed', url=res if ok else None, message=None if ok else res)
+    return jsonify(out)
 
 # ── Reviews API ──────────────────────────────────────────────────────────────
 @app.route('/api/suppliers/<sid>/reviews', methods=['GET'])
@@ -757,7 +922,12 @@ CREATE TABLE IF NOT EXISTS services(
     description TEXT,
     unit_label TEXT NOT NULL,
     unit_price_pennies INTEGER NOT NULL,
-    active INTEGER NOT NULL DEFAULT 1);
+    active INTEGER NOT NULL DEFAULT 1,
+    category TEXT,
+    status TEXT,
+    pricing_basis TEXT,
+    created_at TEXT,
+    updated_at TEXT);
 CREATE TABLE IF NOT EXISTS baskets(
     user_id TEXT PRIMARY KEY, items TEXT DEFAULT '[]', updated_at TEXT);
 CREATE TABLE IF NOT EXISTS orders(
@@ -782,6 +952,27 @@ CREATE TABLE IF NOT EXISTS supplier_documents(
     id TEXT PRIMARY KEY,
     supplier_id TEXT NOT NULL,
     doc_type TEXT NOT NULL,
+    label TEXT,
+    filename TEXT,
+    mime_type TEXT,
+    file_size INTEGER,
+    file_data BYTEA,
+    uploaded_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS listing_images(
+    id TEXT PRIMARY KEY,
+    service_id TEXT NOT NULL,
+    supplier_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    storage_key TEXT NOT NULL,
+    url TEXT NOT NULL,
+    mime_type TEXT,
+    file_size INTEGER,
+    sort_order INTEGER DEFAULT 0,
+    uploaded_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS listing_documents(
+    id TEXT PRIMARY KEY,
+    service_id TEXT NOT NULL,
+    supplier_id TEXT NOT NULL,
     label TEXT,
     filename TEXT,
     mime_type TEXT,
@@ -904,6 +1095,8 @@ def _seed(db=None):
         except Exception as e:
             print(f'  Seed warning (svc): {e}')
 
+    _backfill_listing_fields(db)
+
     # Force-update demo credentials so they always work
     try:
         _x("UPDATE customers SET password_hash=? WHERE id='cust_demo'",
@@ -978,27 +1171,68 @@ def _seed(db=None):
         except: pass
 
 
+def _backfill_listing_fields(db):
+    """Fill the Session 13 listing columns on existing service rows — ONLY where they are
+    still empty (IS NULL). Unlike the coverage_regions backfill, this is deliberately
+    conditional: once suppliers edit their own listings, a redeploy must never overwrite
+    their category / status / pricing basis."""
+    def rows(sql, params=()):
+        cur = db.cursor(); cur.execute(_pg_sql(sql), params)
+        return [list(r.values()) if isinstance(r, dict) else list(r) for r in cur.fetchall()]
+    def run(sql, params=()):
+        cur = db.cursor(); cur.execute(_pg_sql(sql), params); db.commit()
+    try:
+        ts = now()
+        run("UPDATE services SET status = CASE WHEN active=1 THEN 'active' ELSE 'draft' END WHERE status IS NULL")
+        run('UPDATE services SET created_at=? WHERE created_at IS NULL', (ts,))
+        run('UPDATE services SET updated_at=? WHERE updated_at IS NULL', (ts,))
+        for sid, label in rows('SELECT id, unit_label FROM services WHERE pricing_basis IS NULL'):
+            basis = _UNIT_LABEL_TO_BASIS.get((label or '').strip().lower(), 'Per Unit')
+            run('UPDATE services SET pricing_basis=? WHERE id=?', (basis, sid))
+        for sid, cats in rows('''SELECT s.id, p.categories FROM services s
+                                 JOIN suppliers p ON p.id = s.supplier_id WHERE s.category IS NULL'''):
+            try: first = (json.loads(cats or '[]') or [None])[0]
+            except Exception: first = None
+            if first:
+                run('UPDATE services SET category=? WHERE id=?', (first, sid))
+    except Exception as e:
+        print(f'  Backfill warning (listing fields): {e}')
+        try: db.rollback()
+        except: pass
+
+# Columns added after a table was first created. Each is applied on every boot
+# with ADD COLUMN IF NOT EXISTS (Postgres) / a PRAGMA check (SQLite), so existing
+# Railway databases pick them up automatically and re-running is harmless.
+_MIGRATION_COLUMNS = [
+    ('suppliers', 'coverage_regions', "TEXT DEFAULT '[]'"),   # Session 9
+    ('services',  'category',         'TEXT'),                # Session 13 — listings
+    ('services',  'status',           'TEXT'),
+    ('services',  'pricing_basis',    'TEXT'),
+    ('services',  'created_at',       'TEXT'),
+    ('services',  'updated_at',       'TEXT'),
+]
+
 def _migrate(db):
     """Add columns that may be missing on databases created before this version."""
-    if USE_POSTGRES:
-        cur = db.cursor()
-        try:
-            cur.execute("ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS coverage_regions TEXT DEFAULT '[]'")
-            db.commit()
-        except Exception as e:
-            print(f'  Migration warning (coverage_regions): {e}')
-            try: db.rollback()
-            except: pass
-    else:
-        cur = db.cursor()
-        cur.execute("PRAGMA table_info(suppliers)")
-        cols = [r[1] for r in cur.fetchall()]
-        if 'coverage_regions' not in cols:
+    cur = db.cursor()
+    for table, col, ddl in _MIGRATION_COLUMNS:
+        if USE_POSTGRES:
             try:
-                cur.execute("ALTER TABLE suppliers ADD COLUMN coverage_regions TEXT DEFAULT '[]'")
+                cur.execute(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {ddl}')
                 db.commit()
             except Exception as e:
-                print(f'  Migration warning (coverage_regions): {e}')
+                print(f'  Migration warning ({table}.{col}): {e}')
+                try: db.rollback()
+                except: pass
+        else:
+            cur.execute(f'PRAGMA table_info({table})')
+            cols = [r[1] for r in cur.fetchall()]
+            if col not in cols:
+                try:
+                    cur.execute(f'ALTER TABLE {table} ADD COLUMN {col} {ddl}')
+                    db.commit()
+                except Exception as e:
+                    print(f'  Migration warning ({table}.{col}): {e}')
 
 def init_db():
     if USE_POSTGRES:
