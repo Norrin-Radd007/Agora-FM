@@ -101,6 +101,34 @@
     .profile-field .val{font-size:0.88rem;color:var(--ink);font-weight:400;}
     .accred-tag{display:inline-block;padding:4px 10px;background:rgba(26,26,26,0.048);border:1px solid rgba(26,26,26,0.25);border-radius:var(--radius);font-size:0.68rem;color:var(--ink-2);font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;margin:3px;}
     .accred-tag.gold{background:rgba(241, 143, 1, 0.1);border-color:rgba(241, 143, 1, 0.3);color:var(--accent-text);}
+    /* ── Storefront: My Listings (Session 14) ── */
+    .lst-tabs{display:flex;gap:0;border-bottom:1px solid var(--border-faint);padding:0 20px;}
+    .lst-tab{padding:12px 16px;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;}
+    .lst-tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+    .lst-row{display:grid;grid-template-columns:56px 1fr auto auto;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border-faint);}
+    .lst-row:last-child{border-bottom:none;}
+    .lst-logo{width:56px;height:56px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--ink-2);font-size:0.9rem;}
+    .lst-logo img{width:100%;height:100%;object-fit:cover;}
+    .lst-title{font-weight:600;color:var(--ink);font-size:0.92rem;margin-bottom:3px;}
+    .lst-meta{font-size:0.74rem;color:var(--ink-dim);}
+    .lst-price{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:var(--accent-text);text-align:right;white-space:nowrap;}
+    .lst-price small{display:block;font-family:'Barlow',sans-serif;font-size:0.68rem;font-weight:400;color:var(--ink-dim);}
+    .lst-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+    .lst-btn{padding:6px 12px;border-radius:var(--radius);font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;text-decoration:none;border:1px solid var(--border);background:transparent;color:var(--ink);}
+    .lst-btn:hover{border-color:var(--ink);}
+    .lst-btn.dark{background:var(--btn);color:var(--on-btn);border-color:var(--btn);}
+    .lst-btn.dark:hover{background:var(--btn-hover);}
+    .lst-btn.danger{color:#C0392B;border-color:rgba(192,57,43,0.35);}
+    .lst-empty{padding:40px 20px;text-align:center;color:var(--ink-dim);font-size:0.85rem;line-height:1.6;}
+    .cmp-pct{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:1px;line-height:1;margin-bottom:6px;}
+    .cmp-bar{height:8px;background:var(--surface);border-radius:1px;overflow:hidden;margin-bottom:14px;}
+    .cmp-bar div{height:100%;background:var(--accent);}
+    .cmp-list{list-style:none;}
+    .cmp-list li{display:flex;gap:8px;font-size:0.78rem;color:var(--ink-dim);padding:4px 0;}
+    .cmp-list li.ok{color:var(--ink);}
+    .cmp-list li span{width:14px;flex-shrink:0;text-align:center;font-weight:700;}
+    .cmp-list li.ok span{color:#1E7B34;}
+    @media (max-width:700px){.lst-row{grid-template-columns:48px 1fr}.lst-price,.lst-actions{grid-column:2;text-align:left;justify-content:flex-start;}}
     @media (max-width:1100px){.dash-grid{grid-template-columns:1fr}.kpi-row{grid-template-columns:1fr 1fr}}
     @media (max-width:768px){.dash-wrap{grid-template-columns:1fr}.dash-sidebar{display:none}.dash-main{padding:20px}.kpi-row{grid-template-columns:1fr 1fr}}
   </style>
@@ -461,6 +489,10 @@ window.AgoraDB = AgoraDB;
       <a class="sidebar-link" onclick="showView('orders-received');loadSupplierOrders();"><span class="sidebar-icon">📦</span> Orders Received <span class="sidebar-badge" id="sup-orders-badge" style="display:none;">0</span></a>
       <a class="sidebar-link" onclick="showView('contracts')"><span class="sidebar-icon">📄</span> Active Contracts <span class="sidebar-badge">7</span></a>
       <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">Storefront</div>
+      <a class="sidebar-link" id="link-listings" onclick="showView('listings');loadStorefront();"><span class="sidebar-icon">🏪</span> My Listings <span class="sidebar-badge" id="listings-badge" style="display:none;">0</span></a>
+      <a class="sidebar-link" href="listing_editor.html"><span class="sidebar-icon">＋</span> Create Listing</a>
+      <div class="sidebar-divider"></div>
       <div class="sidebar-section-label">Finance</div>
       <a class="sidebar-link" onclick="showView('revenue')"><span class="sidebar-icon">💷</span> Revenue</a>
       <a class="sidebar-link" onclick="showView('commission')"><span class="sidebar-icon">📊</span> Commission Statements</a>
@@ -489,8 +521,8 @@ window.AgoraDB = AgoraDB;
           <div class="dash-subtitle">Thursday 17 April 2026 · 4 new enquiries awaiting response</div>
         </div>
         <div class="dash-header-actions">
-          <a href="service_providers.html" class="btn-secondary" style="padding:9px 18px;font-size:0.78rem;">View Public Profile</a>
-          <a href="#" onclick="showView('enquiries')" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">View Enquiries →</a>
+          <a href="#" onclick="showView('enquiries')" class="btn-secondary" style="padding:9px 18px;font-size:0.78rem;">View Enquiries</a>
+          <a href="listing_editor.html" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">+ Create Service Listing</a>
         </div>
       </div>
 
@@ -559,6 +591,31 @@ window.AgoraDB = AgoraDB;
               <div class="commission-note">5% Agora FM commission (<strong>£360</strong>) deducted this month. <a href="#" onclick="showView('commission')" style="color:var(--accent-text);text-decoration:none;">View statements →</a></div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY LISTINGS VIEW (Storefront, Session 14) -->
+    <div id="view-listings" style="display:none;">
+      <div class="dash-header">
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:6px;"><span class="eyebrow-line"></span><span class="eyebrow-text">Storefront</span></div>
+          <div class="dash-title">My <span style="color:var(--accent-text)">Listings</span></div>
+          <div class="dash-subtitle" id="listings-subtitle">Loading…</div>
+        </div>
+        <div class="dash-header-actions"><a href="listing_editor.html" class="btn-primary" style="padding:9px 18px;font-size:0.78rem;">+ Create Service Listing</a></div>
+      </div>
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="lst-tabs">
+            <button type="button" class="lst-tab active" id="tab-active" onclick="setListingTab('active')">Published (0)</button>
+            <button type="button" class="lst-tab" id="tab-draft" onclick="setListingTab('draft')">Drafts (0)</button>
+          </div>
+          <div id="listings-list"><div class="lst-empty">Loading your listings…</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Profile Completeness</span></div>
+          <div class="panel-body" id="cmp-listings">Loading…</div>
         </div>
       </div>
     </div>
@@ -691,11 +748,7 @@ window.AgoraDB = AgoraDB;
         <div style="display:flex;flex-direction:column;gap:16px;">
           <div class="panel">
             <div class="panel-header"><span class="panel-title">Profile Completeness</span></div>
-            <div class="panel-body">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:#1E7B34;letter-spacing:1px;line-height:1;margin-bottom:6px;">92%</div>
-              <div style="height:8px;background:rgba(26,26,26,0.06);border-radius:1px;overflow:hidden;margin-bottom:14px;"><div style="height:100%;width:92%;background:linear-gradient(90deg,#1E7B34,rgba(30,123,52,0.5));"></div></div>
-              <div style="font-size:0.75rem;color:var(--ink-dim);line-height:1.6;">Complete your profile to maximise search visibility. Missing: company photo, case studies.</div>
-            </div>
+            <div class="panel-body" id="cmp-profile">Loading…</div>
           </div>
           <div class="panel">
             <div class="panel-header"><span class="panel-title">Current Rating</span></div>
@@ -774,7 +827,7 @@ window.AgoraDB = AgoraDB;
 </footer>
 
 <script>
-var views=['overview','enquiries','orders-received','contracts','revenue','commission','profile','accreditations'];
+var views=['overview','listings','enquiries','orders-received','contracts','revenue','commission','profile','accreditations'];
 function showView(id){
   views.forEach(function(v){document.getElementById('view-'+v).style.display=(v===id)?'':'none';});
   document.querySelectorAll('.sidebar-link').forEach(function(l){l.classList.remove('active');});
@@ -941,6 +994,112 @@ document.getElementById('navSearch').addEventListener('keydown',function(e){if(e
       body.innerHTML = '<p style="color:#C0392B;">Error: ' + e.message + '</p>';
     }
   }
+
+  // ── Storefront: My Listings (Session 14) ─────────────────────────────
+  var SF = { data: null, tab: 'active' };
+  function sfEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function sfMoney(n){ return '£' + Number(n || 0).toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+  async function loadStorefront() {
+    try {
+      var r = await fetch('/api/my/storefront', {credentials:'same-origin'});
+      var d = await r.json();
+      if (!d.ok) { document.getElementById('listings-list').innerHTML = '<div class="lst-empty">' + sfEsc(d.error || 'Could not load listings.') + '</div>'; return; }
+      SF.data = d;
+      renderStorefront();
+    } catch(e) {
+      document.getElementById('listings-list').innerHTML = '<div class="lst-empty">Could not reach the server.</div>';
+    }
+  }
+
+  function renderStorefront() {
+    var d = SF.data, ls = d.listings || [];
+    var act = ls.filter(function(l){ return l.status === 'active'; }), dr = ls.filter(function(l){ return l.status !== 'active'; });
+    document.getElementById('tab-active').textContent = 'Published (' + act.length + ')';
+    document.getElementById('tab-draft').textContent  = 'Drafts (' + dr.length + ')';
+    document.getElementById('tab-active').classList.toggle('active', SF.tab === 'active');
+    document.getElementById('tab-draft').classList.toggle('active', SF.tab === 'draft');
+    document.getElementById('listings-subtitle').textContent = act.length + ' published · ' + dr.length + ' draft' + (dr.length === 1 ? '' : 's') +
+      (d.storage_enabled ? '' : ' · image uploads not yet available');
+    var badge = document.getElementById('listings-badge');
+    badge.textContent = ls.length; badge.style.display = ls.length ? 'inline-block' : 'none';
+
+    var rows = SF.tab === 'active' ? act : dr, html = '';
+    if (!rows.length) {
+      html = '<div class="lst-empty">' + (SF.tab === 'active'
+        ? 'You have no published listings yet.<br>Create one, or publish a draft, so customers can find your services.'
+        : 'No drafts. Listings you save without publishing appear here.') +
+        '<div style="margin-top:16px;"><a href="listing_editor.html" class="lst-btn dark">+ Create Service Listing</a></div></div>';
+    } else {
+      rows.forEach(function(l) {
+        var logo = l.logo ? '<img src="' + sfEsc(l.logo.url) + '" alt="">' : sfEsc((l.title || '?').substring(0, 2).toUpperCase());
+        var price = !l.pricing_basis ? '<span style="color:var(--ink-dim);font-weight:400;font-size:0.8rem;">No price yet</span>'
+          : (l.pricing_basis === 'Bespoke Quote Required' ? 'Quote on request' : sfMoney(l.price) + '<small>' + sfEsc(l.unit_label || '') + '</small>');
+        var media = [(l.gallery || []).length + ' photo' + ((l.gallery || []).length === 1 ? '' : 's'), (l.documents || []).length + ' doc' + ((l.documents || []).length === 1 ? '' : 's')].join(' · ');
+        var updated = l.updated_at ? new Date(l.updated_at).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '';
+        html += '<div class="lst-row">' +
+          '<div class="lst-logo">' + logo + '</div>' +
+          '<div style="min-width:0;"><div class="lst-title">' + sfEsc(l.title || 'Untitled') + '</div>' +
+            '<div class="lst-meta">' + sfEsc(l.category || 'No category') + ' · ' + sfEsc(media) + (updated ? ' · updated ' + sfEsc(updated) : '') + '</div></div>' +
+          '<div class="lst-price">' + price + '</div>' +
+          '<div class="lst-actions">' +
+            '<a class="lst-btn" href="listing_editor.html?id=' + encodeURIComponent(l.id) + '">Edit</a>' +
+            (l.status === 'active'
+              ? '<button type="button" class="lst-btn" onclick="setListingStatus(\'' + l.id + '\',\'draft\')">Unpublish</button>'
+              : '<button type="button" class="lst-btn dark" onclick="setListingStatus(\'' + l.id + '\',\'active\')">Publish</button>') +
+            '<button type="button" class="lst-btn danger" onclick="deleteListingRow(\'' + l.id + '\')">Delete</button>' +
+          '</div></div>';
+      });
+    }
+    document.getElementById('listings-list').innerHTML = html;
+    var cmp = renderCompleteness(d.completeness);
+    document.getElementById('cmp-listings').innerHTML = cmp;
+    document.getElementById('cmp-profile').innerHTML  = cmp;
+  }
+
+  function renderCompleteness(c) {
+    var colour = c.percent >= 80 ? '#1E7B34' : c.percent >= 50 ? 'var(--accent-text)' : '#C0392B';
+    var missing = c.items.filter(function(i){ return !i.done; });
+    return '<div class="cmp-pct" style="color:' + colour + ';">' + c.percent + '%</div>' +
+      '<div class="cmp-bar"><div style="width:' + c.percent + '%;"></div></div>' +
+      '<ul class="cmp-list">' + c.items.map(function(i){
+        return '<li class="' + (i.done ? 'ok' : '') + '"><span>' + (i.done ? '✓' : '○') + '</span>' + sfEsc(i.label) + '</li>';
+      }).join('') + '</ul>' +
+      (missing.length ? '<div style="font-size:0.74rem;color:var(--ink-dim);margin-top:12px;line-height:1.5;">Complete profiles and listings with photos tend to win more enquiries.</div>' : '');
+  }
+
+  function setListingTab(t) { SF.tab = t; renderStorefront(); }
+
+  async function setListingStatus(id, status) {
+    var r = await fetch('/api/listings/' + encodeURIComponent(id), {method:'PUT', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({status: status})});
+    var d = await r.json();
+    if (!d.ok) {
+      alert((status === 'active' ? 'This listing can\'t be published yet:\n\n' : '') + (d.errors || [d.error]).join('\n') +
+            (status === 'active' ? '\n\nOpen it with Edit to complete the missing details.' : ''));
+      return;
+    }
+    SF.tab = status === 'active' ? 'active' : 'draft';
+    loadStorefront();
+  }
+
+  async function deleteListingRow(id) {
+    if (!confirm('Delete this listing permanently? Its images and documents will be removed too. This cannot be undone.')) return;
+    var r = await fetch('/api/listings/' + encodeURIComponent(id), {method:'DELETE', credentials:'same-origin'});
+    var d = await r.json();
+    if (!d.ok) { alert(d.error || 'Could not delete the listing.'); return; }
+    loadStorefront();
+  }
+
+  // Load storefront data on page load (badge + completeness), and open My Listings if linked to it
+  document.addEventListener('DOMContentLoaded', function() {
+    loadStorefront();
+    if (location.hash === '#listings') {
+      views.forEach(function(v){ document.getElementById('view-'+v).style.display = (v === 'listings') ? '' : 'none'; });
+      document.querySelectorAll('.sidebar-link').forEach(function(l){ l.classList.remove('active'); });
+      document.getElementById('link-listings').classList.add('active');
+    }
+  });
 
   async function markOrderComplete(orderId, btn) {
     btn.disabled    = true;

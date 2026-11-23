@@ -751,7 +751,9 @@ async function renderProvider(p) {
   services.forEach(function(svc){
     var opt = document.createElement('option');
     opt.value = svc.name;
-    opt.textContent = svc.name + ' — £' + parseFloat(svc.unit_price || svc.price || 0).toFixed(2) + ' ' + (svc.unit_label || svc.unit || '');
+    opt.textContent = svc.pricing_basis === 'Bespoke Quote Required'
+      ? svc.name + ' — quote on request'
+      : svc.name + ' — £' + parseFloat(svc.unit_price || svc.price || 0).toFixed(2) + ' ' + (svc.unit_label || svc.unit || '');
     sel.appendChild(opt);
   });
 
@@ -769,6 +771,25 @@ function renderServices(services, provider) {
     var svcPrice = parseFloat(svc.unit_price || svc.price || 0);
     var svcUnit  = svc.unit_label || svc.unit || 'per visit';
     var svcDesc  = svc.description || svc.desc || '';
+    // Storefront listings priced "Bespoke Quote Required" have no price — never offer them at £0.00
+    if (svc.pricing_basis === 'Bespoke Quote Required') {
+      div.innerHTML =
+        '<div class="service-item-top">'+
+          '<div style="flex:1;">'+
+            '<div class="service-name">'+svc.name+'</div>'+
+            '<div class="service-desc">'+svcDesc+'</div>'+
+          '</div>'+
+          '<div class="service-price-block">'+
+            '<div class="service-price">Quote on request</div>'+
+            '<div class="service-unit">priced per job</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="service-stepper">'+
+          '<button class="btn-add-basket" onclick="requestQuote('+idx+')">Request a Quote →</button>'+
+        '</div>';
+      container.appendChild(div);
+      return;
+    }
     div.innerHTML =
       '<div class="service-item-top">'+
         '<div style="flex:1;">'+
@@ -798,6 +819,17 @@ function renderServices(services, provider) {
       '</div>';
     container.appendChild(div);
   });
+}
+
+function requestQuote(idx) {
+  var svc = (_cachedServices[currentProvider.id] || [])[idx];
+  if (!svc) return;
+  var sel = document.getElementById('enqService');
+  if (sel) sel.value = svc.name;
+  var notes = document.getElementById('enqNotes');
+  if (notes && !notes.value) notes.focus();
+  var panel = document.querySelector('.enquiry-panel');
+  if (panel) panel.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function stepQty(qtyId, totalId, delta, unitPrice) {

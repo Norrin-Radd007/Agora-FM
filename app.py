@@ -5,7 +5,7 @@ Open: http://localhost:5000
 
 Database: Uses PostgreSQL on Railway (DATABASE_URL env var) or SQLite locally.
 """
-import os, json, hashlib, hmac, secrets, datetime, io
+import os, re, json, hashlib, hmac, secrets, datetime, io
 import urllib.request, urllib.parse, urllib.error
 from flask import Flask, request, jsonify, session, send_from_directory, send_file, g
 from werkzeug.utils import secure_filename
@@ -574,6 +574,359 @@ def get_supplier(sid):
     r['coverage_regions'] = json.loads(r.get('coverage_regions') or '[]')
     for k in ('password_hash','bank_name','sort_code','account_num'): r.pop(k, None)
     return jsonify(r)
+
+# ── SERVICE LISTINGS API (Supplier Storefront Phase 2, Session 14) ───────────
+# A listing IS a row in `services`. Suppliers manage only their own listings.
+# Public (customer) visibility = status 'active' AND active=1 (kept in sync).
+MAX_LISTING_DOCS        = 10
+LISTING_TITLE_MAX       = 120
+LISTING_DESC_MIN_PUBLISH = 30
+LISTING_DESC_MAX        = 5000
+LISTING_PRICE_MAX       = 1000000   # £1m ceiling per unit — catches typos like 2850000
+
+_BASIS_UNIT_LABEL = {   # keeps the legacy unit_label column meaningful for existing pages
+    'Monthly': 'per month', 'Quarterly': 'per quarter', 'Annually': 'per year',
+    'Half Day': 'per half day', 'Full Day': 'per day', 'Fixed Price': 'fixed price',
+    'Bespoke Quote Required': 'quote on request',
+}
+
+def _clean_text(s, max_len):
+    """Strip HTML from supplier-entered text. Several existing pages render service names and
+    descriptions with innerHTML, so tags must never reach the database (stored-XSS guard)."""
+    s = str(s or '')
+    s = re.sub(r'<[^>]*>', '', s).replace('<', '').replace('>', '')
+    s = s.replace('\r\n', '\n').strip()
+    return s[:max_len]
+
+def _current_supplier_id():
+    if 'user_id' in session and session.get('user_type') == 'supplier':
+        return session['user_id']
+    return None
+
+def _supplier_categories(sid):
+    row = query('SELECT categories FROM suppliers WHERE id=?', (sid,), one=True)
+    try:
+        return json.loads((row or {}).get('categories') or '[]')
+    except Exception:
+        return []
+
+def _parse_price_to_pennies(raw):
+    """'285', '285.5', '£1,250.00' -> pennies int; returns None if invalid."""
+    s = str(raw if raw is not None else '').replace('£', '').replace(',', '').strip()
+    if not re.fullmatch(r'\d+(\.\d{1,2})?', s):
+        return None
+    pennies = int(round(float(s) * 100))
+    return pennies
+
+def _listing_dict(r, include_media=True):
+    d = {
+        'id': r['id'], 'supplier_id': r['supplier_id'],
+        'title': r['name'], 'description': r.get('description') or '',
+        'category': r.get('category'), 'status': r.get('status') or ('active' if r.get('active') else 'draft'),
+        'pricing_basis': r.get('pricing_basis'), 'unit_label': r.get('unit_label'),
+        'price': (r.get('unit_price_pennies') or 0) / 100,
+        'price_pennies': r.get('unit_price_pennies') or 0,
+        'created_at': r.get('created_at'), 'updated_at': r.get('updated_at'),
+    }
+    if include_media:
+        imgs = query('''SELECT id,kind,url,file_size,sort_order,uploaded_at FROM listing_images
+                        WHERE service_id=? ORDER BY kind DESC, sort_order, uploaded_at''', (r['id'],))
+        d['logo']    = next((i for i in imgs if i['kind'] == 'logo'), None)
+        d['gallery'] = [i for i in imgs if i['kind'] == 'gallery']
+        d['documents'] = query('''SELECT id,label,filename,mime_type,file_size,uploaded_at FROM listing_documents
+                                  WHERE service_id=? ORDER BY uploaded_at''', (r['id'],))
+    return d
+
+def _validate_listing(data, categories, publishing):
+    """data = merged listing fields. Returns a list of human-readable problems (empty = OK)."""
+    errs = []
+    if len(data['title']) < 3:
+        errs.append('Please give the listing a title (at least 3 characters).')
+    if not data['category']:
+        if publishing: errs.append('Please choose a service category.')
+    elif data['category'] not in categories:
+        errs.append('Category must be one of the services you registered for.')
+    if data['pricing_basis'] and data['pricing_basis'] not in PRICING_BASES:
+        errs.append('Please choose a pricing basis from the list.')
+    if publishing:
+        if len(data['description']) < LISTING_DESC_MIN_PUBLISH:
+            errs.append('Please add a description of at least %d characters before publishing.' % LISTING_DESC_MIN_PUBLISH)
+        if not data['pricing_basis']:
+            errs.append('Please choose a pricing basis before publishing.')
+        elif data['pricing_basis'] not in NO_PRICE_BASES and data['price_pennies'] <= 0:
+            errs.append('Please enter a price greater than £0 (or choose "Bespoke Quote Required").')
+    if data['price_pennies'] > LISTING_PRICE_MAX * 100:
+        errs.append('Price looks too high — the maximum is £%s.' % format(LISTING_PRICE_MAX, ','))
+    return errs
+
+def _merge_listing_input(d, existing=None):
+    """Combine JSON input with an existing row (for partial updates). Returns (fields, error)."""
+    ex = existing or {}
+    f = {
+        'title':         _clean_text(d['title'], LISTING_TITLE_MAX) if 'title' in d else (ex.get('name') or ''),
+        'description':   _clean_text(d['description'], LISTING_DESC_MAX) if 'description' in d else (ex.get('description') or ''),
+        'category':      (str(d.get('category') or '').strip() if 'category' in d else (ex.get('category') or '')),
+        'pricing_basis': (str(d.get('pricing_basis') or '').strip() if 'pricing_basis' in d else (ex.get('pricing_basis') or '')),
+        'status':        (str(d.get('status') or '').strip() if 'status' in d else (ex.get('status') or 'draft')),
+        'price_pennies': ex.get('unit_price_pennies') or 0,
+    }
+    if f['status'] not in LISTING_STATUSES:
+        return None, 'Invalid status.'
+    if 'price' in d:
+        if f['pricing_basis'] in NO_PRICE_BASES or d.get('price') in (None, ''):
+            f['price_pennies'] = 0
+        else:
+            p = _parse_price_to_pennies(d.get('price'))
+            if p is None:
+                return None, 'Please enter the price as a number, e.g. 285 or 285.50.'
+            f['price_pennies'] = p
+    if f['pricing_basis'] in NO_PRICE_BASES:
+        f['price_pennies'] = 0
+    return f, None
+
+def _unit_label_for(basis):
+    if not basis: return ''
+    return _BASIS_UNIT_LABEL.get(basis, basis.lower())
+
+def _own_listing(listing_id, sid):
+    r = query('SELECT * FROM services WHERE id=?', (listing_id,), one=True)
+    if not r or r['supplier_id'] != sid:
+        return None
+    return r
+
+@app.route('/api/my/storefront')
+def my_storefront():
+    """Everything the supplier dashboard + listing editor need in one call."""
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    sup = query('SELECT * FROM suppliers WHERE id=?', (sid,), one=True)
+    if not sup:
+        return jsonify(ok=False, error='Supplier not found.'), 404
+    rows = query('SELECT * FROM services WHERE supplier_id=? ORDER BY created_at DESC, id', (sid,))
+    listings = [_listing_dict(r) for r in rows]
+    cats = _supplier_categories(sid)
+    return jsonify(ok=True,
+        supplier=dict(id=sid, company_name=sup['company_name'], categories=cats, verified=bool(sup.get('verified'))),
+        listings=listings,
+        completeness=_profile_completeness(sup, listings),
+        pricing_bases=list(PRICING_BASES), no_price_bases=list(NO_PRICE_BASES),
+        limits=dict(gallery=MAX_GALLERY_IMAGES, image_mb=MAX_IMAGE_BYTES // (1024*1024),
+                    documents=MAX_LISTING_DOCS, document_mb=MAX_LISTING_DOC_BYTES // (1024*1024),
+                    title_max=LISTING_TITLE_MAX, desc_min=LISTING_DESC_MIN_PUBLISH, desc_max=LISTING_DESC_MAX),
+        storage_enabled=STORAGE_ENABLED)
+
+def _profile_completeness(sup, listings):
+    """Simple, transparent checklist — each item counts equally."""
+    try: regions = json.loads(sup.get('coverage_regions') or '[]')
+    except Exception: regions = []
+    try: accreds = json.loads(sup.get('accreditations') or '[]')
+    except Exception: accreds = []
+    has_pl = bool(query("SELECT id FROM supplier_documents WHERE supplier_id=? AND doc_type='pl_insurance'",
+                        (sup['id'],), one=True))
+    active = [l for l in listings if l['status'] == 'active']
+    items = [
+        ('desc',     'Company description',                 len((sup.get('company_desc') or '').strip()) >= 50),
+        ('contact',  'Phone number and website',            bool((sup.get('main_tel') or '').strip() and (sup.get('website') or '').strip())),
+        ('regions',  'Regions you cover',                   len(regions) > 0),
+        ('accreds',  'Accreditations listed',               len(accreds) > 0),
+        ('pl_doc',   'Public Liability certificate uploaded', has_pl),
+        ('listing',  'At least one published listing',      len(active) > 0),
+        ('logos',    'Logo on every published listing',     len(active) > 0 and all(l.get('logo') for l in active)),
+        ('gallery',  'Gallery photos on a published listing', any(l.get('gallery') for l in active)),
+    ]
+    done = sum(1 for _, _, ok in items if ok)
+    return dict(percent=int(round(100 * done / len(items))),
+                items=[dict(key=k, label=lbl, done=ok) for k, lbl, ok in items])
+
+@app.route('/api/listings/<listing_id>')
+def get_listing(listing_id):
+    """Owner sees any of their listings; everyone else only published ones."""
+    r = query('SELECT * FROM services WHERE id=?', (listing_id,), one=True)
+    if not r:
+        return jsonify(ok=False, error='Listing not found.'), 404
+    is_owner = _current_supplier_id() == r['supplier_id']
+    if not is_owner and not (r.get('status') == 'active' and r.get('active') == 1):
+        return jsonify(ok=False, error='Listing not found.'), 404
+    return jsonify(ok=True, listing=_listing_dict(r), is_owner=is_owner)
+
+@app.route('/api/listings', methods=['POST'])
+def create_listing():
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    f, err = _merge_listing_input(request.json or {})
+    if err:
+        return jsonify(ok=False, error=err), 400
+    errs = _validate_listing(f, _supplier_categories(sid), publishing=(f['status'] == 'active'))
+    if errs:
+        return jsonify(ok=False, error=errs[0], errors=errs), 400
+    lid = 'svc_' + uid()
+    ts = now()
+    execute('''INSERT INTO services(id,supplier_id,name,description,unit_label,unit_price_pennies,active,
+                                    category,status,pricing_basis,created_at,updated_at)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''',
+            (lid, sid, f['title'], f['description'], _unit_label_for(f['pricing_basis']), f['price_pennies'],
+             1 if f['status'] == 'active' else 0, f['category'] or None, f['status'],
+             f['pricing_basis'] or None, ts, ts))
+    r = query('SELECT * FROM services WHERE id=?', (lid,), one=True)
+    if not r:
+        return jsonify(ok=False, error='Could not save the listing. Please try again.'), 500
+    return jsonify(ok=True, listing=_listing_dict(r))
+
+@app.route('/api/listings/<listing_id>', methods=['PUT'])
+def update_listing(listing_id):
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    ex = _own_listing(listing_id, sid)
+    if not ex:
+        return jsonify(ok=False, error='Listing not found.'), 404
+    f, err = _merge_listing_input(request.json or {}, ex)
+    if err:
+        return jsonify(ok=False, error=err), 400
+    errs = _validate_listing(f, _supplier_categories(sid), publishing=(f['status'] == 'active'))
+    if errs:
+        return jsonify(ok=False, error=errs[0], errors=errs), 400
+    execute('''UPDATE services SET name=?, description=?, unit_label=?, unit_price_pennies=?, active=?,
+                                   category=?, status=?, pricing_basis=?, updated_at=? WHERE id=?''',
+            (f['title'], f['description'], _unit_label_for(f['pricing_basis']), f['price_pennies'],
+             1 if f['status'] == 'active' else 0, f['category'] or None, f['status'],
+             f['pricing_basis'] or None, now(), listing_id))
+    return jsonify(ok=True, listing=_listing_dict(query('SELECT * FROM services WHERE id=?', (listing_id,), one=True)))
+
+@app.route('/api/listings/<listing_id>', methods=['DELETE'])
+def delete_listing(listing_id):
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    if not _own_listing(listing_id, sid):
+        return jsonify(ok=False, error='Listing not found.'), 404
+    for img in query('SELECT storage_key FROM listing_images WHERE service_id=?', (listing_id,)):
+        storage_delete(img['storage_key'])
+    execute('DELETE FROM listing_images WHERE service_id=?', (listing_id,))
+    execute('DELETE FROM listing_documents WHERE service_id=?', (listing_id,))
+    execute('DELETE FROM services WHERE id=?', (listing_id,))
+    return jsonify(ok=True)
+
+@app.route('/api/listings/<listing_id>/images', methods=['POST'])
+def upload_listing_image(listing_id):
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    if not _own_listing(listing_id, sid):
+        return jsonify(ok=False, error='Listing not found.'), 404
+    if not STORAGE_ENABLED:
+        return jsonify(ok=False, error='Image uploads are not available yet (storage not configured).'), 503
+    kind = (request.form.get('kind') or '').strip()
+    if kind not in ('logo', 'gallery'):
+        return jsonify(ok=False, error='Invalid image type.'), 400
+    f = request.files.get('file')
+    if not f or not f.filename:
+        return jsonify(ok=False, error='No file was received.'), 400
+    data = f.read()
+    if not data:
+        return jsonify(ok=False, error='That file appears to be empty.'), 400
+    if len(data) > MAX_IMAGE_BYTES:
+        return jsonify(ok=False, error='Images must be under %dMB.' % (MAX_IMAGE_BYTES // (1024*1024))), 400
+    mime = sniff_image_mime(data)
+    if not mime:
+        return jsonify(ok=False, error='Please upload a JPG, PNG or WebP image.'), 400
+    if kind == 'gallery':
+        n = query("SELECT COUNT(*) AS n FROM listing_images WHERE service_id=? AND kind='gallery'", (listing_id,), one=True)
+        if (n or {}).get('n', 0) >= MAX_GALLERY_IMAGES:
+            return jsonify(ok=False, error='This listing already has the maximum of %d gallery images.' % MAX_GALLERY_IMAGES), 400
+    img_id = 'img_' + uid()
+    key = 'listings/%s/%s/%s-%s.%s' % (sid, listing_id, kind, img_id, IMAGE_EXT[mime])
+    ok, res = storage_put(key, data, mime)
+    if not ok:
+        return jsonify(ok=False, error=res), 502
+    old_logos = query("SELECT id, storage_key FROM listing_images WHERE service_id=? AND kind='logo'", (listing_id,)) if kind == 'logo' else []
+    top = query('SELECT MAX(sort_order) AS m FROM listing_images WHERE service_id=?', (listing_id,), one=True)
+    execute('''INSERT INTO listing_images(id,service_id,supplier_id,kind,storage_key,url,mime_type,file_size,sort_order,uploaded_at)
+               VALUES(?,?,?,?,?,?,?,?,?,?)''',
+            (img_id, listing_id, sid, kind, key, res, mime, len(data), ((top or {}).get('m') or 0) + 1, now()))
+    for old in old_logos:   # a listing has one logo — replace, after the new one is safely stored
+        storage_delete(old['storage_key'])
+        execute('DELETE FROM listing_images WHERE id=?', (old['id'],))
+    execute('UPDATE services SET updated_at=? WHERE id=?', (now(), listing_id))
+    return jsonify(ok=True, image=dict(id=img_id, kind=kind, url=res, file_size=len(data)))
+
+@app.route('/api/listings/<listing_id>/images/<img_id>', methods=['DELETE'])
+def delete_listing_image(listing_id, img_id):
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    if not _own_listing(listing_id, sid):
+        return jsonify(ok=False, error='Listing not found.'), 404
+    img = query('SELECT * FROM listing_images WHERE id=? AND service_id=?', (img_id, listing_id), one=True)
+    if not img:
+        return jsonify(ok=False, error='Image not found.'), 404
+    storage_delete(img['storage_key'])
+    execute('DELETE FROM listing_images WHERE id=?', (img_id,))
+    return jsonify(ok=True)
+
+def _sniff_doc_mime(data):
+    if data[:5] == b'%PDF-':
+        return 'application/pdf'
+    m = sniff_image_mime(data)
+    return m if m in ALLOWED_LISTING_DOC_MIME else None
+
+@app.route('/api/listings/<listing_id>/documents', methods=['POST'])
+def upload_listing_document(listing_id):
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    if not _own_listing(listing_id, sid):
+        return jsonify(ok=False, error='Listing not found.'), 404
+    f = request.files.get('file')
+    if not f or not f.filename:
+        return jsonify(ok=False, error='No file was received.'), 400
+    data = f.read()
+    if not data:
+        return jsonify(ok=False, error='That file appears to be empty.'), 400
+    if len(data) > MAX_LISTING_DOC_BYTES:
+        return jsonify(ok=False, error='Documents must be under %dMB.' % (MAX_LISTING_DOC_BYTES // (1024*1024))), 400
+    mime = _sniff_doc_mime(data)
+    if not mime:
+        return jsonify(ok=False, error='Please upload a PDF, JPG or PNG file.'), 400
+    n = query('SELECT COUNT(*) AS n FROM listing_documents WHERE service_id=?', (listing_id,), one=True)
+    if (n or {}).get('n', 0) >= MAX_LISTING_DOCS:
+        return jsonify(ok=False, error='This listing already has the maximum of %d documents.' % MAX_LISTING_DOCS), 400
+    doc_id = 'ldoc_' + uid()
+    filename = secure_filename(f.filename) or 'document'
+    label = _clean_text(request.form.get('label') or '', 120) or filename
+    execute('''INSERT INTO listing_documents(id,service_id,supplier_id,label,filename,mime_type,file_size,file_data,uploaded_at)
+               VALUES(?,?,?,?,?,?,?,?,?)''',
+            (doc_id, listing_id, sid, label, filename, mime, len(data), _bin(data), now()))
+    return jsonify(ok=True, document=dict(id=doc_id, label=label, filename=filename, mime_type=mime, file_size=len(data)))
+
+@app.route('/api/listings/<listing_id>/documents/<doc_id>', methods=['DELETE'])
+def delete_listing_document(listing_id, doc_id):
+    sid = _current_supplier_id()
+    if not sid:
+        return jsonify(ok=False, error='Supplier login required.'), 401
+    if not _own_listing(listing_id, sid):
+        return jsonify(ok=False, error='Listing not found.'), 404
+    if not query('SELECT id FROM listing_documents WHERE id=? AND service_id=?', (doc_id, listing_id), one=True):
+        return jsonify(ok=False, error='Document not found.'), 404
+    execute('DELETE FROM listing_documents WHERE id=?', (doc_id,))
+    return jsonify(ok=True)
+
+@app.route('/api/listings/documents/<doc_id>')
+def download_listing_document(doc_id):
+    """Customer-visible documents: served when the listing is published, or to its owner."""
+    row = query('SELECT * FROM listing_documents WHERE id=?', (doc_id,), one=True)
+    if not row:
+        return jsonify(error='Not found'), 404
+    svc = query('SELECT supplier_id, status, active FROM services WHERE id=?', (row['service_id'],), one=True)
+    published = bool(svc and svc.get('status') == 'active' and svc.get('active') == 1)
+    if not published and _current_supplier_id() != (svc or {}).get('supplier_id'):
+        return jsonify(error='Not found'), 404
+    resp = send_file(io.BytesIO(bytes(row['file_data'])), mimetype=row['mime_type'],
+                     as_attachment=False, download_name=row['filename'])
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    return resp
 
 # ── BASKET ──────────────────────────────────────────────────────────────────
 def _get_basket():
